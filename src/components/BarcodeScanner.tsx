@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -9,6 +8,7 @@ import {
   DialogTrigger,
   DialogFooter,
   DialogClose,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { useToast } from "@/hooks/use-toast";
 import { BrowserMultiFormatReader, NotFoundException, DecodeHintType } from '@zxing/library';
@@ -92,9 +92,12 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onDetect, children }) =
       <DialogContent className="sm:max-w-[625px]">
         <DialogHeader>
           <DialogTitle>Scan ISBN Barcode</DialogTitle>
+          <DialogDescription>
+            Point your camera at the book's barcode. The scan will happen automatically.
+          </DialogDescription>
         </DialogHeader>
         <div className="relative">
-          <video ref={videoRef} className="w-full h-auto rounded-md bg-muted" />
+          <video ref={videoRef} autoPlay playsInline className="w-full h-auto rounded-md bg-muted" />
         </div>
         <DialogFooter>
           <DialogClose asChild>
