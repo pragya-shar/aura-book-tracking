@@ -14,7 +14,7 @@ import {
 import { Link, useLocation } from "react-router-dom";
 
 const menuItems = [
-  { title: "Dashboard", href: "/", icon: Home },
+  { title: "AURA", href: "/", icon: Home },
   { title: "My Library", href: "/library", icon: Library },
   { title: "Reading Progress", href: "/progress", icon: BookOpen },
   { title: "Statistics", href: "/statistics", icon: BarChart },
