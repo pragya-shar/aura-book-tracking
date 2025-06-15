@@ -59,13 +59,20 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture }) => {
 
   const takePicture = () => {
     if (videoRef.current) {
+      const video = videoRef.current;
       const canvas = document.createElement('canvas');
-      canvas.width = videoRef.current.videoWidth;
-      canvas.height = videoRef.current.videoHeight;
+      
+      const MAX_WIDTH = 800;
+      const scale = video.videoWidth > MAX_WIDTH ? MAX_WIDTH / video.videoWidth : 1;
+      
+      canvas.width = video.videoWidth * scale;
+      canvas.height = video.videoHeight * scale;
+
       const ctx = canvas.getContext('2d');
       if (ctx) {
-        ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-        const dataUrl = canvas.toDataURL('image/png');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        // Use jpeg for smaller file size and set quality
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
         onCapture(dataUrl);
         handleOpenChange(false);
       }
