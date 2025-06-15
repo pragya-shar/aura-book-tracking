@@ -4,7 +4,7 @@ import CameraCapture from '@/components/CameraCapture';
 import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { AlertCircle, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const AddBook = () => {
@@ -12,6 +12,9 @@ const AddBook = () => {
 
   const scanBookMutation = useMutation({
     mutationFn: async (imageBase64: string) => {
+      if (!supabase) {
+        throw new Error('Supabase client is not initialized.');
+      }
       const { data, error } = await supabase.functions.invoke('scan-book', {
         body: { image: imageBase64 },
       });
@@ -39,6 +42,22 @@ const AddBook = () => {
   const reset = () => {
     setScannedImage(null);
     scanBookMutation.reset();
+  }
+
+  if (!supabase) {
+    return (
+      <div>
+        <h1 className="text-3xl font-bold">Add New Book</h1>
+        <p className="text-muted-foreground">Scan a book cover to detect its title and other information.</p>
+        <Alert variant="destructive" className="mt-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Configuration Error</AlertTitle>
+          <AlertDescription>
+            Could not connect to Supabase. This can sometimes happen after the initial setup. Please try refreshing the page.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
   }
 
   return (
@@ -91,4 +110,3 @@ const AddBook = () => {
   );
 };
 export default AddBook;
-
