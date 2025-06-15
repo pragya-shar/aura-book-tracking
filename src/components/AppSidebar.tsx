@@ -1,5 +1,4 @@
-
-import { Home, Library, PlusSquare, BarChart, BookOpen, LogOut } from "lucide-react";
+import { Home, PlusSquare, BarChart, BookOpen, LogOut } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -16,8 +15,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
 const menuItems = [
-  { title: "Home", href: "/", icon: Home },
-  { title: "My Library", href: "/library", icon: Library },
+  { title: "Home", href: "/library", icon: Home },
   { title: "Reading Progress", href: "/progress", icon: BookOpen },
   { title: "Statistics", href: "/statistics", icon: BarChart },
 ];

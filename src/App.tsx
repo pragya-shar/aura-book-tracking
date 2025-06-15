@@ -30,8 +30,8 @@ const App = () => (
             <SidebarProvider>
               <Routes>
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/" element={<Index />} />
                 <Route element={<ProtectedRoute><SharedLayout /></ProtectedRoute>}>
-                  <Route index element={<Index />} />
                   <Route path="/library" element={<Library />} />
                   <Route path="/add-book" element={<AddBook />} />
                   <Route path="/progress" element={<ReadingProgress />} />

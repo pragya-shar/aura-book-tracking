@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -69,7 +68,7 @@ const Auth = () => {
 
   useEffect(() => {
     if (session) {
-      navigate('/');
+      navigate('/library');
     }
   }, [session, navigate]);
 
@@ -95,7 +94,7 @@ const Auth = () => {
     } else {
       toast({ title: 'Logged in successfully!' });
       setLoginAttempts(0);
-      navigate('/');
+      navigate('/library');
     }
     setLoading(false);
   };
