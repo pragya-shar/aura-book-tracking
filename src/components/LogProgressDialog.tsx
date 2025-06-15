@@ -81,14 +81,22 @@ export function LogProgressDialog({ book, children }: LogProgressDialogProps) {
 
       if (error) throw error;
 
-      // If book is 'to-read', update its status to 'reading'
-      if (book.status === 'to-read') {
-          const { error: updateError } = await supabase
-            .from('books')
-            .update({ status: 'reading' })
-            .eq('id', book.id);
+      const isFinished = book.page_count && values.currentPage >= book.page_count;
 
-          if (updateError) throw updateError;
+      if (isFinished) {
+        const { error: updateError } = await supabase
+          .from('books')
+          .update({ status: 'read', finished_at: new Date().toISOString() })
+          .eq('id', book.id);
+        
+        if (updateError) throw updateError;
+      } else if (book.status === 'to-read') {
+        const { error: updateError } = await supabase
+          .from('books')
+          .update({ status: 'reading' })
+          .eq('id', book.id);
+
+        if (updateError) throw updateError;
       }
 
       return data;
@@ -100,6 +108,7 @@ export function LogProgressDialog({ book, children }: LogProgressDialogProps) {
       });
       queryClient.invalidateQueries({ queryKey: ["reading-progress", user?.id] });
       queryClient.invalidateQueries({ queryKey: ["books", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["statistics", user?.id] });
       setIsOpen(false);
     },
     onError: (error: Error) => {

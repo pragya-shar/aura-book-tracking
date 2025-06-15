@@ -14,7 +14,9 @@ export type Database = {
           authors: string[] | null
           created_at: string
           description: string | null
+          finished_at: string | null
           gbooks_id: string | null
+          genres: string[] | null
           id: string
           image_url: string | null
           page_count: number | null
@@ -26,7 +28,9 @@ export type Database = {
           authors?: string[] | null
           created_at?: string
           description?: string | null
+          finished_at?: string | null
           gbooks_id?: string | null
+          genres?: string[] | null
           id?: string
           image_url?: string | null
           page_count?: number | null
@@ -38,7 +42,9 @@ export type Database = {
           authors?: string[] | null
           created_at?: string
           description?: string | null
+          finished_at?: string | null
           gbooks_id?: string | null
+          genres?: string[] | null
           id?: string
           image_url?: string | null
           page_count?: number | null
