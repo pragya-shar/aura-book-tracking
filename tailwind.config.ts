@@ -20,6 +20,7 @@ export default {
 		},
 		extend: {
       fontFamily: {
+        'playfair': ['"Playfair Display"', 'serif'],
         'cinzel': ['"Cinzel Decorative"', 'serif'],
         'melody': ['"Great Vibes"', 'cursive'],
         'pixel': ['"Pixelify Sans"', 'sans-serif'],
