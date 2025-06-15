@@ -1,4 +1,5 @@
 
+
 import { Home, Library, PlusSquare, BarChart, BookOpen } from "lucide-react";
 import {
   Sidebar,
@@ -14,7 +15,7 @@ import {
 import { Link, useLocation } from "react-router-dom";
 
 const menuItems = [
-  { title: "AURA", href: "/", icon: Home },
+  { title: "Home", href: "/", icon: Home },
   { title: "My Library", href: "/library", icon: Library },
   { title: "Reading Progress", href: "/progress", icon: BookOpen },
   { title: "Statistics", href: "/statistics", icon: BarChart },
@@ -33,8 +34,8 @@ const AppSidebar = () => {
   return (
     <Sidebar>
       <SidebarHeader className="p-4">
-        <h2 className="text-xl font-semibold text-center group-data-[collapsible=icon]:hidden">Aura</h2>
-        <h2 className="text-xl font-semibold text-center group-data-[collapsible=icon]:block hidden">A</h2>
+        <h2 className="text-2xl font-bold text-center group-data-[collapsible=icon]:hidden font-cinzel tracking-wider">Aura</h2>
+        <h2 className="text-2xl font-bold text-center group-data-[collapsible=icon]:block hidden font-cinzel">A</h2>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
@@ -70,3 +71,4 @@ const AppSidebar = () => {
 };
 
 export default AppSidebar;
+
