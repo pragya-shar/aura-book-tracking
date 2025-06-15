@@ -55,7 +55,21 @@ serve(async (req) => {
     const visionData = await visionResponse.json()
     const text = visionData.responses[0]?.fullTextAnnotation?.text
 
-    return new Response(JSON.stringify({ text }), {
+    let bookData = null;
+    if (text) {
+      const booksResponse = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(text)}&maxResults=1&key=${apiKey}`);
+      if (booksResponse.ok) {
+          const booksResult = await booksResponse.json();
+          if (booksResult.items && booksResult.items.length > 0) {
+              bookData = booksResult.items[0];
+          }
+      } else {
+          console.error(`Google Books API error: ${booksResponse.status} ${booksResponse.statusText}`, await booksResponse.text());
+          // Don't throw an error, just log it. The function can still return the detected text.
+      }
+    }
+
+    return new Response(JSON.stringify({ text, book: bookData }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     })
