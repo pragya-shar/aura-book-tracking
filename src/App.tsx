@@ -12,6 +12,9 @@ import Library from "./pages/Library";
 import AddBook from "./pages/AddBook";
 import ReadingProgress from "./pages/ReadingProgress";
 import Statistics from "./pages/Statistics";
+import { AuthProvider } from "./contexts/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Auth from "./pages/Auth";
 
 const queryClient = new QueryClient();
 
@@ -21,18 +24,21 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <SidebarProvider>
-          <Routes>
-            <Route element={<SharedLayout />}>
-              <Route index element={<Index />} />
-              <Route path="/library" element={<Library />} />
-              <Route path="/add-book" element={<AddBook />} />
-              <Route path="/progress" element={<ReadingProgress />} />
-              <Route path="/statistics" element={<Statistics />} />
-            </Route>
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </SidebarProvider>
+        <AuthProvider>
+          <SidebarProvider>
+            <Routes>
+              <Route path="/auth" element={<Auth />} />
+              <Route element={<ProtectedRoute><SharedLayout /></ProtectedRoute>}>
+                <Route index element={<Index />} />
+                <Route path="/library" element={<Library />} />
+                <Route path="/add-book" element={<AddBook />} />
+                <Route path="/progress" element={<ReadingProgress />} />
+                <Route path="/statistics" element={<Statistics />} />
+              </Route>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </SidebarProvider>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

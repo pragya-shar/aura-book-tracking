@@ -1,6 +1,5 @@
 
-
-import { Home, Library, PlusSquare, BarChart, BookOpen } from "lucide-react";
+import { Home, Library, PlusSquare, BarChart, BookOpen, LogOut } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -12,7 +11,9 @@ import {
   SidebarFooter,
   SidebarSeparator,
 } from "@/components/ui/sidebar";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const menuItems = [
   { title: "Home", href: "/", icon: Home },
@@ -23,6 +24,13 @@ const menuItems = [
 
 const AppSidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate('/auth');
+  };
 
   const isLinkActive = (href: string) => {
     if (href === '/') {
@@ -58,17 +66,22 @@ const AppSidebar = () => {
         </SidebarGroup>
       </SidebarContent>
       <SidebarSeparator />
-      <SidebarFooter className="p-4">
+      <SidebarFooter className="p-4 flex flex-col gap-2">
         <SidebarMenuButton asChild tooltip="Add New Book" className="w-full justify-center">
             <Link to="/add-book">
                 <PlusSquare />
                 <span className="group-data-[collapsible=icon]:hidden ml-2">Add New Book</span>
             </Link>
         </SidebarMenuButton>
+        {user && (
+          <SidebarMenuButton onClick={handleLogout} tooltip="Logout" className="w-full justify-center">
+            <LogOut />
+            <span className="group-data-[collapsible=icon]:hidden ml-2">Logout</span>
+          </SidebarMenuButton>
+        )}
       </SidebarFooter>
     </Sidebar>
   );
 };
 
 export default AppSidebar;
-
