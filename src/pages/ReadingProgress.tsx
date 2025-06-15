@@ -53,12 +53,12 @@ const ReadingProgress = () => {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold">Reading Progress</h1>
-      <p className="text-muted-foreground">Track and update your reading progress for each book.</p>
+      <h1 className="text-3xl font-pixel tracking-widest text-amber-400">Reading Progress</h1>
+      <p className="text-stone-400 font-playfair italic mt-1">Track and update your reading progress for each book.</p>
 
       {isLoading && (
         <div className="flex justify-center items-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
         </div>
       )}
 
@@ -70,14 +70,14 @@ const ReadingProgress = () => {
       )}
 
       {!isLoading && !isError && books?.length === 0 && (
-         <div className="text-center py-16 border-2 border-dashed rounded-lg mt-6">
-            <BookOpen className="mx-auto h-12 w-12 text-muted-foreground" />
-            <h3 className="mt-4 text-lg font-medium">Your library is empty</h3>
-            <p className="mt-1 text-sm text-muted-foreground">
+         <div className="text-center py-16 border-2 border-dashed border-amber-500/20 rounded-lg mt-6 bg-black/20">
+            <BookOpen className="mx-auto h-12 w-12 text-stone-500" />
+            <h3 className="mt-4 text-lg font-pixel text-amber-400">Your library is empty</h3>
+            <p className="mt-1 text-sm text-stone-400 font-playfair italic">
                 Add a book to your library to start tracking your progress.
             </p>
             <div className="mt-6">
-                <Button asChild>
+                <Button asChild className="border-amber-500 text-amber-500 bg-transparent hover:bg-amber-500 hover:text-black transition-all duration-300 ease-in-out shadow-[0_0_15px_rgba(251,191,36,0.4)] hover:shadow-[0_0_25px_rgba(251,191,36,0.7)]" variant="outline">
                     <Link to="/add-book">
                         <BookPlus />
                         Add a Book
@@ -95,25 +95,25 @@ const ReadingProgress = () => {
               : 0;
 
             return (
-              <Card key={book.id}>
+              <Card key={book.id} className="bg-black/30 border border-amber-500/30 text-stone-300">
                 <CardHeader>
-                  <CardTitle className="line-clamp-2">{book.title}</CardTitle>
+                  <CardTitle className="line-clamp-2 font-playfair text-amber-400">{book.title}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex gap-4">
                     {book.image_url ? (
                       <img src={book.image_url} alt={`Cover of ${book.title}`} className="h-24 w-auto rounded-md object-cover" />
                     ) : (
-                      <div className="h-24 w-16 bg-secondary rounded-md flex items-center justify-center">
-                        <BookOpen className="w-6 h-6 text-muted-foreground" />
+                      <div className="h-24 w-16 bg-black/20 rounded-md flex items-center justify-center border border-amber-500/20">
+                        <BookOpen className="w-6 h-6 text-stone-500" />
                       </div>
                     )}
                     <div className="flex-1 space-y-2">
-                        <Progress value={progress} className="h-2" />
-                        <p className="text-sm text-muted-foreground">
+                        <Progress value={progress} className="h-2 [&>div]:bg-amber-500 bg-black/20 border border-amber-500/20" />
+                        <p className="text-sm text-stone-400">
                             {progress}% complete
                         </p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs text-stone-500">
                             {book.latestLog 
                                 ? `Page ${book.latestLog.current_page}`
                                 : 'Not started'}
@@ -124,7 +124,7 @@ const ReadingProgress = () => {
                 </CardContent>
                 <CardFooter>
                   <LogProgressDialog book={book}>
-                    <Button className="w-full">
+                    <Button className="w-full border-amber-500 text-amber-500 bg-transparent hover:bg-amber-500 hover:text-black transition-all duration-300 ease-in-out shadow-[0_0_15px_rgba(251,191,36,0.4)] hover:shadow-[0_0_25px_rgba(251,191,36,0.7)]" variant="outline">
                       {book.latestLog ? 'Update Progress' : 'Start Reading'}
                     </Button>
                   </LogProgressDialog>

@@ -1,3 +1,4 @@
+
 import { Home, PlusSquare, BarChart, BookOpen, LogOut } from "lucide-react";
 import {
   Sidebar,
@@ -38,7 +39,7 @@ const AppSidebar = () => {
   }
 
   return (
-    <Sidebar>
+    <Sidebar className="bg-black/10 backdrop-blur-sm border-r border-amber-500/10">
       <SidebarHeader className="p-4">
         <h2 className="text-2xl font-bold text-center group-data-[collapsible=icon]:hidden tracking-wider flex items-baseline justify-center">
           <span className="font-melody text-4xl">A</span>
@@ -55,6 +56,7 @@ const AppSidebar = () => {
                   asChild
                   isActive={isLinkActive(item.href)}
                   tooltip={item.title}
+                  className="text-stone-400 hover:bg-amber-500/10 hover:text-amber-400 data-[active=true]:bg-amber-500/10 data-[active=true]:text-amber-400"
                 >
                   <Link to={item.href}>
                     <item.icon />
@@ -66,16 +68,16 @@ const AppSidebar = () => {
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarSeparator />
+      <SidebarSeparator className="bg-amber-500/20" />
       <SidebarFooter className="p-4 flex flex-col gap-2">
-        <SidebarMenuButton asChild tooltip="Add New Book" className="w-full justify-center">
+        <SidebarMenuButton asChild tooltip="Add New Book" className="w-full justify-center text-stone-300 hover:bg-amber-500/10 hover:text-amber-400 border border-amber-500/30">
             <Link to="/add-book">
                 <PlusSquare />
                 <span className="group-data-[collapsible=icon]:hidden ml-2">Add New Book</span>
             </Link>
         </SidebarMenuButton>
         {user && (
-          <SidebarMenuButton onClick={handleLogout} tooltip="Logout" className="w-full justify-center">
+          <SidebarMenuButton onClick={handleLogout} tooltip="Logout" className="w-full justify-center text-stone-300 hover:bg-red-500/10 hover:text-red-400 border border-red-500/30">
             <LogOut />
             <span className="group-data-[collapsible=icon]:hidden ml-2">Logout</span>
           </SidebarMenuButton>

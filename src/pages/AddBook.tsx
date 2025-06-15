@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CameraCapture from '@/components/CameraCapture';
@@ -96,32 +97,32 @@ const AddBook = () => {
 
   const BookResultCard = ({ book }: { book: any }) => (
     <>
-      <Card className="mt-2">
+      <Card className="mt-2 bg-black/30 border border-amber-500/30 text-stone-300">
         <CardHeader>
-          <CardTitle>{book.volumeInfo.title}</CardTitle>
-          <CardDescription>{book.volumeInfo.authors?.join(', ')}</CardDescription>
+          <CardTitle className="font-playfair text-amber-400">{book.volumeInfo.title}</CardTitle>
+          <CardDescription className="text-stone-400">{book.volumeInfo.authors?.join(', ')}</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col sm:flex-row gap-4">
           {book.volumeInfo.imageLinks?.thumbnail && (
-            <img src={book.volumeInfo.imageLinks.thumbnail} alt="Book cover" className="w-32 h-auto rounded-md object-cover" />
+            <img src={book.volumeInfo.imageLinks.thumbnail} alt="Book cover" className="w-32 h-auto rounded-md object-cover border border-amber-500/20" />
           )}
-          <p className="text-sm text-muted-foreground line-clamp-6">{book.volumeInfo.description}</p>
+          <p className="text-sm text-stone-400 line-clamp-6">{book.volumeInfo.description}</p>
         </CardContent>
       </Card>
       <div className="flex gap-2 mt-4">
-        <Button onClick={handleSaveBook} disabled={saveBookMutation.isPending}>
+        <Button onClick={handleSaveBook} disabled={saveBookMutation.isPending} className="border-amber-500 text-amber-500 bg-transparent hover:bg-amber-500 hover:text-black transition-all duration-300 ease-in-out shadow-[0_0_15px_rgba(251,191,36,0.4)] hover:shadow-[0_0_25px_rgba(251,191,36,0.7)]" variant="outline">
           {saveBookMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Save to Library
         </Button>
-        <Button onClick={reset} variant="outline">Scan Another</Button>
+        <Button onClick={reset} variant="outline" className="text-stone-300 border-stone-500 hover:bg-stone-700/50 hover:text-white">Scan Another</Button>
       </div>
     </>
   );
 
   return (
     <div>
-      <h1 className="text-3xl font-bold">Add New Book</h1>
-      <p className="text-muted-foreground">Scan a book cover to add it to your library.</p>
+      <h1 className="text-3xl font-pixel tracking-widest text-amber-400">Add New Book</h1>
+      <p className="text-stone-400 font-playfair italic mt-1">Scan a book cover to add it to your library.</p>
       
       <div className="mt-6 space-y-6">
         {!scannedImage && (
@@ -131,18 +132,18 @@ const AddBook = () => {
         {scannedImage && (
           <div className="space-y-4">
             <div>
-              <h2 className="text-xl font-semibold">Scanned Image</h2>
-              <div className="mt-2 border rounded-md p-2 inline-block">
+              <h2 className="text-xl font-pixel text-amber-400">Scanned Image</h2>
+              <div className="mt-2 border rounded-md p-2 inline-block border-amber-500/30 bg-black/20">
                 <img src={scannedImage} alt="Scanned book cover" className="rounded-md max-w-sm" />
               </div>
             </div>
 
             <div>
-              <h2 className="text-xl font-semibold">Detected Information</h2>
+              <h2 className="text-xl font-pixel text-amber-400">Detected Information</h2>
               {scanBookMutation.isPending && (
-                <div className="flex items-center gap-2 mt-2 text-muted-foreground">
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  <span>Scanning for text and book information...</span>
+                <div className="flex items-center gap-2 mt-2 text-stone-400">
+                  <Loader2 className="h-5 w-5 animate-spin text-amber-500" />
+                  <span className="font-playfair italic">Scanning for text and book information...</span>
                 </div>
               )}
               {scanBookMutation.isError && (

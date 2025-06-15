@@ -56,44 +56,44 @@ const BookCard = ({ book }: { book: Tables<'books'> }) => {
   
   const BookStatusBadge = ({ status }: { status: 'to-read' | 'reading' | 'read' }) => {
     if (status === 'reading') {
-        return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">Reading</span>;
+        return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-900/50 text-amber-300 border border-amber-500/50">Reading</span>;
     }
     if (status === 'read') {
-        return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">Read</span>;
+        return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-stone-700/80 text-stone-300 border border-stone-500/50">Read</span>;
     }
     return null;
   }
 
   return (
-    <Card className="flex flex-col hover:shadow-lg transition-shadow relative group">
+    <Card className="flex flex-col bg-black/30 border border-amber-500/30 text-stone-300 hover:border-amber-500/60 transition-colors duration-300 group relative">
        <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
          <DropdownMenu>
            <DropdownMenuTrigger asChild>
-             <Button variant="ghost" size="icon" className="h-8 w-8 bg-background/80 hover:bg-background">
+             <Button variant="ghost" size="icon" className="h-8 w-8 bg-black/50 hover:bg-black/80 text-stone-300 hover:text-amber-400">
                <MoreHorizontal className="h-4 w-4" />
              </Button>
            </DropdownMenuTrigger>
-           <DropdownMenuContent align="end">
+           <DropdownMenuContent align="end" className="bg-black/80 border border-amber-500/30 text-stone-300 backdrop-blur-sm">
              {book.status !== 'reading' && (
-               <DropdownMenuItem onClick={() => updateBookStatusMutation.mutate({ bookId: book.id, status: 'reading' })}>
+               <DropdownMenuItem onClick={() => updateBookStatusMutation.mutate({ bookId: book.id, status: 'reading' })} className="hover:!bg-amber-500/10 focus:!bg-amber-500/10 hover:!text-amber-400 focus:!text-amber-400 cursor-pointer">
                  <BookOpen className="mr-2" />
                  <span>Mark as Reading</span>
                </DropdownMenuItem>
              )}
              {book.status !== 'read' && (
-              <DropdownMenuItem onClick={() => updateBookStatusMutation.mutate({ bookId: book.id, status: 'read' })}>
+              <DropdownMenuItem onClick={() => updateBookStatusMutation.mutate({ bookId: book.id, status: 'read' })} className="hover:!bg-amber-500/10 focus:!bg-amber-500/10 hover:!text-amber-400 focus:!text-amber-400 cursor-pointer">
                  <Check className="mr-2" />
                  <span>Mark as Read</span>
                </DropdownMenuItem>
              )}
              {book.status !== 'to-read' && (
-              <DropdownMenuItem onClick={() => updateBookStatusMutation.mutate({ bookId: book.id, status: 'to-read' })}>
+              <DropdownMenuItem onClick={() => updateBookStatusMutation.mutate({ bookId: book.id, status: 'to-read' })} className="hover:!bg-amber-500/10 focus:!bg-amber-500/10 hover:!text-amber-400 focus:!text-amber-400 cursor-pointer">
                  <BookOpen className="mr-2" />
                  <span>Mark as To Read</span>
                </DropdownMenuItem>
              )}
-             <DropdownMenuSeparator />
-             <DropdownMenuItem className="text-destructive focus:text-destructive-foreground focus:bg-destructive" onClick={() => deleteBookMutation.mutate(book.id)}>
+             <DropdownMenuSeparator className="bg-amber-500/20" />
+             <DropdownMenuItem className="text-red-400 hover:!text-red-400 focus:text-red-400 hover:!bg-red-500/10 focus:!bg-red-500/10 cursor-pointer" onClick={() => deleteBookMutation.mutate(book.id)}>
                <Trash2 className="mr-2" />
                <span>Remove</span>
              </DropdownMenuItem>
@@ -108,16 +108,16 @@ const BookCard = ({ book }: { book: Tables<'books'> }) => {
                 className="rounded-t-lg object-cover aspect-[2/3] w-full"
             />
         ) : (
-          <div className="aspect-[2/3] w-full bg-secondary rounded-t-lg flex items-center justify-center">
-            <BookOpen className="w-10 h-10 text-muted-foreground" />
+          <div className="aspect-[2/3] w-full bg-black/20 rounded-t-lg flex items-center justify-center border-b border-amber-500/20">
+            <BookOpen className="w-10 h-10 text-stone-500" />
           </div>
         )}
       </CardHeader>
       <CardContent className="p-4 flex-grow">
-        <CardTitle className="line-clamp-2 text-base font-semibold">{book.title}</CardTitle>
-        <CardDescription className="line-clamp-1 text-sm">{book.authors?.join(', ')}</CardDescription>
+        <CardTitle className="line-clamp-2 text-base font-semibold font-playfair text-amber-400">{book.title}</CardTitle>
+        <CardDescription className="line-clamp-1 text-sm text-stone-400">{book.authors?.join(', ')}</CardDescription>
       </CardContent>
-      <CardFooter className="p-4 pt-0 text-xs text-muted-foreground flex justify-between items-center">
+      <CardFooter className="p-4 pt-0 text-xs text-stone-500 flex justify-between items-center">
         <span>{book.page_count ? `${book.page_count} pages` : ''}</span>
         <BookStatusBadge status={book.status} />
       </CardFooter>
@@ -155,7 +155,7 @@ const Library = () => {
     if (books.length === 0) return null;
     return (
       <div className="mb-12">
-        <h2 className="text-2xl font-bold mb-4 border-b pb-2">{title}</h2>
+        <h2 className="text-2xl font-pixel tracking-wider text-amber-400 mb-4 border-b border-amber-500/20 pb-2">{title}</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
           {books.map((book) => (
             <BookCard key={book.id} book={book} />
@@ -169,10 +169,10 @@ const Library = () => {
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold">My Library</h1>
-          <p className="text-muted-foreground">Here are the books in your library.</p>
+          <h1 className="text-3xl font-pixel tracking-widest text-amber-400">My Library</h1>
+          <p className="text-stone-400 font-playfair italic mt-1">A collection of tales and whispers from your literary journeys.</p>
         </div>
-        <Button asChild>
+        <Button asChild className="border-amber-500 text-amber-500 bg-transparent hover:bg-amber-500 hover:text-black transition-all duration-300 ease-in-out shadow-[0_0_15px_rgba(251,191,36,0.4)] hover:shadow-[0_0_25px_rgba(251,191,36,0.7)]" variant="outline">
           <Link to="/add-book">
             <PlusCircle />
             Add New Book
@@ -194,14 +194,14 @@ const Library = () => {
       )}
 
       {!isLoading && !isError && books?.length === 0 && (
-        <div className="text-center py-16 border-2 border-dashed rounded-lg">
-            <BookOpen className="mx-auto h-12 w-12 text-muted-foreground" />
-            <h3 className="mt-4 text-lg font-medium">Your library is empty</h3>
-            <p className="mt-1 text-sm text-muted-foreground">
+        <div className="text-center py-16 border-2 border-dashed border-amber-500/20 rounded-lg mt-6 bg-black/20">
+            <BookOpen className="mx-auto h-12 w-12 text-stone-500" />
+            <h3 className="mt-4 text-lg font-pixel text-amber-400">Your library is empty</h3>
+            <p className="mt-1 text-sm text-stone-400 font-playfair italic">
                 Add your first book to get started.
             </p>
             <div className="mt-6">
-                <Button asChild>
+                <Button asChild className="border-amber-500 text-amber-500 bg-transparent hover:bg-amber-500 hover:text-black transition-all duration-300 ease-in-out shadow-[0_0_15px_rgba(251,191,36,0.4)] hover:shadow-[0_0_25px_rgba(251,191,36,0.7)]" variant="outline">
                     <Link to="/add-book">
                         <PlusCircle />
                         Add New Book
