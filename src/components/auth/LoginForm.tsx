@@ -73,9 +73,9 @@ export const LoginForm = () => {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel className="text-stone-400 font-playfair">Email</FormLabel>
               <FormControl>
-                <Input placeholder="m@example.com" {...field} />
+                <Input placeholder="m@example.com" {...field} className="bg-black/20 border-amber-500/30 focus-visible:ring-amber-500 text-stone-300 placeholder:text-stone-500"/>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -86,16 +86,16 @@ export const LoginForm = () => {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Password</FormLabel>
+              <FormLabel className="text-stone-400 font-playfair">Password</FormLabel>
               <FormControl>
-                <Input type="password" {...field} />
+                <Input type="password" {...field} className="bg-black/20 border-amber-500/30 focus-visible:ring-amber-500 text-stone-300 placeholder:text-stone-500"/>
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full" disabled={loading || isLoginDisabled}>
-          {(loading && !isLoginDisabled) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        <Button type="submit" className="w-full border-amber-500 text-amber-500 bg-transparent hover:bg-amber-500 hover:text-black transition-all duration-300 ease-in-out shadow-[0_0_15px_rgba(251,191,36,0.4)] hover:shadow-[0_0_25px_rgba(251,191,36,0.7)] disabled:bg-stone-800/50 disabled:text-stone-500 disabled:border-stone-700 disabled:shadow-none" variant="outline" disabled={loading || isLoginDisabled}>
+          {(loading && !isLoginDisabled) && <Loader2 className="mr-2 h-4 w-4 animate-spin text-amber-500" />}
           {isLoginDisabled ? 'Try again later' : 'Login'}
         </Button>
       </form>
