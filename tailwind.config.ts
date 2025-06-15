@@ -21,6 +21,7 @@ export default {
 		extend: {
       fontFamily: {
         'cinzel': ['"Cinzel Decorative"', 'serif'],
+        'melody': ['"Great Vibes"', 'cursive'],
       },
 			colors: {
 				border: 'hsl(var(--border))',
