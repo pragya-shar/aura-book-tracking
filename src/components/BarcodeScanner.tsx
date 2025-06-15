@@ -11,7 +11,7 @@ import {
   DialogClose,
   DialogDescription,
 } from '@/components/ui/dialog';
-import QRBarcodeScanner from 'react-qr-barcode-scanner';
+import { BarcodeScanner as QRBarcodeScanner } from 'react-qr-barcode-scanner';
 
 interface BarcodeScannerProps {
   onDetect: (isbn: string) => void;
@@ -21,9 +21,9 @@ interface BarcodeScannerProps {
 const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onDetect, children }) => {
   const [isOpen, setIsOpen] = useState(false);
 
-  const handleUpdate = (err: unknown, result: { text: string } | undefined) => {
+  const handleUpdate = (err: unknown, result: { getText: () => string } | undefined) => {
     if (result) {
-      onDetect(result.text);
+      onDetect(result.getText());
       setIsOpen(false);
     }
     // Errors are logged to the console but not shown as toasts,
