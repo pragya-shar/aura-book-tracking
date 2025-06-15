@@ -42,8 +42,11 @@ const AppSidebar = () => {
   return (
     <Sidebar>
       <SidebarHeader className="p-4">
-        <h2 className="text-2xl font-bold text-center group-data-[collapsible=icon]:hidden font-melody tracking-wider">Aura</h2>
-        <h2 className="text-2xl font-bold text-center group-data-[collapsible=icon]:block hidden font-melody">A</h2>
+        <h2 className="text-2xl font-bold text-center group-data-[collapsible=icon]:hidden tracking-wider flex items-baseline justify-center">
+          <span className="font-melody text-4xl">A</span>
+          <span className="font-pixel">ura</span>
+        </h2>
+        <h2 className="text-4xl font-bold text-center group-data-[collapsible=icon]:block hidden font-melody">A</h2>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>

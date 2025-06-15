@@ -22,6 +22,7 @@ export default {
       fontFamily: {
         'cinzel': ['"Cinzel Decorative"', 'serif'],
         'melody': ['"Great Vibes"', 'cursive'],
+        'pixel': ['"Pixelify Sans"', 'sans-serif'],
       },
 			colors: {
 				border: 'hsl(var(--border))',
@@ -99,4 +100,3 @@ export default {
 	},
 	plugins: [require("tailwindcss-animate")],
 } satisfies Config;
-
