@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,7 +12,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { useToast } from "@/hooks/use-toast";
-import { BrowserMultiFormatReader, NotFoundException, DecodeHintType } from '@zxing/library';
+import { BrowserMultiFormatReader, NotFoundException, DecodeHintType, BarcodeFormat } from '@zxing/library';
 
 interface BarcodeScannerProps {
   onDetect: (isbn: string) => void;
@@ -29,7 +30,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onDetect, children }) =
 
     // Use EAN_13 for ISBNs
     const hints = new Map();
-    hints.set(DecodeHintType.POSSIBLE_FORMATS, [10]); // 10 is BarcodeFormat.EAN_13
+    hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.EAN_13]);
 
     codeReader.current = new BrowserMultiFormatReader(hints);
     
