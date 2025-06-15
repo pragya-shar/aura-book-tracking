@@ -18,6 +18,7 @@ export type Database = {
           id: string
           image_url: string | null
           page_count: number | null
+          status: Database["public"]["Enums"]["book_status"]
           title: string
           user_id: string
         }
@@ -29,6 +30,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           page_count?: number | null
+          status?: Database["public"]["Enums"]["book_status"]
           title: string
           user_id: string
         }
@@ -40,6 +42,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           page_count?: number | null
+          status?: Database["public"]["Enums"]["book_status"]
           title?: string
           user_id?: string
         }
@@ -91,7 +94,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      book_status: "to-read" | "reading" | "read"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -206,6 +209,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      book_status: ["to-read", "reading", "read"],
+    },
   },
 } as const
