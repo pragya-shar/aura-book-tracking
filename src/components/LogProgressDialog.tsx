@@ -80,6 +80,17 @@ export function LogProgressDialog({ book, children }: LogProgressDialogProps) {
       });
 
       if (error) throw error;
+
+      // If book is 'to-read', update its status to 'reading'
+      if (book.status === 'to-read') {
+          const { error: updateError } = await supabase
+            .from('books')
+            .update({ status: 'reading' })
+            .eq('id', book.id);
+
+          if (updateError) throw updateError;
+      }
+
       return data;
     },
     onSuccess: () => {
@@ -88,6 +99,7 @@ export function LogProgressDialog({ book, children }: LogProgressDialogProps) {
         description: "Your reading log has been updated.",
       });
       queryClient.invalidateQueries({ queryKey: ["reading-progress", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["books", user?.id] });
       setIsOpen(false);
     },
     onError: (error: Error) => {
