@@ -69,7 +69,9 @@ const AddBook = () => {
               {scanBookMutation.isError && (
                  <Alert variant="destructive" className="mt-2">
                    <AlertTitle>Scan Failed</AlertTitle>
-                   <AlertDescription>{scanBookMutation.error.message}</AlertDescription>
+                   <AlertDescription>
+                    {scanBookMutation.error.message}. This could be a network issue or a problem with the edge function. You can check the function logs for more details.
+                   </AlertDescription>
                  </Alert>
               )}
               {scanBookMutation.isSuccess && (

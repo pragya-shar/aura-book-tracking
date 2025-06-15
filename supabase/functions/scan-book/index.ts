@@ -1,4 +1,5 @@
 
+import 'https://deno.land/x/xhr@0.1.0/mod.ts'
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
 
 const corsHeaders = {
@@ -59,10 +60,10 @@ serve(async (req) => {
       status: 200,
     })
   } catch (error) {
+    console.error('Error in scan-book function:', error)
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,
     })
   }
 })
-
