@@ -1,15 +1,23 @@
 
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import CameraCapture from '@/components/CameraCapture';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+import type { TablesInsert } from '@/integrations/supabase/types';
 
 const AddBook = () => {
   const [scannedImage, setScannedImage] = useState<string | null>(null);
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const scanBookMutation = useMutation({
     mutationFn: async (imageBase64: string) => {
@@ -17,16 +25,44 @@ const AddBook = () => {
         body: { image: imageBase64 },
       });
 
-      if (error) {
-        throw new Error(error.message);
-      }
-      
-      if (data.error) {
-        throw new Error(data.error);
-      }
+      if (error) throw new Error(error.message);
+      if (data.error) throw new Error(data.error);
       
       return data;
     },
+  });
+
+  const saveBookMutation = useMutation({
+    mutationFn: async (bookData: TablesInsert<'books'>) => {
+      if (!user) throw new Error("User not authenticated");
+      
+      const { data, error } = await supabase
+        .from('books')
+        .insert({ ...bookData, user_id: user.id });
+        
+      if (error) {
+        if (error.code === '23505') { // Unique constraint violation
+          throw new Error("This book is already in your library.");
+        }
+        throw error;
+      }
+      return data;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Book Saved!",
+        description: "The book has been added to your library.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['books', user?.id] });
+      navigate('/library');
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: 'destructive',
+        title: "Error saving book",
+        description: error.message,
+      });
+    }
   });
 
   const handleCapture = (imageSrc: string) => {
@@ -40,7 +76,24 @@ const AddBook = () => {
   const reset = () => {
     setScannedImage(null);
     scanBookMutation.reset();
+    saveBookMutation.reset();
   }
+
+  const handleSaveBook = () => {
+    if (!scanBookMutation.data?.book) return;
+
+    const book = scanBookMutation.data.book;
+    const bookData: TablesInsert<'books'> = {
+      gbooks_id: book.id,
+      title: book.volumeInfo.title,
+      authors: book.volumeInfo.authors,
+      description: book.volumeInfo.description,
+      page_count: book.volumeInfo.pageCount,
+      image_url: book.volumeInfo.imageLinks?.thumbnail || book.volumeInfo.imageLinks?.smallThumbnail,
+      user_id: user!.id,
+    };
+    saveBookMutation.mutate(bookData);
+  };
 
   return (
     <div>
@@ -77,18 +130,27 @@ const AddBook = () => {
               )}
               {scanBookMutation.isSuccess && (
                 scanBookMutation.data.book ? (
-                  <Card className="mt-2">
-                    <CardHeader>
-                      <CardTitle>{scanBookMutation.data.book.volumeInfo.title}</CardTitle>
-                      <CardDescription>{scanBookMutation.data.book.volumeInfo.authors?.join(', ')}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="flex flex-col sm:flex-row gap-4">
-                      {scanBookMutation.data.book.volumeInfo.imageLinks?.thumbnail && (
-                        <img src={scanBookMutation.data.book.volumeInfo.imageLinks.thumbnail} alt="Book cover" className="w-32 h-auto rounded-md object-cover" />
-                      )}
-                      <p className="text-sm text-muted-foreground line-clamp-6">{scanBookMutation.data.book.volumeInfo.description}</p>
-                    </CardContent>
-                  </Card>
+                  <>
+                    <Card className="mt-2">
+                      <CardHeader>
+                        <CardTitle>{scanBookMutation.data.book.volumeInfo.title}</CardTitle>
+                        <CardDescription>{scanBookMutation.data.book.volumeInfo.authors?.join(', ')}</CardDescription>
+                      </CardHeader>
+                      <CardContent className="flex flex-col sm:flex-row gap-4">
+                        {scanBookMutation.data.book.volumeInfo.imageLinks?.thumbnail && (
+                          <img src={scanBookMutation.data.book.volumeInfo.imageLinks.thumbnail} alt="Book cover" className="w-32 h-auto rounded-md object-cover" />
+                        )}
+                        <p className="text-sm text-muted-foreground line-clamp-6">{scanBookMutation.data.book.volumeInfo.description}</p>
+                      </CardContent>
+                    </Card>
+                    <div className="flex gap-2 mt-4">
+                        <Button onClick={handleSaveBook} disabled={saveBookMutation.isPending}>
+                            {saveBookMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Save to Library
+                        </Button>
+                        <Button onClick={reset} variant="outline">Scan Another</Button>
+                    </div>
+                  </>
                 ) : scanBookMutation.data.text ? (
                   <div className="mt-2 p-4 border rounded-md bg-muted">
                     <p className="font-semibold mb-2">Could not find a matching book on Google Books, but detected the following text:</p>
@@ -100,7 +162,9 @@ const AddBook = () => {
               )}
             </div>
             
-            <Button onClick={reset} variant="outline">Scan Another Book</Button>
+            {scanBookMutation.isSuccess && !scanBookMutation.data.book && (
+                <Button onClick={reset} variant="outline">Scan Another Book</Button>
+            )}
           </div>
         )}
       </div>
