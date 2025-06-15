@@ -34,7 +34,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onDetect, children }) =
     codeReader.current = new BrowserMultiFormatReader(hints);
     
     try {
-      const videoInputDevices = await BrowserMultiFormatReader.listVideoInputDevices();
+      const videoInputDevices = await codeReader.current.listVideoInputDevices();
       if (videoInputDevices.length === 0) {
         throw new Error("No video input devices found.");
       }
