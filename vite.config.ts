@@ -1,4 +1,3 @@
-
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -19,9 +18,5 @@ export default defineConfig(({ mode }) => ({
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
-    mainFields: ['browser', 'module', 'jsnext:main', 'jsnext', 'main'],
-  },
-  optimizeDeps: {
-    include: ['react-qr-barcode-scanner'],
   },
 }));

@@ -1,12 +1,10 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CameraCapture from '@/components/CameraCapture';
-import BarcodeScanner from '@/components/BarcodeScanner';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Loader2, Barcode } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
@@ -15,7 +13,6 @@ import type { TablesInsert } from '@/integrations/supabase/types';
 
 const AddBook = () => {
   const [scannedImage, setScannedImage] = useState<string | null>(null);
-  const [scannedIsbn, setScannedIsbn] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -31,20 +28,6 @@ const AddBook = () => {
       if (data.error) throw new Error(data.error);
       
       return data;
-    },
-  });
-
-  const searchByIsbnMutation = useMutation({
-    mutationFn: async (isbn: string) => {
-      const response = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch book from Google Books API.');
-      }
-      const data = await response.json();
-      if (data.totalItems === 0) {
-        throw new Error(`No book found for ISBN: ${isbn}`);
-      }
-      return { book: data.items[0] };
     },
   });
 
@@ -88,22 +71,15 @@ const AddBook = () => {
       scanBookMutation.mutate(base64Image);
     }
   };
-
-  const handleIsbnDetect = (isbn: string) => {
-    setScannedIsbn(isbn);
-    searchByIsbnMutation.mutate(isbn);
-  };
   
   const reset = () => {
     setScannedImage(null);
-    setScannedIsbn(null);
     scanBookMutation.reset();
-    searchByIsbnMutation.reset();
     saveBookMutation.reset();
   }
 
   const handleSaveBook = () => {
-    const book = scanBookMutation.data?.book || searchByIsbnMutation.data?.book;
+    const book = scanBookMutation.data?.book;
     if (!book) return;
 
     const bookData: TablesInsert<'books'> = {
@@ -145,19 +121,11 @@ const AddBook = () => {
   return (
     <div>
       <h1 className="text-3xl font-bold">Add New Book</h1>
-      <p className="text-muted-foreground">Scan a book cover or its ISBN barcode to add it to your library.</p>
+      <p className="text-muted-foreground">Scan a book cover to add it to your library.</p>
       
       <div className="mt-6 space-y-6">
-        {!scannedImage && !scannedIsbn && (
-          <div className="flex flex-col sm:flex-row gap-4">
-            <CameraCapture onCapture={handleCapture} />
-            <BarcodeScanner onDetect={handleIsbnDetect}>
-              <Button variant="outline">
-                <Barcode />
-                Scan ISBN Barcode
-              </Button>
-            </BarcodeScanner>
-          </div>
+        {!scannedImage && (
+          <CameraCapture onCapture={handleCapture} />
         )}
         
         {scannedImage && (
@@ -200,42 +168,6 @@ const AddBook = () => {
                   <>
                     <p className="mt-2 text-muted-foreground">No text could be detected from the image.</p>
                     <Button onClick={reset} variant="outline" className="mt-4">Scan Another Book</Button>
-                  </>
-                )
-              )}
-            </div>
-          </div>
-        )}
-
-        {scannedIsbn && (
-          <div className="space-y-4">
-            <div>
-              <h2 className="text-xl font-semibold">Scanned ISBN</h2>
-              <p className="text-lg font-mono bg-muted p-2 rounded-md inline-block">{scannedIsbn}</p>
-            </div>
-             <div>
-              <h2 className="text-xl font-semibold">Detected Information</h2>
-              {searchByIsbnMutation.isPending && (
-                <div className="flex items-center gap-2 mt-2 text-muted-foreground">
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  <span>Looking up ISBN...</span>
-                </div>
-              )}
-              {searchByIsbnMutation.isError && (
-                 <Alert variant="destructive" className="mt-2">
-                   <AlertTitle>Lookup Failed</AlertTitle>
-                   <AlertDescription>
-                    {searchByIsbnMutation.error.message}
-                   </AlertDescription>
-                 </Alert>
-              )}
-              {searchByIsbnMutation.isSuccess && (
-                searchByIsbnMutation.data.book ? (
-                  <BookResultCard book={searchByIsbnMutation.data.book} />
-                ) : (
-                  <>
-                    <p className="mt-2 text-muted-foreground">Could not find a book for this ISBN.</p>
-                    <Button onClick={reset} variant="outline" className="mt-4">Scan Another</Button>
                   </>
                 )
               )}
