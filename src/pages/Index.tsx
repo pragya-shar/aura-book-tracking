@@ -16,7 +16,7 @@ const Index = () => {
           <span className="font-melody text-8xl md:text-9xl">A</span>
           <span className="font-pixel ml-1">URA</span>
         </h1>
-        <p className="font-playfair text-stone-400 mt-2 text-lg md:text-xl italic">Track your literary journey through the shadows.</p>
+        <p className="font-playfair text-stone-400 mt-2 text-lg md:text-xl italic">Uncover the mysteries of your reading adventures.</p>
       </div>
       <Button asChild size="lg" variant="outline" className="z-10 border-amber-500 text-amber-500 bg-transparent hover:bg-amber-500 hover:text-black transition-all duration-300 ease-in-out shadow-[0_0_15px_rgba(251,191,36,0.4)] hover:shadow-[0_0_25px_rgba(251,191,36,0.7)]">
         <Link to="/auth">Enter the Archives</Link>
