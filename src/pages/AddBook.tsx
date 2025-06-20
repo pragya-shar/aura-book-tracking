@@ -106,7 +106,20 @@ const AddBook = () => {
           {book.volumeInfo.imageLinks?.thumbnail && (
             <img src={book.volumeInfo.imageLinks.thumbnail} alt="Book cover" className="w-32 h-auto rounded-md object-cover border border-amber-500/20" />
           )}
-          <p className="text-sm text-stone-400 line-clamp-6">{book.volumeInfo.description}</p>
+          <div className="flex-1">
+            <p className="text-sm text-stone-400 line-clamp-6 mb-2">{book.volumeInfo.description || 'No description available'}</p>
+            <div className="text-xs text-stone-500 space-y-1">
+              {book.volumeInfo.publishedDate && (
+                <p>Published: {book.volumeInfo.publishedDate}</p>
+              )}
+              {book.volumeInfo.publisher && (
+                <p>Publisher: {book.volumeInfo.publisher}</p>
+              )}
+              {book.volumeInfo.pageCount && (
+                <p>Pages: {book.volumeInfo.pageCount}</p>
+              )}
+            </div>
+          </div>
         </CardContent>
       </Card>
       <div className="flex gap-2 mt-4">
@@ -160,7 +173,7 @@ const AddBook = () => {
                 ) : scanBookMutation.data.text ? (
                   <>
                     <div className="mt-2 p-4 border rounded-md bg-muted">
-                      <p className="font-semibold mb-2">Could not find a matching book on Google Books, but detected the following text:</p>
+                      <p className="font-semibold mb-2">Could not find a matching book on Open Library, but detected the following text:</p>
                       <p className="whitespace-pre-wrap font-sans">{scanBookMutation.data.text}</p>
                     </div>
                     <Button onClick={reset} variant="outline" className="mt-4">Scan Another Book</Button>
