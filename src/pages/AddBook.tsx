@@ -5,7 +5,7 @@ import CameraCapture from '@/components/CameraCapture';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Star } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
@@ -95,42 +95,70 @@ const AddBook = () => {
     saveBookMutation.mutate(bookData);
   };
 
-  const BookResultCard = ({ book }: { book: any }) => (
-    <>
-      <Card className="mt-2 bg-black/30 border border-amber-500/30 text-stone-300">
-        <CardHeader>
-          <CardTitle className="font-playfair text-amber-400">{book.volumeInfo.title}</CardTitle>
-          <CardDescription className="text-stone-400">{book.volumeInfo.authors?.join(', ')}</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col sm:flex-row gap-4">
-          {book.volumeInfo.imageLinks?.thumbnail && (
-            <img src={book.volumeInfo.imageLinks.thumbnail} alt="Book cover" className="w-32 h-auto rounded-md object-cover border border-amber-500/20" />
-          )}
-          <div className="flex-1">
-            <p className="text-sm text-stone-400 line-clamp-6 mb-2">{book.volumeInfo.description || 'No description available'}</p>
-            <div className="text-xs text-stone-500 space-y-1">
-              {book.volumeInfo.publishedDate && (
-                <p>Published: {book.volumeInfo.publishedDate}</p>
-              )}
-              {book.volumeInfo.publisher && (
-                <p>Publisher: {book.volumeInfo.publisher}</p>
-              )}
-              {book.volumeInfo.pageCount && (
-                <p>Pages: {book.volumeInfo.pageCount}</p>
+  const BookResultCard = ({ book }: { book: any }) => {
+    const imageUrl = book.volumeInfo.imageLinks?.extraLarge || 
+                     book.volumeInfo.imageLinks?.large || 
+                     book.volumeInfo.imageLinks?.medium || 
+                     book.volumeInfo.imageLinks?.thumbnail || 
+                     book.volumeInfo.imageLinks?.smallThumbnail;
+
+    return (
+      <>
+        <Card className="mt-2 bg-black/30 border border-amber-500/30 text-stone-300">
+          <CardHeader>
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <CardTitle className="font-playfair text-amber-400">{book.volumeInfo.title}</CardTitle>
+                <CardDescription className="text-stone-400">{book.volumeInfo.authors?.join(', ')}</CardDescription>
+              </div>
+              {book.volumeInfo.averageRating && (
+                <div className="flex items-center gap-1 text-amber-400">
+                  <Star className="h-4 w-4 fill-current" />
+                  <span className="text-sm">{book.volumeInfo.averageRating}</span>
+                  {book.volumeInfo.ratingsCount && (
+                    <span className="text-xs text-stone-500">({book.volumeInfo.ratingsCount})</span>
+                  )}
+                </div>
               )}
             </div>
-          </div>
-        </CardContent>
-      </Card>
-      <div className="flex gap-2 mt-4">
-        <Button onClick={handleSaveBook} disabled={saveBookMutation.isPending} className="border-amber-500 text-amber-500 bg-transparent hover:bg-amber-500 hover:text-black transition-all duration-300 ease-in-out shadow-[0_0_15px_rgba(251,191,36,0.4)] hover:shadow-[0_0_25px_rgba(251,191,36,0.7)]" variant="outline">
-          {saveBookMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Save to Library
-        </Button>
-        <Button onClick={reset} variant="outline" className="text-stone-300 border-stone-500 hover:bg-stone-700/50 hover:text-white">Scan Another</Button>
-      </div>
-    </>
-  );
+          </CardHeader>
+          <CardContent className="flex flex-col sm:flex-row gap-4">
+            {imageUrl && (
+              <img 
+                src={imageUrl} 
+                alt="Book cover" 
+                className="w-32 h-auto rounded-md object-cover border border-amber-500/20" 
+              />
+            )}
+            <div className="flex-1">
+              <p className="text-sm text-stone-400 line-clamp-6 mb-2">{book.volumeInfo.description || 'No description available'}</p>
+              <div className="text-xs text-stone-500 space-y-1">
+                {book.volumeInfo.publishedDate && (
+                  <p>Published: {book.volumeInfo.publishedDate}</p>
+                )}
+                {book.volumeInfo.publisher && (
+                  <p>Publisher: {book.volumeInfo.publisher}</p>
+                )}
+                {book.volumeInfo.pageCount && (
+                  <p>Pages: {book.volumeInfo.pageCount}</p>
+                )}
+                {book.volumeInfo.categories && book.volumeInfo.categories.length > 0 && (
+                  <p>Categories: {book.volumeInfo.categories.slice(0, 3).join(', ')}</p>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <div className="flex gap-2 mt-4">
+          <Button onClick={handleSaveBook} disabled={saveBookMutation.isPending} className="border-amber-500 text-amber-500 bg-transparent hover:bg-amber-500 hover:text-black transition-all duration-300 ease-in-out shadow-[0_0_15px_rgba(251,191,36,0.4)] hover:shadow-[0_0_25px_rgba(251,191,36,0.7)]" variant="outline">
+            {saveBookMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Save to Library
+          </Button>
+          <Button onClick={reset} variant="outline" className="text-stone-300 border-stone-500 hover:bg-stone-700/50 hover:text-white">Scan Another</Button>
+        </div>
+      </>
+    );
+  };
 
   return (
     <div>
@@ -152,11 +180,11 @@ const AddBook = () => {
             </div>
 
             <div>
-              <h2 className="text-xl font-pixel text-amber-400">Detected Information</h2>
+              <h2 className="text-xl font-pixel text-amber-400">Book Match Results</h2>
               {scanBookMutation.isPending && (
                 <div className="flex items-center gap-2 mt-2 text-stone-400">
                   <Loader2 className="h-5 w-5 animate-spin text-amber-500" />
-                  <span className="font-playfair italic">Scanning for text and book information...</span>
+                  <span className="font-playfair italic">Analyzing image and finding the best book match...</span>
                 </div>
               )}
               {scanBookMutation.isError && (
@@ -169,7 +197,12 @@ const AddBook = () => {
               )}
               {scanBookMutation.isSuccess && (
                 scanBookMutation.data.book ? (
-                  <BookResultCard book={scanBookMutation.data.book} />
+                  <div>
+                    <p className="text-sm text-stone-400 font-playfair italic mb-3">
+                      Found the best matching book from multiple candidates:
+                    </p>
+                    <BookResultCard book={scanBookMutation.data.book} />
+                  </div>
                 ) : scanBookMutation.data.text ? (
                   <>
                     <div className="mt-2 p-4 border rounded-md bg-muted">
