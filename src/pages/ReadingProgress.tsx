@@ -1,5 +1,5 @@
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -11,6 +11,8 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import type { Tables } from '@/integrations/supabase/types';
 import { LogProgressDialog } from '@/components/LogProgressDialog';
 import { Link } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useToast } from '@/hooks/use-toast';
 
 type BookWithProgress = Tables<'books'> & {
     latestLog?: Tables<'reading_logs'>;
@@ -18,6 +20,8 @@ type BookWithProgress = Tables<'books'> & {
 
 const ReadingProgress = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: books, isLoading, isError, error } = useQuery({
     queryKey: ['reading-progress', user?.id],
@@ -51,6 +55,46 @@ const ReadingProgress = () => {
     },
     enabled: !!user,
   });
+
+  const updatePageCountMutation = useMutation({
+    mutationFn: async ({ bookId, gbooksId }: { bookId: string; gbooksId: string }) => {
+      const response = await fetch(`https://www.googleapis.com/books/v1/volumes/${gbooksId}`);
+      if (!response.ok) throw new Error('Failed to fetch book info');
+      
+      const bookInfo = await response.json();
+      if (!bookInfo.volumeInfo?.pageCount) throw new Error('Page count not available');
+      
+      const { error } = await supabase
+        .from('books')
+        .update({ page_count: bookInfo.volumeInfo.pageCount })
+        .eq('id', bookId);
+        
+      if (error) throw error;
+      
+      return bookInfo.volumeInfo.pageCount;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reading-progress', user?.id] });
+      toast({
+        title: "Page count updated",
+        description: "Book page count has been fetched and updated.",
+      });
+    },
+    onError: (error: Error) => {
+      console.log('Could not update page count:', error.message);
+    }
+  });
+
+  // Auto-update page counts for books that don't have them
+  useEffect(() => {
+    if (books) {
+      books.forEach(book => {
+        if ((!book.page_count || book.page_count === 0) && book.gbooks_id) {
+          updatePageCountMutation.mutate({ bookId: book.id, gbooksId: book.gbooks_id });
+        }
+      });
+    }
+  }, [books]);
 
   return (
     <div className="h-full flex flex-col">
@@ -95,9 +139,10 @@ const ReadingProgress = () => {
           {!isLoading && !isError && books && books.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-6">
               {books.map(book => {
-                const progress = book.latestLog && book.page_count 
-                  ? Math.round((book.latestLog.current_page / book.page_count) * 100)
-                  : 0;
+                // Use actual page count if available, otherwise use estimated 500
+                const maxPages = book.page_count && book.page_count > 0 ? book.page_count : 500;
+                const currentPage = book.latestLog?.current_page || 0;
+                const progress = Math.round((currentPage / maxPages) * 100);
 
                 return (
                   <Card key={book.id} className="bg-black/30 border border-amber-500/30 text-stone-300">
@@ -122,7 +167,7 @@ const ReadingProgress = () => {
                                 {book.latestLog 
                                     ? `Page ${book.latestLog.current_page}`
                                     : 'Not started'}
-                                {book.page_count ? ` / ${book.page_count}` : ''}
+                                {book.page_count && book.page_count > 0 ? ` / ${book.page_count}` : ` / ~${maxPages}`}
                             </p>
                         </div>
                       </div>
