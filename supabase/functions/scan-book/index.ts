@@ -75,43 +75,26 @@ serve(async (req) => {
 
     let bookData = null;
     if (text) {
-      console.log("Sending request to Open Library API...");
-      const searchResponse = await fetch(
-        `https://openlibrary.org/search.json?q=${encodeURIComponent(text)}&limit=1`
+      console.log("Sending request to Google Books API...");
+      const booksResponse = await fetch(
+        `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(
+          text
+        )}&maxResults=1&key=${apiKey}`
       );
-      console.log(`Open Library API responded with status: ${searchResponse.status}`);
+      console.log(`Google Books API responded with status: ${booksResponse.status}`);
 
-      if (searchResponse.ok) {
-        const searchResult = await searchResponse.json();
-        if (searchResult.docs && searchResult.docs.length > 0) {
-          const book = searchResult.docs[0];
-          
-          // Transform Open Library data to match our expected format
-          bookData = {
-            id: book.key || book.cover_edition_key || `ol_${Date.now()}`,
-            volumeInfo: {
-              title: book.title,
-              authors: book.author_name || [],
-              description: book.first_sentence ? book.first_sentence.join(' ') : '',
-              pageCount: book.number_of_pages_median || null,
-              imageLinks: book.cover_i ? {
-                thumbnail: `https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg`,
-                smallThumbnail: `https://covers.openlibrary.org/b/id/${book.cover_i}-S.jpg`
-              } : null,
-              publishedDate: book.first_publish_year?.toString(),
-              publisher: book.publisher ? book.publisher[0] : '',
-              isbn: book.isbn ? book.isbn[0] : '',
-              language: book.language ? book.language[0] : 'en'
-            }
-          };
+      if (booksResponse.ok) {
+        const booksResult = await booksResponse.json();
+        if (booksResult.items && booksResult.items.length > 0) {
+          bookData = booksResult.items[0];
           console.log(`Found book: ${bookData.volumeInfo.title}`);
         } else {
-          console.log("No matching book found on Open Library.");
+          console.log("No matching book found on Google Books.");
         }
       } else {
         console.error(
-          `Open Library API error: ${searchResponse.status} ${searchResponse.statusText}`,
-          await searchResponse.text()
+          `Google Books API error: ${booksResponse.status} ${booksResponse.statusText}`,
+          await booksResponse.text()
         );
       }
     }

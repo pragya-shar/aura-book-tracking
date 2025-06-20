@@ -173,7 +173,7 @@ const AddBook = () => {
                 ) : scanBookMutation.data.text ? (
                   <>
                     <div className="mt-2 p-4 border rounded-md bg-muted">
-                      <p className="font-semibold mb-2">Could not find a matching book on Open Library, but detected the following text:</p>
+                      <p className="font-semibold mb-2">Could not find a matching book on Google Books, but detected the following text:</p>
                       <p className="whitespace-pre-wrap font-sans">{scanBookMutation.data.text}</p>
                     </div>
                     <Button onClick={reset} variant="outline" className="mt-4">Scan Another Book</Button>
