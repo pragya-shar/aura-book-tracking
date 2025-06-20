@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CameraCapture from '@/components/CameraCapture';
+import BookResultCard from '@/components/BookResultCard';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Loader2, Star } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import type { TablesInsert } from '@/integrations/supabase/types';
@@ -94,102 +93,10 @@ const AddBook = () => {
     saveBookMutation.mutate(bookData);
   };
 
-  const BookResultCard = ({ book, analysisData }: { book: any; analysisData?: any }) => {
-    const imageUrl = book.volumeInfo.imageLinks?.extraLarge || 
-                     book.volumeInfo.imageLinks?.large || 
-                     book.volumeInfo.imageLinks?.medium || 
-                     book.volumeInfo.imageLinks?.thumbnail || 
-                     book.volumeInfo.imageLinks?.smallThumbnail;
-
-    return (
-      <>
-        <Card className="mt-2 bg-black/30 border border-amber-500/30 text-stone-300">
-          <CardHeader>
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <CardTitle className="font-playfair text-amber-400">{book.volumeInfo.title}</CardTitle>
-                <CardDescription className="text-stone-400">{book.volumeInfo.authors?.join(', ')}</CardDescription>
-                {/* Enhanced analysis info */}
-                {analysisData && (
-                  <div className="mt-2 text-xs text-stone-500 space-y-1">
-                    {analysisData.extractedISBNs?.length > 0 && (
-                      <div className="flex items-center gap-1">
-                        <span className="px-2 py-1 bg-green-600/20 text-green-400 rounded">ISBN Match</span>
-                        <span>ISBNs: {analysisData.extractedISBNs.join(', ')}</span>
-                      </div>
-                    )}
-                    {analysisData.logos > 0 && (
-                      <div>Logos detected: {analysisData.logos}</div>
-                    )}
-                    {analysisData.objects > 0 && (
-                      <div>Objects detected: {analysisData.objects}</div>
-                    )}
-                  </div>
-                )}
-              </div>
-              {book.volumeInfo.averageRating && (
-                <div className="flex items-center gap-1 text-amber-400">
-                  <Star className="h-4 w-4 fill-current" />
-                  <span className="text-sm">{book.volumeInfo.averageRating}</span>
-                  {book.volumeInfo.ratingsCount && (
-                    <span className="text-xs text-stone-500">({book.volumeInfo.ratingsCount})</span>
-                  )}
-                </div>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent className="flex flex-col sm:flex-row gap-4">
-            {imageUrl && (
-              <div className="relative">
-                <img 
-                  src={imageUrl} 
-                  alt="Book cover" 
-                  className="w-32 h-auto rounded-md object-cover border border-amber-500/20" 
-                />
-                {analysisData?.extractedISBNs?.length > 0 && (
-                  <div className="absolute -top-2 -right-2 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-                    <span className="text-xs text-white">✓</span>
-                  </div>
-                )}
-              </div>
-            )}
-            <div className="flex-1">
-              <p className="text-sm text-stone-400 line-clamp-6 mb-2">{book.volumeInfo.description || 'No description available'}</p>
-              <div className="text-xs text-stone-500 space-y-1">
-                {book.volumeInfo.publishedDate && (
-                  <p>Published: {book.volumeInfo.publishedDate}</p>
-                )}
-                {book.volumeInfo.publisher && (
-                  <p>Publisher: {book.volumeInfo.publisher}</p>
-                )}
-                {book.volumeInfo.pageCount && (
-                  <p>Pages: {book.volumeInfo.pageCount}</p>
-                )}
-                {book.volumeInfo.categories && book.volumeInfo.categories.length > 0 && (
-                  <p>Categories: {book.volumeInfo.categories.slice(0, 3).join(', ')}</p>
-                )}
-                {book.volumeInfo.industryIdentifiers && (
-                  <p>ISBNs: {book.volumeInfo.industryIdentifiers.map((id: any) => id.identifier).join(', ')}</p>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <div className="flex gap-2 mt-4">
-          <Button onClick={handleSaveBook} disabled={saveBookMutation.isPending} className="border-amber-500 text-amber-500 bg-transparent hover:bg-amber-500 hover:text-black transition-all duration-300 ease-in-out shadow-[0_0_15px_rgba(251,191,36,0.4)] hover:shadow-[0_0_25px_rgba(251,191,36,0.7)]" variant="outline">
-            {saveBookMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Save to Library
-          </Button>
-          <Button onClick={reset} variant="outline" className="text-stone-300 border-stone-500 hover:bg-stone-700/50 hover:text-white">Scan Another</Button>
-        </div>
-      </>
-    );
-  };
-
   return (
     <div>
       <h1 className="text-3xl font-pixel tracking-widest text-amber-400">Add New Book</h1>
-      <p className="text-stone-400 font-playfair italic mt-1">Scan a book cover to add it to your library.</p>
+      <p className="text-stone-400 font-playfair italic mt-1">Scan a book cover to add it to your library with enhanced visual recognition.</p>
       
       <div className="mt-6 space-y-6">
         {!scannedImage && (
@@ -206,11 +113,11 @@ const AddBook = () => {
             </div>
 
             <div>
-              <h2 className="text-xl font-pixel text-amber-400">Enhanced Book Analysis</h2>
+              <h2 className="text-xl font-pixel text-amber-400">Enhanced Visual Analysis</h2>
               {scanBookMutation.isPending && (
                 <div className="flex items-center gap-2 mt-2 text-stone-400">
                   <Loader2 className="h-5 w-5 animate-spin text-amber-500" />
-                  <span className="font-playfair italic">Analyzing with visual recognition, ISBN detection, and intelligent matching...</span>
+                  <span className="font-playfair italic">Analyzing with advanced visual recognition, ISBN detection, logo identification, and intelligent matching...</span>
                 </div>
               )}
               {scanBookMutation.isError && (
@@ -227,11 +134,16 @@ const AddBook = () => {
                     <p className="text-sm text-stone-400 font-playfair italic mb-3">
                       {scanBookMutation.data.analysisData?.extractedISBNs?.length > 0 
                         ? "Found exact match using ISBN detection:" 
-                        : "Found the best matching book using enhanced visual analysis:"}
+                        : scanBookMutation.data.analysisData?.confidence >= 90
+                        ? "Found high-confidence match using enhanced visual analysis:"
+                        : "Found potential match using enhanced visual analysis:"}
                     </p>
                     <BookResultCard 
                       book={scanBookMutation.data.book} 
                       analysisData={scanBookMutation.data.analysisData}
+                      onSave={handleSaveBook}
+                      onScanAnother={reset}
+                      isSaving={saveBookMutation.isPending}
                     />
                   </div>
                 ) : scanBookMutation.data.text ? (
@@ -262,4 +174,5 @@ const AddBook = () => {
     </div>
   );
 };
+
 export default AddBook;
