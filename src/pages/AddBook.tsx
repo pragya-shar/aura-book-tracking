@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CameraCapture from '@/components/CameraCapture';
@@ -95,7 +94,7 @@ const AddBook = () => {
     saveBookMutation.mutate(bookData);
   };
 
-  const BookResultCard = ({ book }: { book: any }) => {
+  const BookResultCard = ({ book, analysisData }: { book: any; analysisData?: any }) => {
     const imageUrl = book.volumeInfo.imageLinks?.extraLarge || 
                      book.volumeInfo.imageLinks?.large || 
                      book.volumeInfo.imageLinks?.medium || 
@@ -110,6 +109,23 @@ const AddBook = () => {
               <div className="flex-1">
                 <CardTitle className="font-playfair text-amber-400">{book.volumeInfo.title}</CardTitle>
                 <CardDescription className="text-stone-400">{book.volumeInfo.authors?.join(', ')}</CardDescription>
+                {/* Enhanced analysis info */}
+                {analysisData && (
+                  <div className="mt-2 text-xs text-stone-500 space-y-1">
+                    {analysisData.extractedISBNs?.length > 0 && (
+                      <div className="flex items-center gap-1">
+                        <span className="px-2 py-1 bg-green-600/20 text-green-400 rounded">ISBN Match</span>
+                        <span>ISBNs: {analysisData.extractedISBNs.join(', ')}</span>
+                      </div>
+                    )}
+                    {analysisData.logos > 0 && (
+                      <div>Logos detected: {analysisData.logos}</div>
+                    )}
+                    {analysisData.objects > 0 && (
+                      <div>Objects detected: {analysisData.objects}</div>
+                    )}
+                  </div>
+                )}
               </div>
               {book.volumeInfo.averageRating && (
                 <div className="flex items-center gap-1 text-amber-400">
@@ -124,11 +140,18 @@ const AddBook = () => {
           </CardHeader>
           <CardContent className="flex flex-col sm:flex-row gap-4">
             {imageUrl && (
-              <img 
-                src={imageUrl} 
-                alt="Book cover" 
-                className="w-32 h-auto rounded-md object-cover border border-amber-500/20" 
-              />
+              <div className="relative">
+                <img 
+                  src={imageUrl} 
+                  alt="Book cover" 
+                  className="w-32 h-auto rounded-md object-cover border border-amber-500/20" 
+                />
+                {analysisData?.extractedISBNs?.length > 0 && (
+                  <div className="absolute -top-2 -right-2 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                    <span className="text-xs text-white">✓</span>
+                  </div>
+                )}
+              </div>
             )}
             <div className="flex-1">
               <p className="text-sm text-stone-400 line-clamp-6 mb-2">{book.volumeInfo.description || 'No description available'}</p>
@@ -144,6 +167,9 @@ const AddBook = () => {
                 )}
                 {book.volumeInfo.categories && book.volumeInfo.categories.length > 0 && (
                   <p>Categories: {book.volumeInfo.categories.slice(0, 3).join(', ')}</p>
+                )}
+                {book.volumeInfo.industryIdentifiers && (
+                  <p>ISBNs: {book.volumeInfo.industryIdentifiers.map((id: any) => id.identifier).join(', ')}</p>
                 )}
               </div>
             </div>
@@ -180,11 +206,11 @@ const AddBook = () => {
             </div>
 
             <div>
-              <h2 className="text-xl font-pixel text-amber-400">Book Match Results</h2>
+              <h2 className="text-xl font-pixel text-amber-400">Enhanced Book Analysis</h2>
               {scanBookMutation.isPending && (
                 <div className="flex items-center gap-2 mt-2 text-stone-400">
                   <Loader2 className="h-5 w-5 animate-spin text-amber-500" />
-                  <span className="font-playfair italic">Analyzing image and finding the best book match...</span>
+                  <span className="font-playfair italic">Analyzing with visual recognition, ISBN detection, and intelligent matching...</span>
                 </div>
               )}
               {scanBookMutation.isError && (
@@ -199,21 +225,32 @@ const AddBook = () => {
                 scanBookMutation.data.book ? (
                   <div>
                     <p className="text-sm text-stone-400 font-playfair italic mb-3">
-                      Found the best matching book from multiple candidates:
+                      {scanBookMutation.data.analysisData?.extractedISBNs?.length > 0 
+                        ? "Found exact match using ISBN detection:" 
+                        : "Found the best matching book using enhanced visual analysis:"}
                     </p>
-                    <BookResultCard book={scanBookMutation.data.book} />
+                    <BookResultCard 
+                      book={scanBookMutation.data.book} 
+                      analysisData={scanBookMutation.data.analysisData}
+                    />
                   </div>
                 ) : scanBookMutation.data.text ? (
                   <>
                     <div className="mt-2 p-4 border rounded-md bg-muted">
-                      <p className="font-semibold mb-2">Could not find a matching book on Google Books, but detected the following text:</p>
-                      <p className="whitespace-pre-wrap font-sans">{scanBookMutation.data.text}</p>
+                      <p className="font-semibold mb-2">Could not find a matching book, but enhanced analysis detected:</p>
+                      {scanBookMutation.data.analysisData?.extractedISBNs?.length > 0 && (
+                        <p className="mb-2"><strong>ISBNs:</strong> {scanBookMutation.data.analysisData.extractedISBNs.join(', ')}</p>
+                      )}
+                      {scanBookMutation.data.analysisData?.logos > 0 && (
+                        <p className="mb-2"><strong>Publisher logos detected:</strong> {scanBookMutation.data.analysisData.logos}</p>
+                      )}
+                      <p className="whitespace-pre-wrap font-sans"><strong>Text:</strong> {scanBookMutation.data.text}</p>
                     </div>
                     <Button onClick={reset} variant="outline" className="mt-4">Scan Another Book</Button>
                   </>
                 ) : (
                   <>
-                    <p className="mt-2 text-muted-foreground">No text could be detected from the image.</p>
+                    <p className="mt-2 text-muted-foreground">No text could be detected from the image using enhanced analysis.</p>
                     <Button onClick={reset} variant="outline" className="mt-4">Scan Another Book</Button>
                   </>
                 )

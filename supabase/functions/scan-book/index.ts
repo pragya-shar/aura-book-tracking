@@ -52,9 +52,33 @@ function calculateWordSimilarity(str1: string, str2: string): number {
   return matchCount / Math.max(words1.length, words2.length);
 }
 
+// Function to extract ISBN from detected text
+function extractISBN(text: string): string[] {
+  const isbns: string[] = [];
+  
+  // ISBN-13 pattern (978 or 979 followed by 10 digits)
+  const isbn13Pattern = /(?:978|979)[\s\-]?(?:\d[\s\-]?){9}\d/g;
+  const isbn13Matches = text.match(isbn13Pattern);
+  if (isbn13Matches) {
+    isbns.push(...isbn13Matches.map(isbn => isbn.replace(/[\s\-]/g, '')));
+  }
+  
+  // ISBN-10 pattern (10 digits or 9 digits + X)
+  const isbn10Pattern = /(?:\d[\s\-]?){9}[\dX]/g;
+  const isbn10Matches = text.match(isbn10Pattern);
+  if (isbn10Matches) {
+    isbns.push(...isbn10Matches.map(isbn => isbn.replace(/[\s\-]/g, '')));
+  }
+  
+  return [...new Set(isbns)]; // Remove duplicates
+}
+
 // Function to extract likely title and author from detected text
-function extractBookInfo(text: string): { title: string; author: string; cleanedText: string } {
+function extractBookInfo(text: string): { title: string; author: string; cleanedText: string; isbns: string[] } {
   const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+  
+  // Extract ISBNs first
+  const isbns = extractISBN(text);
   
   // Look for common patterns
   const authorPatterns = [/by\s+(.+)/i, /author[:\s]+(.+)/i, /written\s+by\s+(.+)/i];
@@ -97,78 +121,147 @@ function extractBookInfo(text: string): { title: string; author: string; cleaned
   
   const cleanedText = text.replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim();
   
-  return { title, author, cleanedText };
+  return { title, author, cleanedText, isbns };
 }
 
-// Function to score a book result based on various factors
-function scoreBookResult(book: any, detectedText: string, extractedInfo: { title: string; author: string; cleanedText: string }): number {
+// Function to get all available cover images for a book
+function getAllCoverImages(book: any): string[] {
+  const imageLinks = book.volumeInfo?.imageLinks || {};
+  const covers: string[] = [];
+  
+  // Order by quality preference
+  const imageTypes = ['extraLarge', 'large', 'medium', 'thumbnail', 'smallThumbnail'];
+  
+  for (const type of imageTypes) {
+    if (imageLinks[type]) {
+      covers.push(imageLinks[type]);
+    }
+  }
+  
+  return covers;
+}
+
+// Function to score cover image quality
+function scoreCoverImageQuality(book: any): number {
+  const imageLinks = book.volumeInfo?.imageLinks;
+  if (!imageLinks) return 0;
+  
+  if (imageLinks.extraLarge) return 10;
+  if (imageLinks.large) return 8;
+  if (imageLinks.medium) return 6;
+  if (imageLinks.thumbnail) return 4;
+  if (imageLinks.smallThumbnail) return 2;
+  
+  return 0;
+}
+
+// Enhanced function to score a book result with visual-first approach
+function scoreBookResult(book: any, detectedText: string, extractedInfo: { title: string; author: string; cleanedText: string; isbns: string[] }): number {
   let score = 0;
   const volumeInfo = book.volumeInfo || {};
   
-  // Text similarity scoring (70% of total score) - INCREASED WEIGHT
+  // ISBN matching gets highest priority (50% if found)
+  if (extractedInfo.isbns.length > 0) {
+    const bookISBNs = [
+      ...(volumeInfo.industryIdentifiers || []).map((id: any) => id.identifier?.replace(/[\s\-]/g, '') || ''),
+      volumeInfo.isbn_10?.replace(/[\s\-]/g, '') || '',
+      volumeInfo.isbn_13?.replace(/[\s\-]/g, '') || ''
+    ].filter(Boolean);
+    
+    const hasISBNMatch = extractedInfo.isbns.some(detectedISBN => 
+      bookISBNs.some(bookISBN => bookISBN === detectedISBN)
+    );
+    
+    if (hasISBNMatch) {
+      score += 50;
+      console.log(`ISBN match found for "${volumeInfo.title}": +50 points`);
+    }
+  }
+  
+  // Text similarity scoring (35% of total score)
   const bookTitle = (volumeInfo.title || '').toLowerCase();
   const bookAuthors = (volumeInfo.authors || []).join(' ').toLowerCase();
-  const detectedLower = detectedText.toLowerCase();
   
-  // Title matching (most important - 40% of total score)
+  // Title matching (25% of total score)
   if (extractedInfo.title) {
     const titleSimilarity = calculateSimilarity(extractedInfo.title.toLowerCase(), bookTitle);
     const titleWordSimilarity = calculateWordSimilarity(extractedInfo.title.toLowerCase(), bookTitle);
     const bestTitleMatch = Math.max(titleSimilarity, titleWordSimilarity);
-    score += bestTitleMatch * 40;
+    score += bestTitleMatch * 25;
     console.log(`Title match for "${bookTitle}": ${bestTitleMatch.toFixed(2)} (char: ${titleSimilarity.toFixed(2)}, word: ${titleWordSimilarity.toFixed(2)})`);
   }
   
-  // Author matching (15% of total score)
+  // Author matching (10% of total score)
   if (extractedInfo.author && bookAuthors) {
     const authorSimilarity = calculateSimilarity(extractedInfo.author.toLowerCase(), bookAuthors);
     const authorWordSimilarity = calculateWordSimilarity(extractedInfo.author.toLowerCase(), bookAuthors);
     const bestAuthorMatch = Math.max(authorSimilarity, authorWordSimilarity);
-    score += bestAuthorMatch * 15;
+    score += bestAuthorMatch * 10;
     console.log(`Author match for "${bookTitle}": ${bestAuthorMatch.toFixed(2)}`);
   }
   
-  // Overall text similarity (15% of total score)
-  const textSimilarity = calculateWordSimilarity(extractedInfo.cleanedText.toLowerCase(), (bookTitle + ' ' + bookAuthors));
-  score += textSimilarity * 15;
+  // Cover image quality (10% of total score)
+  const coverQuality = scoreCoverImageQuality(book);
+  score += coverQuality;
   
-  // Publication date recency (15% of total score) - REDUCED WEIGHT
+  // Publication date recency (5% of total score)
   const publishedDate = volumeInfo.publishedDate;
   if (publishedDate) {
     const year = parseInt(publishedDate.substring(0, 4));
     const currentYear = new Date().getFullYear();
     if (year >= 2000) {
-      score += Math.min(15, (year - 2000) / (currentYear - 2000) * 15);
+      score += Math.min(5, (year - 2000) / (currentYear - 2000) * 5);
     } else if (year >= 1990) {
-      score += 8;
+      score += 3;
     } else if (year >= 1980) {
-      score += 4;
+      score += 1;
     }
   }
   
-  // Cover image availability and quality (10% of total score) - REDUCED WEIGHT
-  const imageLinks = volumeInfo.imageLinks;
-  if (imageLinks) {
-    if (imageLinks.extraLarge) score += 10;
-    else if (imageLinks.large) score += 8;
-    else if (imageLinks.medium) score += 6;
-    else if (imageLinks.thumbnail) score += 4;
-    else if (imageLinks.smallThumbnail) score += 2;
-  }
-  
-  // Metadata completeness (5% of total score) - REDUCED WEIGHT
-  let completenessScore = 0;
-  if (volumeInfo.title) completenessScore += 1;
-  if (volumeInfo.authors && volumeInfo.authors.length > 0) completenessScore += 1;
-  if (volumeInfo.description) completenessScore += 1;
-  if (volumeInfo.pageCount) completenessScore += 1;
-  if (volumeInfo.publisher) completenessScore += 1;
-  
-  score += completenessScore;
-  
-  console.log(`Book "${bookTitle}" scored: ${score.toFixed(2)} (title: ${extractedInfo.title ? 'detected' : 'none'}, author: ${extractedInfo.author ? 'detected' : 'none'}, date: ${publishedDate}, images: ${!!imageLinks})`);
+  console.log(`Book "${bookTitle}" scored: ${score.toFixed(2)} (ISBN: ${extractedInfo.isbns.length > 0 ? 'detected' : 'none'}, title: ${extractedInfo.title ? 'detected' : 'none'}, author: ${extractedInfo.author ? 'detected' : 'none'}, covers: ${getAllCoverImages(book).length})`);
   
   return score;
+}
+
+// Enhanced Google Vision API request with multiple feature types
+async function analyzeImageWithVision(apiKey: string, imageBase64: string) {
+  const requestBody = {
+    requests: [
+      {
+        image: {
+          content: imageBase64,
+        },
+        features: [
+          { type: "TEXT_DETECTION" },
+          { type: "LOGO_DETECTION" },
+          { type: "IMAGE_PROPERTIES" },
+          { type: "OBJECT_LOCALIZATION" }
+        ],
+      },
+    ],
+  };
+
+  const response = await fetch(
+    `https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(requestBody),
+    }
+  );
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    console.error(
+      `Google Vision API error: ${response.status} ${response.statusText}`,
+      errorBody
+    );
+    throw new Error(
+      `Google Vision API request failed: ${response.statusText}`
+    );
+  }
+
+  return await response.json();
 }
 
 serve(async (req) => {
@@ -196,107 +289,110 @@ serve(async (req) => {
     }
     console.log("API key retrieved.");
 
-    const requestBody = {
-      requests: [
-        {
-          image: {
-            content: image,
-          },
-          features: [
-            {
-              type: "TEXT_DETECTION",
-            },
-          ],
-        },
-      ],
-    };
+    console.log("Sending request to Google Vision API with enhanced features...");
+    const visionData = await analyzeImageWithVision(apiKey, image);
+    console.log(`Google Vision API responded successfully`);
 
-    console.log("Sending request to Google Vision API...");
-    const visionResponse = await fetch(
-      `https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestBody),
-      }
-    );
-    console.log(`Google Vision API responded with status: ${visionResponse.status}`);
-
-    if (!visionResponse.ok) {
-      const errorBody = await visionResponse.text();
-      console.error(
-        `Google Vision API error: ${visionResponse.status} ${visionResponse.statusText}`,
-        errorBody
-      );
-      throw new Error(
-        `Google Vision API request failed: ${visionResponse.statusText}`
-      );
-    }
-
-    const visionData = await visionResponse.json();
-    const text = visionData.responses[0]?.fullTextAnnotation?.text;
+    const visionResponse = visionData.responses[0];
+    const text = visionResponse?.fullTextAnnotation?.text;
+    const logos = visionResponse?.logoAnnotations || [];
+    const imageProperties = visionResponse?.imagePropertiesAnnotation;
+    const objects = visionResponse?.localizedObjectAnnotations || [];
+    
     console.log(text ? `Detected text: ${text.substring(0, 100)}...` : "No text detected.");
+    console.log(`Found ${logos.length} logos, ${objects.length} objects`);
 
     let bookData = null;
     if (text) {
       // Extract book information from detected text
       const extractedInfo = extractBookInfo(text);
-      console.log(`Extracted info - Title: "${extractedInfo.title}", Author: "${extractedInfo.author}"`);
+      console.log(`Extracted info - Title: "${extractedInfo.title}", Author: "${extractedInfo.author}", ISBNs: [${extractedInfo.isbns.join(', ')}]`);
       
-      // Create a more targeted search query
-      let searchQuery = text;
-      if (extractedInfo.title) {
-        searchQuery = extractedInfo.title;
-        if (extractedInfo.author) {
-          searchQuery += ` ${extractedInfo.author}`;
+      // Priority 1: Search by ISBN if detected
+      if (extractedInfo.isbns.length > 0) {
+        for (const isbn of extractedInfo.isbns) {
+          console.log(`Searching by ISBN: ${isbn}`);
+          const isbnResponse = await fetch(
+            `https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}&key=${apiKey}`
+          );
+          
+          if (isbnResponse.ok) {
+            const isbnResult = await isbnResponse.json();
+            if (isbnResult.items && isbnResult.items.length > 0) {
+              bookData = isbnResult.items[0]; // ISBN should be unique
+              console.log(`Found exact match by ISBN: "${bookData.volumeInfo.title}"`);
+              break;
+            }
+          }
         }
       }
       
-      console.log(`Using search query: "${searchQuery}"`);
-      console.log("Sending request to Google Books API for multiple results...");
-      const booksResponse = await fetch(
-        `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(
-          searchQuery
-        )}&maxResults=10&key=${apiKey}`
-      );
-      console.log(`Google Books API responded with status: ${booksResponse.status}`);
-
-      if (booksResponse.ok) {
-        const booksResult = await booksResponse.json();
-        if (booksResult.items && booksResult.items.length > 0) {
-          console.log(`Found ${booksResult.items.length} potential matches, scoring them...`);
-          
-          // Score all results and find the best match
-          const scoredResults = booksResult.items.map(book => ({
-            book,
-            score: scoreBookResult(book, text, extractedInfo)
-          }));
-          
-          // Sort by score (highest first)
-          scoredResults.sort((a, b) => b.score - a.score);
-          
-          // Take the highest scoring result
-          bookData = scoredResults[0].book;
-          console.log(`Best match: "${bookData.volumeInfo.title}" with score: ${scoredResults[0].score.toFixed(2)}`);
-          
-          // Log all scores for debugging
-          scoredResults.forEach((result, index) => {
-            console.log(`${index + 1}. "${result.book.volumeInfo.title}" - Score: ${result.score.toFixed(2)}`);
-          });
-          
-        } else {
-          console.log("No matching book found on Google Books.");
+      // Priority 2: Enhanced text-based search if no ISBN match
+      if (!bookData) {
+        // Create a more targeted search query
+        let searchQuery = text;
+        if (extractedInfo.title) {
+          searchQuery = extractedInfo.title;
+          if (extractedInfo.author) {
+            searchQuery += ` ${extractedInfo.author}`;
+          }
         }
-      } else {
-        console.error(
-          `Google Books API error: ${booksResponse.status} ${booksResponse.statusText}`,
-          await booksResponse.text()
+        
+        console.log(`Using text search query: "${searchQuery}"`);
+        console.log("Sending request to Google Books API for multiple results...");
+        const booksResponse = await fetch(
+          `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(
+            searchQuery
+          )}&maxResults=20&key=${apiKey}`
         );
+        console.log(`Google Books API responded with status: ${booksResponse.status}`);
+
+        if (booksResponse.ok) {
+          const booksResult = await booksResponse.json();
+          if (booksResult.items && booksResult.items.length > 0) {
+            console.log(`Found ${booksResult.items.length} potential matches, scoring them...`);
+            
+            // Score all results and find the best match
+            const scoredResults = booksResult.items.map(book => ({
+              book,
+              score: scoreBookResult(book, text, extractedInfo)
+            }));
+            
+            // Sort by score (highest first)
+            scoredResults.sort((a, b) => b.score - a.score);
+            
+            // Take the highest scoring result
+            bookData = scoredResults[0].book;
+            console.log(`Best match: "${bookData.volumeInfo.title}" with score: ${scoredResults[0].score.toFixed(2)}`);
+            
+            // Log all scores for debugging
+            scoredResults.slice(0, 5).forEach((result, index) => {
+              console.log(`${index + 1}. "${result.book.volumeInfo.title}" - Score: ${result.score.toFixed(2)}`);
+            });
+            
+          } else {
+            console.log("No matching book found on Google Books.");
+          }
+        } else {
+          console.error(
+            `Google Books API error: ${booksResponse.status} ${booksResponse.statusText}`,
+            await booksResponse.text()
+          );
+        }
       }
     }
 
     console.log("Function completed successfully. Sending response.");
-    return new Response(JSON.stringify({ text, book: bookData }), {
+    return new Response(JSON.stringify({ 
+      text, 
+      book: bookData,
+      analysisData: {
+        logos: logos.length,
+        objects: objects.length,
+        extractedISBNs: extractedInfo?.isbns || [],
+        dominantColors: imageProperties?.dominantColors?.colors?.slice(0, 3) || []
+      }
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
