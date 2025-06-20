@@ -28,7 +28,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Slider } from "@/components/ui/slider";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2 } from "lucide-react";
 
@@ -51,6 +50,9 @@ export function LogProgressDialog({ book, children }: LogProgressDialogProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Use book's page count or default to 500 if not available
+  const maxPages = book.page_count || 500;
 
   const form = useForm<z.infer<typeof logProgressSchema>>({
     resolver: zodResolver(logProgressSchema),
@@ -133,7 +135,10 @@ export function LogProgressDialog({ book, children }: LogProgressDialogProps) {
         <DialogHeader>
           <DialogTitle>Log Progress for {book.title}</DialogTitle>
           <DialogDescription>
-            {book.page_count ? `You are on page ${currentPage} of ${book.page_count}.` : 'Update your reading progress.'}
+            {book.page_count 
+              ? `You are on page ${currentPage} of ${book.page_count}.` 
+              : `You are on page ${currentPage}. (Page count estimated at ${maxPages})`
+            }
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -145,24 +150,18 @@ export function LogProgressDialog({ book, children }: LogProgressDialogProps) {
                 <FormItem>
                   <FormLabel>Current Page</FormLabel>
                   <FormControl>
-                    {book.page_count ? (
-                      <Slider
-                        max={book.page_count}
-                        step={1}
-                        value={[field.value]}
-                        onValueChange={(value) => field.onChange(value[0])}
-                      />
-                    ) : (
-                      <Input
-                        type="number"
-                        min={0}
-                        placeholder="Enter current page number"
-                        value={field.value}
-                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                      />
-                    )}
+                    <Slider
+                      max={maxPages}
+                      step={1}
+                      value={[field.value]}
+                      onValueChange={(value) => field.onChange(value[0])}
+                    />
                   </FormControl>
-                  {!book.page_count && <p className="text-xs text-muted-foreground">Enter the page number you're currently on.</p>}
+                  {!book.page_count && (
+                    <p className="text-xs text-muted-foreground">
+                      Page count not available - using estimated maximum of {maxPages} pages.
+                    </p>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}

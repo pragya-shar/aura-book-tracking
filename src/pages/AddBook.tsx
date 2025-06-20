@@ -36,9 +36,26 @@ const AddBook = () => {
     mutationFn: async (bookData: TablesInsert<'books'>) => {
       if (!user) throw new Error("User not authenticated");
       
+      // Ensure we have page count, if not try to fetch it from Google Books API
+      let finalBookData = { ...bookData };
+      
+      if (!finalBookData.page_count && finalBookData.gbooks_id) {
+        try {
+          const response = await fetch(`https://www.googleapis.com/books/v1/volumes/${finalBookData.gbooks_id}`);
+          if (response.ok) {
+            const bookInfo = await response.json();
+            if (bookInfo.volumeInfo?.pageCount) {
+              finalBookData.page_count = bookInfo.volumeInfo.pageCount;
+            }
+          }
+        } catch (error) {
+          console.log('Could not fetch additional book info:', error);
+        }
+      }
+      
       const { data, error } = await supabase
         .from('books')
-        .insert({ ...bookData, user_id: user.id });
+        .insert({ ...finalBookData, user_id: user.id });
         
       if (error) {
         if (error.code === '23505') { // Unique constraint violation
