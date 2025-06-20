@@ -32,6 +32,26 @@ function calculateSimilarity(str1: string, str2: string): number {
   return maxLength > 0 ? (maxLength - distance) / maxLength : 1;
 }
 
+// Enhanced function to check if strings contain similar words
+function calculateWordSimilarity(str1: string, str2: string): number {
+  const words1 = str1.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+  const words2 = str2.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+  
+  if (words1.length === 0 || words2.length === 0) return 0;
+  
+  let matchCount = 0;
+  for (const word1 of words1) {
+    for (const word2 of words2) {
+      if (word1.includes(word2) || word2.includes(word1) || calculateSimilarity(word1, word2) > 0.7) {
+        matchCount++;
+        break;
+      }
+    }
+  }
+  
+  return matchCount / Math.max(words1.length, words2.length);
+}
+
 // Function to extract likely title and author from detected text
 function extractBookInfo(text: string): { title: string; author: string; cleanedText: string } {
   const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
@@ -85,63 +105,68 @@ function scoreBookResult(book: any, detectedText: string, extractedInfo: { title
   let score = 0;
   const volumeInfo = book.volumeInfo || {};
   
-  // Text similarity scoring (40% of total score)
+  // Text similarity scoring (70% of total score) - INCREASED WEIGHT
   const bookTitle = (volumeInfo.title || '').toLowerCase();
   const bookAuthors = (volumeInfo.authors || []).join(' ').toLowerCase();
   const detectedLower = detectedText.toLowerCase();
   
+  // Title matching (most important - 40% of total score)
   if (extractedInfo.title) {
     const titleSimilarity = calculateSimilarity(extractedInfo.title.toLowerCase(), bookTitle);
-    score += titleSimilarity * 25;
+    const titleWordSimilarity = calculateWordSimilarity(extractedInfo.title.toLowerCase(), bookTitle);
+    const bestTitleMatch = Math.max(titleSimilarity, titleWordSimilarity);
+    score += bestTitleMatch * 40;
+    console.log(`Title match for "${bookTitle}": ${bestTitleMatch.toFixed(2)} (char: ${titleSimilarity.toFixed(2)}, word: ${titleWordSimilarity.toFixed(2)})`);
   }
   
+  // Author matching (15% of total score)
   if (extractedInfo.author && bookAuthors) {
     const authorSimilarity = calculateSimilarity(extractedInfo.author.toLowerCase(), bookAuthors);
-    score += authorSimilarity * 15;
+    const authorWordSimilarity = calculateWordSimilarity(extractedInfo.author.toLowerCase(), bookAuthors);
+    const bestAuthorMatch = Math.max(authorSimilarity, authorWordSimilarity);
+    score += bestAuthorMatch * 15;
+    console.log(`Author match for "${bookTitle}": ${bestAuthorMatch.toFixed(2)}`);
   }
   
-  // Overall text similarity
-  const textSimilarity = calculateSimilarity(extractedInfo.cleanedText.toLowerCase(), (bookTitle + ' ' + bookAuthors));
-  score += textSimilarity * 10;
+  // Overall text similarity (15% of total score)
+  const textSimilarity = calculateWordSimilarity(extractedInfo.cleanedText.toLowerCase(), (bookTitle + ' ' + bookAuthors));
+  score += textSimilarity * 15;
   
-  // Publication date recency (20% of total score)
+  // Publication date recency (15% of total score) - REDUCED WEIGHT
   const publishedDate = volumeInfo.publishedDate;
   if (publishedDate) {
     const year = parseInt(publishedDate.substring(0, 4));
     const currentYear = new Date().getFullYear();
     if (year >= 2000) {
-      score += Math.min(20, (year - 2000) / (currentYear - 2000) * 20);
+      score += Math.min(15, (year - 2000) / (currentYear - 2000) * 15);
     } else if (year >= 1990) {
-      score += 10;
+      score += 8;
     } else if (year >= 1980) {
-      score += 5;
+      score += 4;
     }
   }
   
-  // Cover image availability and quality (20% of total score)
+  // Cover image availability and quality (10% of total score) - REDUCED WEIGHT
   const imageLinks = volumeInfo.imageLinks;
   if (imageLinks) {
-    if (imageLinks.extraLarge) score += 20;
-    else if (imageLinks.large) score += 15;
-    else if (imageLinks.medium) score += 12;
-    else if (imageLinks.thumbnail) score += 8;
-    else if (imageLinks.smallThumbnail) score += 5;
+    if (imageLinks.extraLarge) score += 10;
+    else if (imageLinks.large) score += 8;
+    else if (imageLinks.medium) score += 6;
+    else if (imageLinks.thumbnail) score += 4;
+    else if (imageLinks.smallThumbnail) score += 2;
   }
   
-  // Metadata completeness (20% of total score)
+  // Metadata completeness (5% of total score) - REDUCED WEIGHT
   let completenessScore = 0;
-  if (volumeInfo.title) completenessScore += 3;
-  if (volumeInfo.authors && volumeInfo.authors.length > 0) completenessScore += 3;
-  if (volumeInfo.description) completenessScore += 4;
-  if (volumeInfo.pageCount) completenessScore += 2;
-  if (volumeInfo.publisher) completenessScore += 2;
-  if (volumeInfo.categories && volumeInfo.categories.length > 0) completenessScore += 2;
-  if (volumeInfo.averageRating) completenessScore += 2;
-  if (volumeInfo.ratingsCount) completenessScore += 2;
+  if (volumeInfo.title) completenessScore += 1;
+  if (volumeInfo.authors && volumeInfo.authors.length > 0) completenessScore += 1;
+  if (volumeInfo.description) completenessScore += 1;
+  if (volumeInfo.pageCount) completenessScore += 1;
+  if (volumeInfo.publisher) completenessScore += 1;
   
   score += completenessScore;
   
-  console.log(`Book "${bookTitle}" scored: ${score.toFixed(2)} (text: ${textSimilarity.toFixed(2)}, date: ${publishedDate}, images: ${!!imageLinks})`);
+  console.log(`Book "${bookTitle}" scored: ${score.toFixed(2)} (title: ${extractedInfo.title ? 'detected' : 'none'}, author: ${extractedInfo.author ? 'detected' : 'none'}, date: ${publishedDate}, images: ${!!imageLinks})`);
   
   return score;
 }
@@ -218,10 +243,20 @@ serve(async (req) => {
       const extractedInfo = extractBookInfo(text);
       console.log(`Extracted info - Title: "${extractedInfo.title}", Author: "${extractedInfo.author}"`);
       
+      // Create a more targeted search query
+      let searchQuery = text;
+      if (extractedInfo.title) {
+        searchQuery = extractedInfo.title;
+        if (extractedInfo.author) {
+          searchQuery += ` ${extractedInfo.author}`;
+        }
+      }
+      
+      console.log(`Using search query: "${searchQuery}"`);
       console.log("Sending request to Google Books API for multiple results...");
       const booksResponse = await fetch(
         `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(
-          text
+          searchQuery
         )}&maxResults=10&key=${apiKey}`
       );
       console.log(`Google Books API responded with status: ${booksResponse.status}`);
