@@ -28,6 +28,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Slider } from "@/components/ui/slider";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2 } from "lucide-react";
 
@@ -65,7 +66,6 @@ export function LogProgressDialog({ book, children }: LogProgressDialogProps) {
         notes: "",
     });
   }, [book, form, isOpen]);
-
 
   const saveLogMutation = useMutation({
     mutationFn: async (values: z.infer<typeof logProgressSchema>) => {
@@ -145,15 +145,24 @@ export function LogProgressDialog({ book, children }: LogProgressDialogProps) {
                 <FormItem>
                   <FormLabel>Current Page</FormLabel>
                   <FormControl>
-                    <Slider
-                      max={book.page_count || 1000}
-                      step={1}
-                      value={[field.value]}
-                      onValueChange={(value) => field.onChange(value[0])}
-                      disabled={!book.page_count}
-                    />
+                    {book.page_count ? (
+                      <Slider
+                        max={book.page_count}
+                        step={1}
+                        value={[field.value]}
+                        onValueChange={(value) => field.onChange(value[0])}
+                      />
+                    ) : (
+                      <Input
+                        type="number"
+                        min={0}
+                        placeholder="Enter current page number"
+                        value={field.value}
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                      />
+                    )}
                   </FormControl>
-                  {!book.page_count && <p className="text-xs text-muted-foreground">Page count not available for this book.</p>}
+                  {!book.page_count && <p className="text-xs text-muted-foreground">Enter the page number you're currently on.</p>}
                   <FormMessage />
                 </FormItem>
               )}
