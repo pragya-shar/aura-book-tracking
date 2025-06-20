@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CameraCapture from '@/components/CameraCapture';
@@ -11,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import type { TablesInsert } from '@/integrations/supabase/types';
+import ISBNBarcodeScanner from '@/components/ISBNBarcodeScanner';
 
 const AddBook = () => {
   const [scannedImage, setScannedImage] = useState<string | null>(null);
@@ -98,11 +98,22 @@ const AddBook = () => {
   return (
     <div>
       <h1 className="text-3xl font-pixel tracking-widest text-amber-400">Add New Book</h1>
-      <p className="text-stone-400 font-playfair italic mt-1">Scan a book cover to add it to your library with enhanced visual recognition.</p>
+      <p className="text-stone-400 font-playfair italic mt-1">Scan a book cover or ISBN barcode to add it to your library with enhanced visual recognition.</p>
       
       <div className="mt-6 space-y-6">
         {!scannedImage && (
-          <CameraCapture onCapture={handleCapture} />
+          <div className="space-y-4">
+            <div>
+              <h2 className="text-xl font-pixel text-amber-400 mb-3">Scanning Options</h2>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <CameraCapture onCapture={handleCapture} />
+                <ISBNBarcodeScanner onCapture={handleCapture} />
+              </div>
+              <p className="text-xs text-stone-500 mt-2 font-playfair italic">
+                Use "Scan with Camera" for book covers or "Scan ISBN Barcode" for precise barcode detection
+              </p>
+            </div>
+          </div>
         )}
         
         {scannedImage && (
