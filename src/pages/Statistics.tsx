@@ -2,7 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2, BarChart as BarChartIcon } from 'lucide-react';
+import { Loader2, BarChart as BarChartIcon, Clock } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -40,7 +40,7 @@ const Statistics = () => {
 
       if (booksError) throw booksError;
       if (!readBooks || readBooks.length === 0) {
-        return { timeToFinishData: [], genreData: [], authorData: [] };
+        return { averageDays: 0, genreData: [], authorData: [] };
       }
 
       const bookIds = readBooks.map((b) => b.id);
@@ -70,12 +70,13 @@ const Statistics = () => {
           if (startDate && finishDate) {
             days = differenceInDays(new Date(finishDate), new Date(startDate));
           }
-          return {
-            title: book.title,
-            days: days > 0 ? days : 1,
-          };
+          return days > 0 ? days : 1;
         })
-        .filter(b => b.days > 0);
+        .filter(days => days > 0);
+
+      const averageDays = timeToFinishData.length > 0 
+        ? Math.round(timeToFinishData.reduce((sum, days) => sum + days, 0) / timeToFinishData.length)
+        : 0;
 
       const genreCounts = new Map<string, number>();
       readBooks.forEach((book) => {
@@ -97,21 +98,16 @@ const Statistics = () => {
       });
       const authorData = Array.from(authorCounts.entries()).map(([name, value]) => ({ name, value }));
 
-      return { timeToFinishData, genreData, authorData };
+      return { averageDays, genreData, authorData };
     },
     enabled: !!user,
   });
   
-  const timeToFinishConfig = {
-    days: { label: "Days", color: "hsl(var(--chart-1))" },
-  } satisfies ChartConfig;
-
   const authorChartConfig = {
     value: { label: "Books", color: "hsl(var(--chart-2))" },
   } satisfies ChartConfig;
   
   const genreColors = ['#FBBF24', '#F59E0B', '#D97706', '#B45309', '#92400E', '#78350F'];
-
 
   if (isLoading) {
     return <div className="flex justify-center items-center h-64"><Loader2 className="h-8 w-8 animate-spin text-amber-500" /></div>
@@ -121,7 +117,7 @@ const Statistics = () => {
     return <Alert variant="destructive" className="mt-6"><AlertTitle>Error loading statistics</AlertTitle><AlertDescription>{error.message}</AlertDescription></Alert>
   }
 
-  if (!statsData || (statsData.timeToFinishData.length === 0 && statsData.genreData.length === 0 && statsData.authorData.length === 0)) {
+  if (!statsData || (statsData.averageDays === 0 && statsData.genreData.length === 0 && statsData.authorData.length === 0)) {
     return (
       <div>
         <h1 className="text-3xl font-pixel tracking-widest text-amber-400">Statistics</h1>
@@ -144,20 +140,26 @@ const Statistics = () => {
       <p className="text-stone-400 font-playfair italic mt-1">Analyzing the archives of your reading history.</p>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-        {statsData.timeToFinishData.length > 0 && (
+        {statsData.averageDays > 0 && (
           <Card className="bg-black/30 border border-amber-500/30 text-stone-300">
-            <CardHeader><CardTitle className="font-playfair text-amber-400">Time to Finish Books</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle className="font-playfair text-amber-400 flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Average Reading Time
+              </CardTitle>
+            </CardHeader>
             <CardContent>
-              <ChartContainer config={timeToFinishConfig} className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={statsData.timeToFinishData} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
-                    <XAxis dataKey="title" tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" fontSize={12} interval={0} hide />
-                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                    <Tooltip cursor={{ fill: 'hsl(var(--muted))' }} content={<ChartTooltipContent indicator="dot" />} />
-                    <Bar dataKey="days" fill="var(--color-days)" radius={4} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </ChartContainer>
+              <div className="text-center py-8">
+                <div className="text-4xl font-pixel text-amber-400 mb-2">
+                  {statsData.averageDays}
+                </div>
+                <div className="text-lg text-stone-300 font-playfair">
+                  {statsData.averageDays === 1 ? 'day' : 'days'} per book
+                </div>
+                <p className="text-sm text-stone-400 mt-2 font-playfair italic">
+                  Your average time to complete a book
+                </p>
+              </div>
             </CardContent>
           </Card>
         )}
