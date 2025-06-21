@@ -139,8 +139,8 @@ const ReadingProgress = () => {
           {!isLoading && !isError && books && books.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-6">
               {books.map(book => {
-                // Use actual page count if available, otherwise use estimated 500
-                const maxPages = book.page_count && book.page_count > 0 ? book.page_count : 500;
+                // Use actual page count if available, otherwise use estimated 300
+                const maxPages = book.page_count && book.page_count > 0 ? book.page_count : 300;
                 const currentPage = book.latestLog?.current_page || 0;
                 const progress = Math.round((currentPage / maxPages) * 100);
 
