@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Loader2, BookOpen, PlusCircle, MoreHorizontal, Trash2, Check } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +20,7 @@ const BookCard = ({ book }: { book: Tables<'books'> }) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const updateBookStatusMutation = useMutation({
     mutationFn: async ({ bookId, status }: { bookId: string, status: 'to-read' | 'reading' | 'read' }) => {
@@ -64,9 +65,17 @@ const BookCard = ({ book }: { book: Tables<'books'> }) => {
     return null;
   }
 
+  const handleCardClick = () => {
+    navigate('/progress');
+  };
+
+  const handleDropdownClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
+
   return (
-    <Card className="flex flex-col bg-black/30 border border-amber-500/30 text-stone-300 hover:border-amber-500/60 transition-colors duration-300 group relative">
-       <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+    <Card className="flex flex-col bg-black/30 border border-amber-500/30 text-stone-300 hover:border-amber-500/60 transition-colors duration-300 group relative cursor-pointer" onClick={handleCardClick}>
+       <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity" onClick={handleDropdownClick}>
          <DropdownMenu>
            <DropdownMenuTrigger asChild>
              <Button variant="ghost" size="icon" className="h-8 w-8 bg-black/50 hover:bg-black/80 text-stone-300 hover:text-amber-400">
