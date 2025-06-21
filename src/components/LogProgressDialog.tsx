@@ -28,7 +28,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Slider } from "@/components/ui/slider";
-import { Textarea } from "@/components/ui/textarea";
 import { Loader2 } from "lucide-react";
 
 type BookWithProgress = Tables<'books'> & {
@@ -42,7 +41,6 @@ interface LogProgressDialogProps {
 
 const logProgressSchema = z.object({
   currentPage: z.number().min(0),
-  notes: z.string().optional(),
 });
 
 export function LogProgressDialog({ book, children }: LogProgressDialogProps) {
@@ -58,14 +56,12 @@ export function LogProgressDialog({ book, children }: LogProgressDialogProps) {
     resolver: zodResolver(logProgressSchema),
     defaultValues: {
       currentPage: book.latestLog?.current_page || 0,
-      notes: "",
     },
   });
   
   React.useEffect(() => {
     form.reset({
         currentPage: book.latestLog?.current_page || 0,
-        notes: "",
     });
   }, [book, form, isOpen]);
 
@@ -78,7 +74,7 @@ export function LogProgressDialog({ book, children }: LogProgressDialogProps) {
         user_id: user.id,
         book_id: book.id,
         current_page: values.currentPage,
-        notes: values.notes,
+        notes: null,
       });
 
       if (error) throw error;
@@ -162,19 +158,6 @@ export function LogProgressDialog({ book, children }: LogProgressDialogProps) {
                       Page count not available - using estimated maximum of {maxPages} pages.
                     </p>
                   )}
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Notes (Optional)</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Any thoughts on what you just read?" {...field} />
-                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
