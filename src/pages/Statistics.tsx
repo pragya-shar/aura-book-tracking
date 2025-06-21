@@ -2,7 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2, BarChart as BarChartIcon, Clock } from 'lucide-react';
+import { Loader2, BarChart as BarChartIcon, Clock, BookOpen } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -106,6 +106,10 @@ const Statistics = () => {
   const authorChartConfig = {
     value: { label: "Books", color: "hsl(var(--chart-2))" },
   } satisfies ChartConfig;
+
+  const genreChartConfig = {
+    value: { label: "Books", color: "hsl(var(--chart-1))" },
+  } satisfies ChartConfig;
   
   const genreColors = ['#FBBF24', '#F59E0B', '#D97706', '#B45309', '#92400E', '#78350F'];
 
@@ -166,26 +170,35 @@ const Statistics = () => {
 
         {statsData.genreData.length > 0 && (
           <Card className="bg-black/30 border border-amber-500/30 text-stone-300">
-            <CardHeader><CardTitle className="font-playfair text-amber-400">Books by Genre</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle className="font-playfair text-amber-400 flex items-center gap-2">
+                <BookOpen className="h-5 w-5" />
+                Genre Distribution
+              </CardTitle>
+            </CardHeader>
             <CardContent>
-              <ChartContainer config={{}} className="h-80 mx-auto">
+              <ChartContainer config={genreChartConfig} className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie data={statsData.genreData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} labelLine={false} label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
-                        const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-                        const x = cx + radius * Math.cos(-midAngle * (Math.PI / 180));
-                        const y = cy + radius * Math.sin(-midAngle * (Math.PI / 180));
-                        return (<text x={x} y={y} fill="white" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central">
-                            {`${(percent * 100).toFixed(0)}%`}
-                        </text>);
-                    }}>
-                      {statsData.genreData.map((_entry, index) => (
-                        <Cell key={`cell-${index}`} fill={genreColors[index % genreColors.length]} />
-                      ))}
-                    </Pie>
+                  <BarChart data={statsData.genreData} margin={{ top: 20, right: 20, bottom: 60, left: 20 }}>
+                    <XAxis 
+                      dataKey="name" 
+                      tickLine={false} 
+                      axisLine={false} 
+                      stroke="hsl(var(--muted-foreground))" 
+                      fontSize={12} 
+                      interval={0}
+                      angle={-45}
+                      textAnchor="end"
+                      height={60}
+                    />
+                    <YAxis 
+                      stroke="hsl(var(--muted-foreground))" 
+                      fontSize={12} 
+                      allowDecimals={false} 
+                    />
                     <Tooltip cursor={{ fill: 'hsl(var(--muted))' }} content={<ChartTooltipContent />} />
-                    <Legend />
-                  </PieChart>
+                    <Bar dataKey="value" name="Books" fill="var(--color-value)" radius={4} />
+                  </BarChart>
                 </ResponsiveContainer>
               </ChartContainer>
             </CardContent>
