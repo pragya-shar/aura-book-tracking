@@ -124,69 +124,6 @@ const Auth = () => {
       <div className="z-50 w-full max-w-sm sm:max-w-md relative">
         <Tabs defaultValue="login">
           <TabsList className="grid w-full grid-cols-2 bg-black/95 backdrop-blur-md border-2 border-amber-500/70 rounded-b-none relative overflow-visible shadow-2xl shadow-amber-500/30 z-50">
-            {/* Hanging fairy lights */}
-            <div className="absolute -top-2 left-0 right-0 z-40 overflow-visible">
-              {/* Main wire across the top */}
-              <div className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-amber-800/60 to-transparent"></div>
-              
-              {/* Individual hanging lights */}
-              {[...Array(12)].map((_, i) => {
-                const hangLength = 15 + Math.random() * 20; // Random hang length 15-35px
-                const xPosition = 8 + (i * (100 - 16) / 11); // Distribute evenly across width
-                
-                return (
-                  <div
-                    key={`hanging-light-${i}`}
-                    className="absolute"
-                    style={{
-                      left: `${xPosition}%`,
-                      top: '0px',
-                    }}
-                  >
-                    {/* Hanging wire */}
-                    <div
-                      className="absolute w-px bg-amber-800/40"
-                      style={{
-                        height: `${hangLength}px`,
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                      }}
-                    />
-                    
-                    {/* Light bulb at end of wire */}
-                    <div
-                      className="absolute"
-                      style={{
-                        top: `${hangLength}px`,
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                      }}
-                    >
-                      {/* Main light bulb */}
-                      <div
-                        className="w-3 h-3 bg-yellow-50 rounded-full animate-pulse border border-yellow-100"
-                        style={{
-                          animationDelay: `${i * 0.2}s`,
-                          animationDuration: `${2 + Math.random() * 0.5}s`,
-                          boxShadow: '0 0 8px #fef3c7, 0 0 16px #fbbf24, 0 0 24px #f59e0b',
-                          background: 'radial-gradient(circle, #fffbeb 0%, #fef3c7 40%, #fbbf24 100%)'
-                        }}
-                      />
-                      {/* Outer glow effect */}
-                      <div
-                        className="absolute inset-0 w-6 h-6 -translate-x-1.5 -translate-y-1.5 rounded-full opacity-40 animate-pulse"
-                        style={{
-                          background: 'radial-gradient(circle, transparent 20%, #fbbf24 40%, transparent 80%)',
-                          animationDelay: `${i * 0.2}s`,
-                          animationDuration: `${2.5 + Math.random() * 0.3}s`,
-                        }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            
             <TabsTrigger value="login" className="data-[state=active]:bg-amber-500/30 data-[state=active]:text-amber-200 text-stone-200 font-medium z-50 relative">Login</TabsTrigger>
             <TabsTrigger value="signup" className="data-[state=active]:bg-amber-500/30 data-[state=active]:text-amber-200 text-stone-200 font-medium z-50 relative">Sign Up</TabsTrigger>
           </TabsList>
