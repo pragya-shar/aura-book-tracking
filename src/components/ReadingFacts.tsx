@@ -3,13 +3,32 @@ import React from 'react';
 import TypewriterText from './TypewriterText';
 
 const ReadingFacts = () => {
-  const fact = "World's tallest book is over 6 feet tall. The \"Collection of Maritime Rules\" is stored in the Amsterdam Museum - it's about 6.4 feet high and over 3 feet wide!";
+  const facts = [
+    "World's tallest book is over 6 feet tall. The \"Collection of Maritime Rules\" is stored in the Amsterdam Museum - it's about 6.4 feet high and over 3 feet wide!",
+    "The smallest book in the world is 'Teeny Ted from Turnip Town' - it's only 70 micrometers by 100 micrometers and requires a microscope to read!",
+    "The most expensive book ever sold was Leonardo da Vinci's 'Codex Leicester' for $30.8 million in 1994, purchased by Bill Gates.",
+    "Iceland publishes more books per capita than any other country - about 5 books per 1,000 people annually!",
+    "The Harry Potter series has been translated into 80 languages, making it one of the most translated book series in history.",
+    "Ancient libraries used chains to prevent book theft - books were literally chained to reading desks!",
+    "The longest novel ever written is 'In Search of Lost Time' by Marcel Proust, containing approximately 1.5 million words.",
+    "Before paper, books were written on materials like papyrus, parchment, and even clay tablets that could weigh up to 30 pounds!",
+    "The Bible is the most shoplifted book in the world, despite being freely available in many places.",
+    "Speed reading champion Howard Berg can read at 25,000 words per minute - that's an entire novel in under 10 minutes!"
+  ];
+
+  // Generate a random fact based on current time to ensure it changes
+  const getRandomFact = () => {
+    const randomIndex = Math.floor(Math.random() * facts.length);
+    return facts[randomIndex];
+  };
+
+  const selectedFact = getRandomFact();
 
   return (
     <div className="mb-8 z-10 px-4 max-w-2xl mx-auto">
       <div className="bg-amber-900/10 border border-amber-500/20 rounded-lg p-4 backdrop-blur-sm">
         <TypewriterText 
-          text={fact}
+          text={selectedFact}
           delay={0}
           speed={30}
           className="text-amber-300/90 text-sm md:text-base font-serif italic text-center leading-relaxed"
