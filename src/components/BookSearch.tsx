@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
-import { Search, Filter, X } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { Filter, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -83,24 +82,14 @@ export const BookSearch = ({ onFiltersChange, availableGenres, availableAuthors,
     updateFilters({ tags: filters.tags.filter(t => t !== tag) });
   };
 
-  const hasActiveFilters = filters.search || filters.status || filters.genre || filters.author || 
+  const hasActiveFilters = filters.status || filters.genre || filters.author || 
     filters.rating[0] > 1 || filters.rating[1] < 5 || filters.pageCount[0] > 0 || filters.pageCount[1] < 1000 ||
     filters.publicationYear[0] > 1900 || filters.publicationYear[1] < new Date().getFullYear() ||
     filters.tags.length > 0 || filters.favorite !== null;
 
   return (
     <div className="space-y-4 p-4 bg-black/20 border border-amber-500/20 rounded-lg">
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-stone-400 h-4 w-4" />
-          <Input
-            placeholder="Search books, authors, or descriptions..."
-            value={filters.search}
-            onChange={(e) => updateFilters({ search: e.target.value })}
-            className="pl-10 bg-black/30 border-amber-500/30 text-stone-300 placeholder:text-stone-500"
-          />
-        </div>
-        
+      <div className="flex justify-center">
         <Popover>
           <PopoverTrigger asChild>
             <Button variant="outline" className="border-amber-500/30 text-stone-300 hover:bg-amber-500/10">
@@ -237,12 +226,6 @@ export const BookSearch = ({ onFiltersChange, availableGenres, availableAuthors,
 
       {hasActiveFilters && (
         <div className="flex flex-wrap gap-2">
-          {filters.search && (
-            <Badge variant="outline" className="border-amber-500/30 text-stone-300">
-              Search: "{filters.search}"
-              <X className="h-3 w-3 ml-1 cursor-pointer" onClick={() => updateFilters({ search: '' })} />
-            </Badge>
-          )}
           {filters.status && (
             <Badge variant="outline" className="border-amber-500/30 text-stone-300">
               Status: {filters.status}
