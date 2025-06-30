@@ -40,7 +40,7 @@ const CascadingBookTitles = () => {
       {bookTitles.map((title, index) => (
         <div
           key={title}
-          className="absolute select-none text-amber-300/40 font-serif text-sm md:text-base hover:text-amber-300/60 transition-colors duration-300"
+          className="absolute select-none text-amber-300/50 font-serif text-sm md:text-base hover:text-amber-300/80 transition-colors duration-300 font-medium"
           style={{
             left: `${(index * 37) % 100}%`,
             top: `-${Math.floor(index / 3) * 50}px`,
@@ -50,7 +50,7 @@ const CascadingBookTitles = () => {
             animationIterationCount: 'infinite',
             animationName: 'cascade-fall',
             transform: `rotate(${(index % 5 - 2) * 5}deg)`,
-            textShadow: '0 0 10px rgba(251, 191, 36, 0.3), 0 0 20px rgba(251, 191, 36, 0.1)',
+            textShadow: '0 0 15px rgba(251, 191, 36, 0.4), 0 0 25px rgba(251, 191, 36, 0.2), 0 2px 4px rgba(0, 0, 0, 0.3)',
           }}
         >
           {title}
