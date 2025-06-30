@@ -6,7 +6,7 @@ import type { Tables } from '@/integrations/supabase/types';
 
 interface SearchFilters {
   search: string;
-  status: string;
+  status: '' | 'to-read' | 'reading' | 'read';
   genre: string;
   author: string;
   rating: number[];
@@ -35,7 +35,7 @@ export const useEnhancedLibrary = (filters?: SearchFilters) => {
           query = query.or(`title.ilike.%${filters.search}%,authors.cs.{${filters.search}},description.ilike.%${filters.search}%`);
         }
         
-        if (filters.status) {
+        if (filters.status && filters.status !== '') {
           query = query.eq('status', filters.status);
         }
         
