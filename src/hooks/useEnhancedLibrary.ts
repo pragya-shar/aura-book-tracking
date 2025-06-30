@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -35,7 +34,7 @@ export const useEnhancedLibrary = (filters?: SearchFilters) => {
           query = query.or(`title.ilike.%${filters.search}%,authors.cs.{${filters.search}},description.ilike.%${filters.search}%`);
         }
         
-        if (filters.status && filters.status !== '') {
+        if (filters.status && filters.status.length > 0) {
           query = query.eq('status', filters.status);
         }
         
