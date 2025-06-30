@@ -24,7 +24,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from '@/components/ui/chart';
-import { differenceInDays, format, startOfMonth, endOfMonth, eachMonthOfInterval, subMonths } from 'date-fns';
+import { differenceInDays, format, startOfMonth, endOfMonth, eachMonthOfInterval, startOfYear, endOfYear } from 'date-fns';
 
 const Statistics = () => {
   const { user } = useAuth();
@@ -124,10 +124,11 @@ const Statistics = () => {
         count 
       }));
 
-      // Monthly reading progress (last 12 months)
-      const now = new Date();
-      const twelveMonthsAgo = subMonths(now, 11);
-      const months = eachMonthOfInterval({ start: twelveMonthsAgo, end: now });
+      // Current year reading progress (January to December)
+      const currentYear = new Date().getFullYear();
+      const yearStart = startOfYear(new Date(currentYear, 0, 1));
+      const yearEnd = endOfYear(new Date(currentYear, 11, 31));
+      const months = eachMonthOfInterval({ start: yearStart, end: yearEnd });
       
       const monthlyData = months.map(month => {
         const monthStart = startOfMonth(month);
@@ -140,7 +141,7 @@ const Statistics = () => {
         });
 
         return {
-          month: format(month, 'MMM yyyy'),
+          month: format(month, 'MMM'),
           books: booksReadThisMonth.length,
           pages: booksReadThisMonth.reduce((sum, book) => sum + (book.page_count || 0), 0)
         };
@@ -160,7 +161,8 @@ const Statistics = () => {
         totalPagesRead,
         averageRating,
         readingVelocity,
-        totalBooksRead: readBooks.length
+        totalBooksRead: readBooks.length,
+        currentYear
       };
     },
     enabled: !!user,
@@ -169,8 +171,8 @@ const Statistics = () => {
   const chartConfig = {
     value: { label: "Books", color: "hsl(var(--chart-2))" },
     count: { label: "Books", color: "hsl(var(--chart-1))" },
-    books: { label: "Books", color: "hsl(var(--chart-1))" },
-    pages: { label: "Pages", color: "hsl(var(--chart-2))" },
+    books: { label: "Books", color: "#F59E0B" },
+    pages: { label: "Pages", color: "#10B981" },
   } satisfies ChartConfig;
   
   const ratingColors = ['#EF4444', '#F97316', '#EAB308', '#22C55E', '#10B981'];
@@ -221,6 +223,59 @@ const Statistics = () => {
         <h1 className="text-xl sm:text-2xl md:text-3xl font-pixel tracking-widest text-amber-400">Statistics</h1>
         <p className="text-stone-400 font-playfair italic mt-1 text-xs sm:text-sm md:text-base">Analyzing the archives of your reading history.</p>
       </div>
+
+      {/* Reading Progress - Prominent Display */}
+      <Card className="mb-6 bg-gradient-to-br from-amber-500/10 to-amber-600/5 border-2 border-amber-500/40 shadow-lg">
+        <CardHeader className="pb-4">
+          <CardTitle className="font-playfair text-amber-400 flex items-center gap-3 text-lg sm:text-xl">
+            <Calendar className="h-5 w-5 sm:h-6 sm:w-6" />
+            {statsData.currentYear} Reading Progress
+          </CardTitle>
+          <p className="text-stone-400 text-sm">Track your monthly reading journey this year</p>
+        </CardHeader>
+        <CardContent>
+          <ChartContainer config={chartConfig} className="h-80 sm:h-96">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={statsData.monthlyData} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                <XAxis 
+                  dataKey="month" 
+                  tickLine={false} 
+                  axisLine={false} 
+                  stroke="#A8A29E" 
+                  fontSize={12}
+                  fontWeight={500}
+                />
+                <YAxis 
+                  stroke="#A8A29E" 
+                  fontSize={12} 
+                  allowDecimals={false} 
+                  width={40}
+                  fontWeight={500}
+                />
+                <Tooltip 
+                  cursor={{ stroke: '#F59E0B', strokeWidth: 2, strokeDasharray: '5 5' }} 
+                  content={<ChartTooltipContent />}
+                  contentStyle={{
+                    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                    border: '1px solid #F59E0B',
+                    borderRadius: '8px',
+                    color: '#F3F4F6'
+                  }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="books" 
+                  stroke="#F59E0B" 
+                  strokeWidth={3} 
+                  dot={{ fill: "#F59E0B", strokeWidth: 3, r: 6 }}
+                  activeDot={{ r: 8, fill: "#F59E0B", stroke: "#1F2937", strokeWidth: 2 }}
+                  name="Books Read"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </ChartContainer>
+        </CardContent>
+      </Card>
 
       {/* Key Metrics */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6 mb-6">
@@ -284,49 +339,6 @@ const Statistics = () => {
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6 mt-4 sm:mt-6">
-        {/* Monthly Reading Progress */}
-        <Card className="lg:col-span-2 bg-black/30 border border-amber-500/30 text-stone-300">
-          <CardHeader className="pb-3 sm:pb-4 px-3 sm:px-6">
-            <CardTitle className="font-playfair text-amber-400 text-sm sm:text-base">
-              Reading Progress (Last 12 Months)
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-3 sm:px-6">
-            <ChartContainer config={chartConfig} className="h-64 sm:h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={statsData.monthlyData} margin={{ top: 20, right: 10, bottom: 40, left: 10 }}>
-                  <XAxis 
-                    dataKey="month" 
-                    tickLine={false} 
-                    axisLine={false} 
-                    stroke="hsl(var(--muted-foreground))" 
-                    fontSize={10} 
-                    interval={0}
-                    angle={-45}
-                    textAnchor="end"
-                    height={40}
-                  />
-                  <YAxis 
-                    stroke="hsl(var(--muted-foreground))" 
-                    fontSize={10} 
-                    allowDecimals={false} 
-                    width={30}
-                  />
-                  <Tooltip cursor={{ fill: 'hsl(var(--muted))' }} content={<ChartTooltipContent />} />
-                  <Line 
-                    type="monotone" 
-                    dataKey="books" 
-                    stroke="var(--color-books)" 
-                    strokeWidth={2} 
-                    dot={{ fill: "var(--color-books)", strokeWidth: 2, r: 4 }}
-                    name="Books"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-
         {/* Rating Distribution */}
         {statsData.ratingData.length > 0 && (
           <Card className="bg-black/30 border border-amber-500/30 text-stone-300">
