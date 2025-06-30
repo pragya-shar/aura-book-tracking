@@ -50,6 +50,7 @@ const CascadingBookTitles = () => {
             animationIterationCount: 'infinite',
             animationName: 'cascade-fall',
             transform: `rotate(${(index % 5 - 2) * 5}deg)`,
+            textShadow: '0 0 8px rgba(251, 191, 36, 0.3), 0 0 16px rgba(251, 191, 36, 0.1)',
           }}
         >
           {title}
