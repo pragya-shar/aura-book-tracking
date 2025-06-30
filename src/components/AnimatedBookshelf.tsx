@@ -5,10 +5,14 @@ const AnimatedBookshelf = () => {
   // Generate random books with different heights, colors, and titles
   const generateBooks = () => {
     const bookColors = [
-      'bg-amber-700', 'bg-amber-800', 'bg-amber-900',
-      'bg-stone-700', 'bg-stone-800', 'bg-stone-900',
-      'bg-yellow-800', 'bg-orange-800', 'bg-red-900',
-      'bg-green-900', 'bg-blue-900', 'bg-purple-900'
+      'bg-red-500', 'bg-red-600', 'bg-red-700',
+      'bg-blue-500', 'bg-blue-600', 'bg-blue-700',
+      'bg-green-500', 'bg-green-600', 'bg-green-700',
+      'bg-purple-500', 'bg-purple-600', 'bg-purple-700',
+      'bg-yellow-500', 'bg-yellow-600', 'bg-orange-500',
+      'bg-orange-600', 'bg-pink-500', 'bg-pink-600',
+      'bg-indigo-500', 'bg-indigo-600', 'bg-teal-500',
+      'bg-teal-600', 'bg-emerald-500', 'bg-emerald-600'
     ];
     
     const books = [];
@@ -45,7 +49,7 @@ const AnimatedBookshelf = () => {
               {shelf.map((book) => (
                 <div
                   key={book.id}
-                  className={`${book.color} border border-amber-500/20 animate-pulse`}
+                  className={`${book.color} border border-white/20 animate-pulse shadow-sm`}
                   style={{
                     width: `${book.width}px`,
                     height: `${book.height}px`,
@@ -55,26 +59,26 @@ const AnimatedBookshelf = () => {
                 />
               ))}
             </div>
-            {/* Warm yellow fairy lights with realistic glow */}
+            {/* Smaller warm yellow fairy lights */}
             <div className="absolute top-2 left-0 right-0 flex justify-between px-6">
               {[...Array(8)].map((_, lightIndex) => (
                 <div
                   key={`left-light-${shelfIndex}-${lightIndex}`}
                   className="relative"
                 >
-                  {/* Main light bulb */}
+                  {/* Main light bulb - smaller */}
                   <div
-                    className="w-3 h-3 bg-yellow-50 rounded-full animate-pulse border border-yellow-100"
+                    className="w-2 h-2 bg-yellow-50 rounded-full animate-pulse border border-yellow-100"
                     style={{
                       animationDelay: `${lightIndex * 0.2 + shelfIndex * 0.5}s`,
                       animationDuration: `${2 + Math.random()}s`,
-                      boxShadow: '0 0 8px #fef3c7, 0 0 16px #fbbf24, 0 0 24px #f59e0b, 0 0 32px #d97706',
+                      boxShadow: '0 0 6px #fef3c7, 0 0 12px #fbbf24, 0 0 18px #f59e0b',
                       background: 'radial-gradient(circle, #fffbeb 0%, #fef3c7 50%, #fbbf24 100%)'
                     }}
                   />
-                  {/* Outer glow effect */}
+                  {/* Outer glow effect - smaller */}
                   <div
-                    className="absolute inset-0 w-6 h-6 -translate-x-1.5 -translate-y-1.5 rounded-full opacity-60 animate-pulse"
+                    className="absolute inset-0 w-4 h-4 -translate-x-1 -translate-y-1 rounded-full opacity-60 animate-pulse"
                     style={{
                       background: 'radial-gradient(circle, transparent 30%, #fbbf24 50%, transparent 70%)',
                       animationDelay: `${lightIndex * 0.2 + shelfIndex * 0.5}s`,
@@ -96,7 +100,7 @@ const AnimatedBookshelf = () => {
               {shelf.map((book) => (
                 <div
                   key={book.id}
-                  className={`${book.color} border border-amber-500/20 animate-pulse`}
+                  className={`${book.color} border border-white/20 animate-pulse shadow-sm`}
                   style={{
                     width: `${book.width}px`,
                     height: `${book.height}px`,
@@ -106,26 +110,26 @@ const AnimatedBookshelf = () => {
                 />
               ))}
             </div>
-            {/* Warm yellow fairy lights with realistic glow */}
+            {/* Smaller warm yellow fairy lights */}
             <div className="absolute top-2 left-0 right-0 flex justify-between px-6">
               {[...Array(8)].map((_, lightIndex) => (
                 <div
                   key={`right-light-${shelfIndex}-${lightIndex}`}
                   className="relative"
                 >
-                  {/* Main light bulb */}
+                  {/* Main light bulb - smaller */}
                   <div
-                    className="w-3 h-3 bg-yellow-50 rounded-full animate-pulse border border-yellow-100"
+                    className="w-2 h-2 bg-yellow-50 rounded-full animate-pulse border border-yellow-100"
                     style={{
                       animationDelay: `${lightIndex * 0.3 + shelfIndex * 0.7}s`,
                       animationDuration: `${2.5 + Math.random()}s`,
-                      boxShadow: '0 0 8px #fef3c7, 0 0 16px #fbbf24, 0 0 24px #f59e0b, 0 0 32px #d97706',
+                      boxShadow: '0 0 6px #fef3c7, 0 0 12px #fbbf24, 0 0 18px #f59e0b',
                       background: 'radial-gradient(circle, #fffbeb 0%, #fef3c7 50%, #fbbf24 100%)'
                     }}
                   />
-                  {/* Outer glow effect */}
+                  {/* Outer glow effect - smaller */}
                   <div
-                    className="absolute inset-0 w-6 h-6 -translate-x-1.5 -translate-y-1.5 rounded-full opacity-60 animate-pulse"
+                    className="absolute inset-0 w-4 h-4 -translate-x-1 -translate-y-1 rounded-full opacity-60 animate-pulse"
                     style={{
                       background: 'radial-gradient(circle, transparent 30%, #fbbf24 50%, transparent 70%)',
                       animationDelay: `${lightIndex * 0.3 + shelfIndex * 0.7}s`,
@@ -139,7 +143,7 @@ const AnimatedBookshelf = () => {
         ))}
       </div>
 
-      {/* Connecting fairy light string with warm yellow lights */}
+      {/* Connecting fairy light string with smaller warm yellow lights */}
       <div className="absolute top-16 left-64 right-64 h-1">
         <div className="flex justify-between items-center h-full">
           {[...Array(12)].map((_, i) => (
@@ -147,19 +151,19 @@ const AnimatedBookshelf = () => {
               key={`connect-light-${i}`}
               className="relative"
             >
-              {/* Main light bulb */}
+              {/* Main light bulb - smaller */}
               <div
-                className="w-3 h-3 bg-yellow-50 rounded-full animate-pulse border border-yellow-100"
+                className="w-2 h-2 bg-yellow-50 rounded-full animate-pulse border border-yellow-100"
                 style={{
                   animationDelay: `${i * 0.15}s`,
                   animationDuration: `${1.5 + Math.random() * 0.5}s`,
-                  boxShadow: '0 0 10px #fef3c7, 0 0 20px #fbbf24, 0 0 30px #f59e0b, 0 0 40px #d97706',
+                  boxShadow: '0 0 6px #fef3c7, 0 0 12px #fbbf24, 0 0 18px #f59e0b',
                   background: 'radial-gradient(circle, #fffbeb 0%, #fef3c7 50%, #fbbf24 100%)'
                 }}
               />
-              {/* Outer glow effect */}
+              {/* Outer glow effect - smaller */}
               <div
-                className="absolute inset-0 w-6 h-6 -translate-x-1.5 -translate-y-1.5 rounded-full opacity-50 animate-pulse"
+                className="absolute inset-0 w-4 h-4 -translate-x-1 -translate-y-1 rounded-full opacity-50 animate-pulse"
                 style={{
                   background: 'radial-gradient(circle, transparent 30%, #fbbf24 50%, transparent 70%)',
                   animationDelay: `${i * 0.15}s`,
