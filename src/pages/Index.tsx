@@ -1,8 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import ParticleSystem from "@/components/ParticleSystem";
 import TypewriterText from "@/components/TypewriterText";
 import InteractiveButton from "@/components/InteractiveButton";
+import CascadingBookTitles from "@/components/CascadingBookTitles";
 
 const Index = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -31,6 +31,9 @@ const Index = () => {
       
       {/* Softer vignette effect */}
       <div className="absolute inset-0 bg-black/20 [mask-image:radial-gradient(ellipse_at_center,transparent_40%,black)] animate-pulse" style={{ animationDuration: '4s' }}></div>
+
+      {/* Cascading Book Titles */}
+      <CascadingBookTitles />
 
       {/* Particle System */}
       <ParticleSystem />
