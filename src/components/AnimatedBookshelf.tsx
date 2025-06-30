@@ -5,22 +5,24 @@ const AnimatedBookshelf = () => {
   // Generate random books with different heights, colors, and titles
   const generateBooks = () => {
     const bookColors = [
-      'bg-red-500', 'bg-red-600', 'bg-red-700',
-      'bg-blue-500', 'bg-blue-600', 'bg-blue-700',
-      'bg-green-500', 'bg-green-600', 'bg-green-700',
-      'bg-purple-500', 'bg-purple-600', 'bg-purple-700',
-      'bg-yellow-500', 'bg-yellow-600', 'bg-orange-500',
-      'bg-orange-600', 'bg-pink-500', 'bg-pink-600',
-      'bg-indigo-500', 'bg-indigo-600', 'bg-teal-500',
-      'bg-teal-600', 'bg-emerald-500', 'bg-emerald-600'
+      'bg-red-500', 'bg-red-600', 'bg-red-700', 'bg-red-800',
+      'bg-blue-500', 'bg-blue-600', 'bg-blue-700', 'bg-blue-800',
+      'bg-green-500', 'bg-green-600', 'bg-green-700', 'bg-green-800',
+      'bg-purple-500', 'bg-purple-600', 'bg-purple-700', 'bg-purple-800',
+      'bg-yellow-500', 'bg-yellow-600', 'bg-orange-500', 'bg-orange-600',
+      'bg-orange-700', 'bg-pink-500', 'bg-pink-600', 'bg-pink-700',
+      'bg-indigo-500', 'bg-indigo-600', 'bg-indigo-700', 'bg-teal-500',
+      'bg-teal-600', 'bg-teal-700', 'bg-emerald-500', 'bg-emerald-600',
+      'bg-emerald-700', 'bg-cyan-500', 'bg-cyan-600', 'bg-violet-500',
+      'bg-violet-600', 'bg-rose-500', 'bg-rose-600', 'bg-fuchsia-500'
     ];
     
     const books = [];
     for (let shelf = 0; shelf < 6; shelf++) {
       const shelfBooks = [];
-      for (let i = 0; i < 12; i++) {
+      for (let i = 0; i < 18; i++) { // Increased from 12 to 18 books per shelf
         const height = Math.random() * 40 + 60; // 60-100px height
-        const width = Math.random() * 20 + 15; // 15-35px width
+        const width = Math.random() * 15 + 12; // 12-27px width (slightly smaller to fit more)
         const color = bookColors[Math.floor(Math.random() * bookColors.length)];
         const delay = Math.random() * 5; // Random animation delay
         
@@ -44,8 +46,10 @@ const AnimatedBookshelf = () => {
       {/* Left bookshelf */}
       <div className="absolute left-0 top-0 h-full w-64 flex flex-col justify-between py-8">
         {bookShelves.slice(0, 3).map((shelf, shelfIndex) => (
-          <div key={`left-${shelfIndex}`} className="relative h-24 border-b border-amber-500/30">
-            <div className="absolute bottom-0 left-0 right-0 flex items-end justify-start gap-1 px-4">
+          <div key={`left-${shelfIndex}`} className="relative h-24">
+            {/* Wooden shelf */}
+            <div className="absolute bottom-0 left-0 right-0 h-3 bg-gradient-to-r from-amber-900 via-amber-800 to-amber-900 border-t border-amber-700 shadow-lg"></div>
+            <div className="absolute bottom-0 left-0 right-0 flex items-end justify-start gap-0.5 px-4 pb-3">
               {shelf.map((book) => (
                 <div
                   key={book.id}
@@ -95,8 +99,10 @@ const AnimatedBookshelf = () => {
       {/* Right bookshelf */}
       <div className="absolute right-0 top-0 h-full w-64 flex flex-col justify-between py-8">
         {bookShelves.slice(3, 6).map((shelf, shelfIndex) => (
-          <div key={`right-${shelfIndex}`} className="relative h-24 border-b border-amber-500/30">
-            <div className="absolute bottom-0 left-0 right-0 flex items-end justify-start gap-1 px-4">
+          <div key={`right-${shelfIndex}`} className="relative h-24">
+            {/* Wooden shelf */}
+            <div className="absolute bottom-0 left-0 right-0 h-3 bg-gradient-to-r from-amber-900 via-amber-800 to-amber-900 border-t border-amber-700 shadow-lg"></div>
+            <div className="absolute bottom-0 left-0 right-0 flex items-end justify-start gap-0.5 px-4 pb-3">
               {shelf.map((book) => (
                 <div
                   key={book.id}
