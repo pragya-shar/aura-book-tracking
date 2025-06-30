@@ -23,6 +23,70 @@ const Auth = () => {
       {/* Animated Bookshelf Background */}
       <AnimatedBookshelf />
       
+      {/* Golden Confetti with Halo Lights */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+        {[...Array(20)].map((_, i) => (
+          <div
+            key={`confetti-${i}`}
+            className="absolute animate-[cascade-fall_8s_linear_infinite]"
+            style={{
+              left: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 8}s`,
+              '--rotation': `${Math.random() * 360}deg`,
+            } as React.CSSProperties}
+          >
+            {/* Halo light effect */}
+            <div
+              className="absolute w-8 h-8 rounded-full opacity-30 animate-pulse"
+              style={{
+                background: 'radial-gradient(circle, #fbbf24 0%, transparent 70%)',
+                filter: 'blur(4px)',
+                transform: 'translate(-50%, -50%)',
+              }}
+            />
+            {/* Golden confetti piece */}
+            <div
+              className="w-3 h-3 bg-gradient-to-br from-yellow-300 via-amber-400 to-yellow-600 rounded-sm opacity-80"
+              style={{
+                boxShadow: '0 0 8px #fbbf24, 0 0 16px #f59e0b',
+                transform: `rotate(${Math.random() * 360}deg)`,
+              }}
+            />
+          </div>
+        ))}
+        
+        {/* Additional smaller confetti pieces */}
+        {[...Array(15)].map((_, i) => (
+          <div
+            key={`small-confetti-${i}`}
+            className="absolute animate-[cascade-fall_6s_linear_infinite]"
+            style={{
+              left: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 6}s`,
+              '--rotation': `${Math.random() * 360}deg`,
+            } as React.CSSProperties}
+          >
+            {/* Smaller halo */}
+            <div
+              className="absolute w-4 h-4 rounded-full opacity-20 animate-pulse"
+              style={{
+                background: 'radial-gradient(circle, #fbbf24 0%, transparent 60%)',
+                filter: 'blur(2px)',
+                transform: 'translate(-50%, -50%)',
+              }}
+            />
+            {/* Small confetti */}
+            <div
+              className="w-2 h-2 bg-gradient-to-br from-yellow-200 via-amber-300 to-yellow-500 rounded-full opacity-70"
+              style={{
+                boxShadow: '0 0 4px #fbbf24',
+                transform: `rotate(${Math.random() * 360}deg)`,
+              }}
+            />
+          </div>
+        ))}
+      </div>
+      
       {/* Softer vignette effect */}
       <div className="absolute inset-0 bg-black/20 [mask-image:radial-gradient(ellipse_at_center,transparent_40%,black)] z-0"></div>
       
