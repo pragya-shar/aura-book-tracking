@@ -55,6 +55,19 @@ const AnimatedBookshelf = () => {
                 />
               ))}
             </div>
+            {/* Fairy lights for left shelf */}
+            <div className="absolute top-2 left-0 right-0 flex justify-between px-6">
+              {[...Array(8)].map((_, lightIndex) => (
+                <div
+                  key={`left-light-${shelfIndex}-${lightIndex}`}
+                  className="w-1 h-1 bg-amber-300 rounded-full animate-pulse shadow-sm shadow-amber-300/50"
+                  style={{
+                    animationDelay: `${lightIndex * 0.2 + shelfIndex * 0.5}s`,
+                    animationDuration: `${2 + Math.random()}s`
+                  }}
+                />
+              ))}
+            </div>
           </div>
         ))}
       </div>
@@ -77,8 +90,37 @@ const AnimatedBookshelf = () => {
                 />
               ))}
             </div>
+            {/* Fairy lights for right shelf */}
+            <div className="absolute top-2 left-0 right-0 flex justify-between px-6">
+              {[...Array(8)].map((_, lightIndex) => (
+                <div
+                  key={`right-light-${shelfIndex}-${lightIndex}`}
+                  className="w-1 h-1 bg-amber-300 rounded-full animate-pulse shadow-sm shadow-amber-300/50"
+                  style={{
+                    animationDelay: `${lightIndex * 0.3 + shelfIndex * 0.7}s`,
+                    animationDuration: `${2.5 + Math.random()}s`
+                  }}
+                />
+              ))}
+            </div>
           </div>
         ))}
+      </div>
+
+      {/* Connecting fairy light strings */}
+      <div className="absolute top-16 left-64 right-64 h-1">
+        <div className="flex justify-between items-center h-full">
+          {[...Array(12)].map((_, i) => (
+            <div
+              key={`connect-light-${i}`}
+              className="w-1 h-1 bg-amber-200 rounded-full animate-pulse shadow-sm shadow-amber-200/50"
+              style={{
+                animationDelay: `${i * 0.15}s`,
+                animationDuration: `${1.5 + Math.random() * 0.5}s`
+              }}
+            />
+          ))}
+        </div>
       </div>
 
       {/* Floating book particles */}
