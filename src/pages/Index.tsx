@@ -29,11 +29,8 @@ const Index = () => {
         }}
       />
       
-      {/* Reduced film grain effect */}
-      <div className="absolute top-0 left-0 w-full h-full bg-[url('data:image/svg+xml,%3Csvg%20viewBox%3D%220%200%20200%20200%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cfilter%20id%3D%22noiseFilter%22%3E%3CfeTurbulence%20type%3D%22fractalNoise%22%20baseFrequency%3D%220.45%22%20numOctaves%3D%222%22%20stitchTiles%3D%22stitch%22/%3E%3C/filter%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20filter%3D%22url(%23noiseFilter)%22/%3E%3C/svg%3E')] opacity-2 pointer-events-none animate-pulse"></div>
-      
       {/* Softer vignette effect */}
-      <div className="absolute inset-0 bg-black/30 [mask-image:radial-gradient(ellipse_at_center,transparent_30%,black)] animate-pulse" style={{ animationDuration: '4s' }}></div>
+      <div className="absolute inset-0 bg-black/20 [mask-image:radial-gradient(ellipse_at_center,transparent_40%,black)] animate-pulse" style={{ animationDuration: '4s' }}></div>
 
       {/* Particle System */}
       <ParticleSystem />
