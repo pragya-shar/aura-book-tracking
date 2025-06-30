@@ -92,39 +92,68 @@ const Auth = () => {
       
       <div className="z-10 w-full max-w-sm sm:max-w-md relative">
         <Tabs defaultValue="login">
-          <TabsList className="grid w-full grid-cols-2 bg-black/30 border border-amber-500/30 rounded-b-none relative">
-            {/* Fairy light strip ON the button */}
-            <div className="absolute -top-4 left-0 right-0 h-1 z-10">
-              <div className="flex justify-between items-center h-full px-4">
-                {[...Array(15)].map((_, i) => (
+          <TabsList className="grid w-full grid-cols-2 bg-black/30 border border-amber-500/30 rounded-b-none relative overflow-visible">
+            {/* Hanging fairy lights */}
+            <div className="absolute -top-2 left-0 right-0 z-10 overflow-visible">
+              {/* Main wire across the top */}
+              <div className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-amber-800/60 to-transparent"></div>
+              
+              {/* Individual hanging lights */}
+              {[...Array(12)].map((_, i) => {
+                const hangLength = 15 + Math.random() * 20; // Random hang length 15-35px
+                const xPosition = 8 + (i * (100 - 16) / 11); // Distribute evenly across width
+                
+                return (
                   <div
-                    key={`auth-light-${i}`}
-                    className="relative"
+                    key={`hanging-light-${i}`}
+                    className="absolute"
+                    style={{
+                      left: `${xPosition}%`,
+                      top: '0px',
+                    }}
                   >
-                    {/* Main light bulb */}
+                    {/* Hanging wire */}
                     <div
-                      className="w-2 h-2 bg-yellow-50 rounded-full animate-pulse border border-yellow-100"
+                      className="absolute w-px bg-amber-800/40"
                       style={{
-                        animationDelay: `${i * 0.1}s`,
-                        animationDuration: `${1.8 + Math.random() * 0.4}s`,
-                        boxShadow: '0 0 6px #fef3c7, 0 0 12px #fbbf24, 0 0 18px #f59e0b',
-                        background: 'radial-gradient(circle, #fffbeb 0%, #fef3c7 50%, #fbbf24 100%)'
+                        height: `${hangLength}px`,
+                        left: '50%',
+                        transform: 'translateX(-50%)',
                       }}
                     />
-                    {/* Outer glow effect */}
+                    
+                    {/* Light bulb at end of wire */}
                     <div
-                      className="absolute inset-0 w-4 h-4 -translate-x-1 -translate-y-1 rounded-full opacity-50 animate-pulse"
+                      className="absolute"
                       style={{
-                        background: 'radial-gradient(circle, transparent 30%, #fbbf24 50%, transparent 70%)',
-                        animationDelay: `${i * 0.1}s`,
-                        animationDuration: `${2.2 + Math.random() * 0.3}s`,
+                        top: `${hangLength}px`,
+                        left: '50%',
+                        transform: 'translateX(-50%)',
                       }}
-                    />
+                    >
+                      {/* Main light bulb */}
+                      <div
+                        className="w-3 h-3 bg-yellow-50 rounded-full animate-pulse border border-yellow-100"
+                        style={{
+                          animationDelay: `${i * 0.2}s`,
+                          animationDuration: `${2 + Math.random() * 0.5}s`,
+                          boxShadow: '0 0 8px #fef3c7, 0 0 16px #fbbf24, 0 0 24px #f59e0b',
+                          background: 'radial-gradient(circle, #fffbeb 0%, #fef3c7 40%, #fbbf24 100%)'
+                        }}
+                      />
+                      {/* Outer glow effect */}
+                      <div
+                        className="absolute inset-0 w-6 h-6 -translate-x-1.5 -translate-y-1.5 rounded-full opacity-40 animate-pulse"
+                        style={{
+                          background: 'radial-gradient(circle, transparent 20%, #fbbf24 40%, transparent 80%)',
+                          animationDelay: `${i * 0.2}s`,
+                          animationDuration: `${2.5 + Math.random() * 0.3}s`,
+                        }}
+                      />
+                    </div>
                   </div>
-                ))}
-              </div>
-              {/* Light string wire */}
-              <div className="absolute top-1 left-4 right-4 h-px bg-gradient-to-r from-transparent via-amber-800/40 to-transparent"></div>
+                );
+              })}
             </div>
             
             <TabsTrigger value="login" className="data-[state=active]:bg-amber-500/10 data-[state=active]:text-amber-400 text-stone-400">Login</TabsTrigger>
