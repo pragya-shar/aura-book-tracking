@@ -97,38 +97,38 @@ const ReadingProgress = () => {
   }, [books]);
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex-shrink-0 mb-6">
-        <h1 className="text-3xl font-pixel tracking-widest text-amber-400">Reading Progress</h1>
-        <p className="text-stone-400 font-playfair italic mt-1">Track and update your reading progress for each book.</p>
+    <div className="h-full flex flex-col px-2 sm:px-0">
+      <div className="flex-shrink-0 mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-pixel tracking-widest text-amber-400">Reading Progress</h1>
+        <p className="text-stone-400 font-playfair italic mt-1 text-xs sm:text-sm md:text-base">Track and update your reading progress for each book.</p>
       </div>
 
       <ScrollArea className="flex-1">
-        <div className="pr-4">
+        <div className="pr-2 sm:pr-4">
           {isLoading && (
-            <div className="flex justify-center items-center h-64">
-              <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
+            <div className="flex justify-center items-center h-32 sm:h-64">
+              <Loader2 className="h-6 w-6 sm:h-8 sm:w-8 animate-spin text-amber-500" />
             </div>
           )}
 
           {isError && (
-            <Alert variant="destructive" className="mt-6">
+            <Alert variant="destructive" className="mt-4 sm:mt-6">
               <AlertTitle>Error fetching reading progress</AlertTitle>
-              <AlertDescription>{error.message}</AlertDescription>
+              <AlertDescription className="text-sm">{error.message}</AlertDescription>
             </Alert>
           )}
 
           {!isLoading && !isError && books?.length === 0 && (
-             <div className="text-center py-16 border-2 border-dashed border-amber-500/20 rounded-lg mt-6 bg-black/20">
-                <BookOpen className="mx-auto h-12 w-12 text-stone-500" />
-                <h3 className="mt-4 text-lg font-pixel text-amber-400">Your library is empty</h3>
-                <p className="mt-1 text-sm text-stone-400 font-playfair italic">
+             <div className="text-center py-12 sm:py-16 border-2 border-dashed border-amber-500/20 rounded-lg mt-4 sm:mt-6 bg-black/20 mx-2 sm:mx-0">
+                <BookOpen className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-stone-500" />
+                <h3 className="mt-3 sm:mt-4 text-base sm:text-lg font-pixel text-amber-400">Your library is empty</h3>
+                <p className="mt-1 text-xs sm:text-sm text-stone-400 font-playfair italic px-4">
                     Add a book to your library to start tracking your progress.
                 </p>
-                <div className="mt-6">
-                    <Button asChild className="border-amber-500 text-amber-500 bg-transparent hover:bg-amber-500 hover:text-black transition-all duration-300 ease-in-out shadow-[0_0_15px_rgba(251,191,36,0.4)] hover:shadow-[0_0_25px_rgba(251,191,36,0.7)]" variant="outline">
-                        <Link to="/add-book">
-                            <BookPlus />
+                <div className="mt-4 sm:mt-6">
+                    <Button asChild className="border-amber-500 text-amber-500 bg-transparent hover:bg-amber-500 hover:text-black transition-all duration-300 ease-in-out shadow-[0_0_15px_rgba(251,191,36,0.4)] hover:shadow-[0_0_25px_rgba(251,191,36,0.7)] text-sm px-4 py-2" variant="outline">
+                        <Link to="/add-book" className="flex items-center gap-2">
+                            <BookPlus className="h-4 w-4" />
                             Add a Book
                         </Link>
                     </Button>
@@ -137,7 +137,7 @@ const ReadingProgress = () => {
           )}
           
           {!isLoading && !isError && books && books.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 pb-20 sm:pb-6">
               {books.map(book => {
                 // Use actual page count if available, otherwise use estimated 300
                 const maxPages = book.page_count && book.page_count > 0 ? book.page_count : 300;
@@ -146,24 +146,24 @@ const ReadingProgress = () => {
 
                 return (
                   <Card key={book.id} className="bg-black/30 border border-amber-500/30 text-stone-300">
-                    <CardHeader>
-                      <CardTitle className="line-clamp-2 font-playfair text-amber-400">{book.title}</CardTitle>
+                    <CardHeader className="pb-3 sm:pb-4 px-3 sm:px-6">
+                      <CardTitle className="line-clamp-2 font-playfair text-amber-400 text-sm sm:text-base">{book.title}</CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="flex gap-4">
+                    <CardContent className="space-y-3 sm:space-y-4 px-3 sm:px-6">
+                      <div className="flex gap-3 sm:gap-4">
                         {book.image_url ? (
-                          <img src={book.image_url} alt={`Cover of ${book.title}`} className="h-24 w-auto rounded-md object-cover" />
+                          <img src={book.image_url} alt={`Cover of ${book.title}`} className="h-20 sm:h-24 w-auto rounded-md object-cover flex-shrink-0" />
                         ) : (
-                          <div className="h-24 w-16 bg-black/20 rounded-md flex items-center justify-center border border-amber-500/20">
-                            <BookOpen className="w-6 h-6 text-stone-500" />
+                          <div className="h-20 sm:h-24 w-14 sm:w-16 bg-black/20 rounded-md flex items-center justify-center border border-amber-500/20 flex-shrink-0">
+                            <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-stone-500" />
                           </div>
                         )}
-                        <div className="flex-1 space-y-2">
+                        <div className="flex-1 space-y-2 min-w-0">
                             <Progress value={progress} className="h-2 [&>div]:bg-amber-500 bg-black/20 border border-amber-500/20" />
-                            <p className="text-sm text-stone-400">
+                            <p className="text-xs sm:text-sm text-stone-400">
                                 {progress}% complete
                             </p>
-                            <p className="text-xs text-stone-500">
+                            <p className="text-[10px] sm:text-xs text-stone-500 truncate">
                                 {book.latestLog 
                                     ? `Page ${book.latestLog.current_page}`
                                     : 'Not started'}
@@ -172,9 +172,9 @@ const ReadingProgress = () => {
                         </div>
                       </div>
                     </CardContent>
-                    <CardFooter>
+                    <CardFooter className="px-3 sm:px-6 pt-0">
                       <LogProgressDialog book={book}>
-                        <Button className="w-full border-amber-500 text-amber-500 bg-transparent hover:bg-amber-500 hover:text-black transition-all duration-300 ease-in-out shadow-[0_0_15px_rgba(251,191,36,0.4)] hover:shadow-[0_0_25px_rgba(251,191,36,0.7)]" variant="outline">
+                        <Button className="w-full border-amber-500 text-amber-500 bg-transparent hover:bg-amber-500 hover:text-black transition-all duration-300 ease-in-out shadow-[0_0_15px_rgba(251,191,36,0.4)] hover:shadow-[0_0_25px_rgba(251,191,36,0.7)] text-xs sm:text-sm py-2 h-8 sm:h-10" variant="outline">
                           {book.latestLog ? 'Update Progress' : 'Start Reading'}
                         </Button>
                       </LogProgressDialog>

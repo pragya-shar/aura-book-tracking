@@ -113,20 +113,22 @@ const AddBook = () => {
   };
 
   return (
-    <div>
-      <h1 className="text-3xl font-pixel tracking-widest text-amber-400">Add New Book</h1>
-      <p className="text-stone-400 font-playfair italic mt-1">Scan a book cover or ISBN barcode to add it to your library with enhanced visual recognition.</p>
+    <div className="px-2 sm:px-0 pb-20 sm:pb-6">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-pixel tracking-widest text-amber-400">Add New Book</h1>
+        <p className="text-stone-400 font-playfair italic mt-1 text-xs sm:text-sm md:text-base">Scan a book cover or ISBN barcode to add it to your library with enhanced visual recognition.</p>
+      </div>
       
-      <div className="mt-6 space-y-6">
+      <div className="mt-4 sm:mt-6 space-y-4 sm:space-y-6">
         {!scannedImage && (
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <div>
-              <h2 className="text-xl font-pixel text-amber-400 mb-3">Scanning Options</h2>
-              <div className="flex flex-col sm:flex-row gap-3">
+              <h2 className="text-lg sm:text-xl font-pixel text-amber-400 mb-2 sm:mb-3">Scanning Options</h2>
+              <div className="flex flex-col gap-3">
                 <CameraCapture onCapture={handleCapture} />
                 <ISBNBarcodeScanner onCapture={handleCapture} />
               </div>
-              <p className="text-xs text-stone-500 mt-2 font-playfair italic">
+              <p className="text-[10px] sm:text-xs text-stone-500 mt-2 font-playfair italic px-1">
                 Use "Scan with Camera" for book covers or "Scan ISBN Barcode" for precise barcode detection
               </p>
             </div>
@@ -134,26 +136,26 @@ const AddBook = () => {
         )}
         
         {scannedImage && (
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <div>
-              <h2 className="text-xl font-pixel text-amber-400">Scanned Image</h2>
-              <div className="mt-2 border rounded-md p-2 inline-block border-amber-500/30 bg-black/20">
-                <img src={scannedImage} alt="Scanned book cover" className="rounded-md max-w-sm" />
+              <h2 className="text-lg sm:text-xl font-pixel text-amber-400 mb-2">Scanned Image</h2>
+              <div className="mt-2 border rounded-md p-2 inline-block border-amber-500/30 bg-black/20 max-w-full">
+                <img src={scannedImage} alt="Scanned book cover" className="rounded-md max-w-full h-auto max-h-48 sm:max-h-64" />
               </div>
             </div>
 
             <div>
-              <h2 className="text-xl font-pixel text-amber-400">Enhanced Visual Analysis</h2>
+              <h2 className="text-lg sm:text-xl font-pixel text-amber-400 mb-2">Enhanced Visual Analysis</h2>
               {scanBookMutation.isPending && (
-                <div className="flex items-center gap-2 mt-2 text-stone-400">
-                  <Loader2 className="h-5 w-5 animate-spin text-amber-500" />
-                  <span className="font-playfair italic">Analyzing with advanced visual recognition, ISBN detection, logo identification, and intelligent matching...</span>
+                <div className="flex items-start gap-2 mt-2 text-stone-400">
+                  <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin text-amber-500 flex-shrink-0 mt-0.5" />
+                  <span className="font-playfair italic text-xs sm:text-sm">Analyzing with advanced visual recognition, ISBN detection, logo identification, and intelligent matching...</span>
                 </div>
               )}
               {scanBookMutation.isError && (
                  <Alert variant="destructive" className="mt-2">
-                   <AlertTitle>Scan Failed</AlertTitle>
-                   <AlertDescription>
+                   <AlertTitle className="text-sm">Scan Failed</AlertTitle>
+                   <AlertDescription className="text-xs sm:text-sm">
                     {scanBookMutation.error.message}. This could be a network issue or a problem with the edge function.
                    </AlertDescription>
                  </Alert>
@@ -161,7 +163,7 @@ const AddBook = () => {
               {scanBookMutation.isSuccess && (
                 scanBookMutation.data.book ? (
                   <div>
-                    <p className="text-sm text-stone-400 font-playfair italic mb-3">
+                    <p className="text-xs sm:text-sm text-stone-400 font-playfair italic mb-2 sm:mb-3">
                       {scanBookMutation.data.analysisData?.extractedISBNs?.length > 0 
                         ? "Found exact match using ISBN detection:" 
                         : scanBookMutation.data.analysisData?.confidence >= 90
@@ -178,22 +180,22 @@ const AddBook = () => {
                   </div>
                 ) : scanBookMutation.data.text ? (
                   <>
-                    <div className="mt-2 p-4 border rounded-md bg-muted">
-                      <p className="font-semibold mb-2">Could not find a matching book, but enhanced analysis detected:</p>
+                    <div className="mt-2 p-3 sm:p-4 border rounded-md bg-muted">
+                      <p className="font-semibold mb-2 text-sm">Could not find a matching book, but enhanced analysis detected:</p>
                       {scanBookMutation.data.analysisData?.extractedISBNs?.length > 0 && (
-                        <p className="mb-2"><strong>ISBNs:</strong> {scanBookMutation.data.analysisData.extractedISBNs.join(', ')}</p>
+                        <p className="mb-2 text-xs sm:text-sm"><strong>ISBNs:</strong> {scanBookMutation.data.analysisData.extractedISBNs.join(', ')}</p>
                       )}
                       {scanBookMutation.data.analysisData?.logos > 0 && (
-                        <p className="mb-2"><strong>Publisher logos detected:</strong> {scanBookMutation.data.analysisData.logos}</p>
+                        <p className="mb-2 text-xs sm:text-sm"><strong>Publisher logos detected:</strong> {scanBookMutation.data.analysisData.logos}</p>
                       )}
-                      <p className="whitespace-pre-wrap font-sans"><strong>Text:</strong> {scanBookMutation.data.text}</p>
+                      <p className="whitespace-pre-wrap font-sans text-xs sm:text-sm"><strong>Text:</strong> {scanBookMutation.data.text}</p>
                     </div>
-                    <Button onClick={reset} variant="outline" className="mt-4">Scan Another Book</Button>
+                    <Button onClick={reset} variant="outline" className="mt-3 sm:mt-4 w-full sm:w-auto">Scan Another Book</Button>
                   </>
                 ) : (
                   <>
-                    <p className="mt-2 text-muted-foreground">No text could be detected from the image using enhanced analysis.</p>
-                    <Button onClick={reset} variant="outline" className="mt-4">Scan Another Book</Button>
+                    <p className="mt-2 text-muted-foreground text-xs sm:text-sm">No text could be detected from the image using enhanced analysis.</p>
+                    <Button onClick={reset} variant="outline" className="mt-3 sm:mt-4 w-full sm:w-auto">Scan Another Book</Button>
                   </>
                 )
               )}
