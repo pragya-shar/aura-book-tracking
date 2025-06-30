@@ -1,6 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
 import ParticleSystem from "@/components/ParticleSystem";
-import TypewriterText from "@/components/TypewriterText";
 import InteractiveButton from "@/components/InteractiveButton";
 import CascadingBookTitles from "@/components/CascadingBookTitles";
 
@@ -45,11 +45,7 @@ const Index = () => {
           <span className="font-pixel ml-1 animate-fade-in" style={{ animationDelay: '0.8s' }}>URA</span>
         </h1>
         <p className="font-playfair text-stone-400 mt-2 text-lg md:text-xl italic animate-fade-in" style={{ animationDelay: '1.2s' }}>
-          <TypewriterText 
-            text="Uncover the mysteries of your reading adventures." 
-            delay={2000}
-            speed={80}
-          />
+          Uncover the mysteries of your reading adventures.
         </p>
       </div>
       
