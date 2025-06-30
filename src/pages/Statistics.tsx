@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -179,9 +178,9 @@ const Statistics = () => {
 
   if (isLoading) {
     return (
-      <div className="px-2 sm:px-0">
-        <div className="flex justify-center items-center h-32 sm:h-64">
-          <Loader2 className="h-6 w-6 sm:h-8 sm:w-8 animate-spin text-amber-500" />
+      <div className="px-2 sm:px-4">
+        <div className="flex justify-center items-center h-32">
+          <Loader2 className="h-6 w-6 animate-spin text-amber-500" />
         </div>
       </div>
     );
@@ -189,8 +188,8 @@ const Statistics = () => {
 
   if (isError) {
     return (
-      <div className="px-2 sm:px-0">
-        <Alert variant="destructive" className="mt-4 sm:mt-6">
+      <div className="px-2 sm:px-4">
+        <Alert variant="destructive" className="mt-4">
           <AlertTitle>Error loading statistics</AlertTitle>
           <AlertDescription className="text-sm">{error.message}</AlertDescription>
         </Alert>
@@ -200,16 +199,16 @@ const Statistics = () => {
 
   if (!statsData || statsData.totalBooksRead === 0) {
     return (
-      <div className="px-2 sm:px-0 pb-20 sm:pb-6">
-        <div className="mb-4 sm:mb-6">
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-pixel tracking-widest text-amber-400">Statistics</h1>
-          <p className="text-stone-400 font-playfair italic mt-1 text-xs sm:text-sm md:text-base">Analyzing the archives of your reading history.</p>
+      <div className="px-2 sm:px-4 pb-16 sm:pb-6">
+        <div className="mb-3">
+          <h1 className="text-lg sm:text-xl md:text-2xl font-pixel tracking-widest text-amber-400">Statistics</h1>
+          <p className="text-stone-400 font-playfair italic mt-1 text-xs sm:text-sm">Analyzing your reading history.</p>
         </div>
         
-        <div className="text-center py-12 sm:py-16 border-2 border-dashed border-amber-500/20 rounded-lg mt-4 sm:mt-6 bg-black/20">
-          <BarChartIcon className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-stone-500" />
-          <h3 className="mt-3 sm:mt-4 text-base sm:text-lg font-pixel text-amber-400">Finish a book to see your stats</h3>
-          <p className="mt-1 text-xs sm:text-sm text-stone-400 font-playfair italic px-4">
+        <div className="text-center py-8 border-2 border-dashed border-amber-500/20 rounded-lg bg-black/20">
+          <BarChartIcon className="mx-auto h-8 w-8 text-stone-500" />
+          <h3 className="mt-3 text-sm sm:text-base font-pixel text-amber-400">Finish a book to see your stats</h3>
+          <p className="mt-1 text-xs text-stone-400 font-playfair italic px-4">
               Once you've read a book, your statistics will appear here.
           </p>
         </div>
@@ -218,39 +217,36 @@ const Statistics = () => {
   }
 
   return (
-    <div className="px-2 sm:px-0 pb-20 sm:pb-6">
-      <div className="mb-4 sm:mb-6">
-        <h1 className="text-xl sm:text-2xl md:text-3xl font-pixel tracking-widest text-amber-400">Statistics</h1>
-        <p className="text-stone-400 font-playfair italic mt-1 text-xs sm:text-sm md:text-base">Analyzing the archives of your reading history.</p>
+    <div className="px-2 sm:px-4 pb-16 sm:pb-6">
+      <div className="mb-3">
+        <h1 className="text-lg sm:text-xl md:text-2xl font-pixel tracking-widest text-amber-400">Statistics</h1>
+        <p className="text-stone-400 font-playfair italic mt-1 text-xs sm:text-sm">Analyzing your reading history.</p>
       </div>
 
-      {/* Reading Progress - Prominent Display */}
-      <Card className="mb-6 bg-gradient-to-br from-amber-500/10 to-amber-600/5 border-2 border-amber-500/40 shadow-lg">
-        <CardHeader className="pb-4">
-          <CardTitle className="font-playfair text-amber-400 flex items-center gap-3 text-lg sm:text-xl">
-            <Calendar className="h-5 w-5 sm:h-6 sm:w-6" />
+      {/* Reading Progress - Compact Display */}
+      <Card className="mb-4 bg-gradient-to-br from-amber-500/10 to-amber-600/5 border-2 border-amber-500/40">
+        <CardHeader className="pb-2 px-3 pt-3">
+          <CardTitle className="font-playfair text-amber-400 flex items-center gap-2 text-base sm:text-lg">
+            <Calendar className="h-4 w-4" />
             {statsData.currentYear} Reading Progress
           </CardTitle>
-          <p className="text-stone-400 text-sm">Track your monthly reading journey this year</p>
         </CardHeader>
-        <CardContent>
-          <ChartContainer config={chartConfig} className="h-80 sm:h-96">
+        <CardContent className="px-3 pb-3">
+          <ChartContainer config={chartConfig} className="h-48 sm:h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={statsData.monthlyData} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+              <LineChart data={statsData.monthlyData} margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
                 <XAxis 
                   dataKey="month" 
                   tickLine={false} 
                   axisLine={false} 
                   stroke="#A8A29E" 
-                  fontSize={12}
-                  fontWeight={500}
+                  fontSize={10}
                 />
                 <YAxis 
                   stroke="#A8A29E" 
-                  fontSize={12} 
+                  fontSize={10} 
                   allowDecimals={false} 
-                  width={40}
-                  fontWeight={500}
+                  width={25}
                 />
                 <Tooltip 
                   cursor={{ stroke: '#F59E0B', strokeWidth: 2, strokeDasharray: '5 5' }} 
@@ -258,17 +254,18 @@ const Statistics = () => {
                   contentStyle={{
                     backgroundColor: 'rgba(0, 0, 0, 0.9)',
                     border: '1px solid #F59E0B',
-                    borderRadius: '8px',
-                    color: '#F3F4F6'
+                    borderRadius: '6px',
+                    color: '#F3F4F6',
+                    fontSize: '12px'
                   }}
                 />
                 <Line 
                   type="monotone" 
                   dataKey="books" 
                   stroke="#F59E0B" 
-                  strokeWidth={3} 
-                  dot={{ fill: "#F59E0B", strokeWidth: 3, r: 6 }}
-                  activeDot={{ r: 8, fill: "#F59E0B", stroke: "#1F2937", strokeWidth: 2 }}
+                  strokeWidth={2} 
+                  dot={{ fill: "#F59E0B", strokeWidth: 2, r: 4 }}
+                  activeDot={{ r: 6, fill: "#F59E0B", stroke: "#1F2937", strokeWidth: 2 }}
                   name="Books Read"
                 />
               </LineChart>
@@ -277,96 +274,96 @@ const Statistics = () => {
         </CardContent>
       </Card>
 
-      {/* Key Metrics */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6 mb-6">
+      {/* Key Metrics - Compact */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-4">
         <Card className="bg-black/30 border border-amber-500/30 text-stone-300">
-          <CardHeader className="pb-2">
-            <CardTitle className="font-playfair text-amber-400 flex items-center gap-2 text-sm">
-              <BookOpen className="h-4 w-4" />
-              Books Read
+          <CardHeader className="pb-1 px-2 pt-2">
+            <CardTitle className="font-playfair text-amber-400 flex items-center gap-1 text-xs">
+              <BookOpen className="h-3 w-3" />
+              Books
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-pixel text-amber-400">
+          <CardContent className="px-2 pb-2">
+            <div className="text-lg font-pixel text-amber-400">
               {statsData.totalBooksRead}
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-black/30 border border-amber-500/30 text-stone-300">
-          <CardHeader className="pb-2">
-            <CardTitle className="font-playfair text-amber-400 flex items-center gap-2 text-sm">
-              <Target className="h-4 w-4" />
-              Total Pages
+          <CardHeader className="pb-1 px-2 pt-2">
+            <CardTitle className="font-playfair text-amber-400 flex items-center gap-1 text-xs">
+              <Target className="h-3 w-3" />
+              Pages
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-pixel text-amber-400">
+          <CardContent className="px-2 pb-2">
+            <div className="text-lg font-pixel text-amber-400">
               {statsData.totalPagesRead.toLocaleString()}
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-black/30 border border-amber-500/30 text-stone-300">
-          <CardHeader className="pb-2">
-            <CardTitle className="font-playfair text-amber-400 flex items-center gap-2 text-sm">
-              <Clock className="h-4 w-4" />
-              Avg. Time
+          <CardHeader className="pb-1 px-2 pt-2">
+            <CardTitle className="font-playfair text-amber-400 flex items-center gap-1 text-xs">
+              <Clock className="h-3 w-3" />
+              Avg Time
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-pixel text-amber-400">
+          <CardContent className="px-2 pb-2">
+            <div className="text-lg font-pixel text-amber-400">
               {statsData.averageDays}
             </div>
-            <p className="text-xs text-stone-400">days per book</p>
+            <p className="text-xs text-stone-400">days</p>
           </CardContent>
         </Card>
 
         <Card className="bg-black/30 border border-amber-500/30 text-stone-300">
-          <CardHeader className="pb-2">
-            <CardTitle className="font-playfair text-amber-400 flex items-center gap-2 text-sm">
-              <TrendingUp className="h-4 w-4" />
-              Reading Speed
+          <CardHeader className="pb-1 px-2 pt-2">
+            <CardTitle className="font-playfair text-amber-400 flex items-center gap-1 text-xs">
+              <TrendingUp className="h-3 w-3" />
+              Speed
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-pixel text-amber-400">
+          <CardContent className="px-2 pb-2">
+            <div className="text-lg font-pixel text-amber-400">
               {statsData.readingVelocity}
             </div>
-            <p className="text-xs text-stone-400">pages per day</p>
+            <p className="text-xs text-stone-400">pg/day</p>
           </CardContent>
         </Card>
       </div>
       
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6 mt-4 sm:mt-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mt-3">
         {/* Rating Distribution */}
         {statsData.ratingData.length > 0 && (
           <Card className="bg-black/30 border border-amber-500/30 text-stone-300">
-            <CardHeader className="pb-3 sm:pb-4 px-3 sm:px-6">
-              <CardTitle className="font-playfair text-amber-400 text-sm sm:text-base">
+            <CardHeader className="pb-2 px-3 pt-3">
+              <CardTitle className="font-playfair text-amber-400 text-sm">
                 Rating Distribution
               </CardTitle>
             </CardHeader>
-            <CardContent className="px-3 sm:px-6">
-              <ChartContainer config={chartConfig} className="h-64 sm:h-80">
+            <CardContent className="px-3 pb-3">
+              <ChartContainer config={chartConfig} className="h-48 sm:h-56">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={statsData.ratingData} margin={{ top: 20, right: 10, bottom: 40, left: 10 }}>
+                  <BarChart data={statsData.ratingData} margin={{ top: 10, right: 5, bottom: 30, left: 5 }}>
                     <XAxis 
                       dataKey="rating" 
                       tickLine={false} 
                       axisLine={false} 
                       stroke="hsl(var(--muted-foreground))" 
-                      fontSize={10} 
+                      fontSize={9} 
                       interval={0}
                     />
                     <YAxis 
                       stroke="hsl(var(--muted-foreground))" 
-                      fontSize={10} 
+                      fontSize={9} 
                       allowDecimals={false} 
-                      width={30}
+                      width={25}
                     />
                     <Tooltip cursor={{ fill: 'hsl(var(--muted))' }} content={<ChartTooltipContent />} />
-                    <Bar dataKey="count" name="Books" fill="var(--color-count)" radius={4} />
+                    <Bar dataKey="count" name="Books" fill="var(--color-count)" radius={3} />
                   </BarChart>
                 </ResponsiveContainer>
               </ChartContainer>
@@ -377,35 +374,35 @@ const Statistics = () => {
         {/* Genre Distribution */}
         {statsData.genreData.length > 0 && (
           <Card className="bg-black/30 border border-amber-500/30 text-stone-300">
-            <CardHeader className="pb-3 sm:pb-4 px-3 sm:px-6">
-              <CardTitle className="font-playfair text-amber-400 flex items-center gap-2 text-sm sm:text-base">
-                <BookOpen className="h-4 w-4 sm:h-5 sm:w-5" />
+            <CardHeader className="pb-2 px-3 pt-3">
+              <CardTitle className="font-playfair text-amber-400 flex items-center gap-2 text-sm">
+                <BookOpen className="h-4 w-4" />
                 Genre Distribution
               </CardTitle>
             </CardHeader>
-            <CardContent className="px-3 sm:px-6">
-              <ChartContainer config={chartConfig} className="h-64 sm:h-80">
+            <CardContent className="px-3 pb-3">
+              <ChartContainer config={chartConfig} className="h-48 sm:h-56">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={statsData.genreData} margin={{ top: 20, right: 10, bottom: 40, left: 10 }}>
+                  <BarChart data={statsData.genreData} margin={{ top: 10, right: 5, bottom: 30, left: 5 }}>
                     <XAxis 
                       dataKey="name" 
                       tickLine={false} 
                       axisLine={false} 
                       stroke="hsl(var(--muted-foreground))" 
-                      fontSize={10} 
+                      fontSize={9} 
                       interval={0}
                       angle={-45}
                       textAnchor="end"
-                      height={40}
+                      height={30}
                     />
                     <YAxis 
                       stroke="hsl(var(--muted-foreground))" 
-                      fontSize={10} 
+                      fontSize={9} 
                       allowDecimals={false} 
-                      width={30}
+                      width={25}
                     />
                     <Tooltip cursor={{ fill: 'hsl(var(--muted))' }} content={<ChartTooltipContent />} />
-                    <Bar dataKey="value" name="Books" fill="var(--color-value)" radius={4} />
+                    <Bar dataKey="value" name="Books" fill="var(--color-value)" radius={3} />
                   </BarChart>
                 </ResponsiveContainer>
               </ChartContainer>
@@ -416,17 +413,17 @@ const Statistics = () => {
         {/* Author Analysis */}
         {statsData.authorData.length > 0 && (
           <Card className="lg:col-span-2 bg-black/30 border border-amber-500/30 text-stone-300">
-            <CardHeader className="pb-3 sm:pb-4 px-3 sm:px-6">
-              <CardTitle className="font-playfair text-amber-400 text-sm sm:text-base">Books by Author</CardTitle>
+            <CardHeader className="pb-2 px-3 pt-3">
+              <CardTitle className="font-playfair text-amber-400 text-sm">Books by Author</CardTitle>
             </CardHeader>
-            <CardContent className="px-3 sm:px-6">
-              <ChartContainer config={chartConfig} className="h-72 sm:h-96">
+            <CardContent className="px-3 pb-3">
+              <ChartContainer config={chartConfig} className="h-56 sm:h-72">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={statsData.authorData.slice(0, 10)} layout="vertical" margin={{ top: 20, right: 10, bottom: 5, left: 40 }}>
-                    <YAxis type="category" dataKey="name" tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" fontSize={10} width={120} interval={0} />
-                    <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={10} allowDecimals={false} />
+                  <BarChart data={statsData.authorData.slice(0, 10)} layout="vertical" margin={{ top: 10, right: 5, bottom: 5, left: 80 }}>
+                    <YAxis type="category" dataKey="name" tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" fontSize={9} width={75} interval={0} />
+                    <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={9} allowDecimals={false} />
                     <Tooltip cursor={{ fill: 'hsl(var(--muted))' }} content={<ChartTooltipContent indicator="dot" />} />
-                    <Bar dataKey="value" name="Books" fill="var(--color-value)" radius={4} />
+                    <Bar dataKey="value" name="Books" fill="var(--color-value)" radius={3} />
                   </BarChart>
                 </ResponsiveContainer>
               </ChartContainer>
