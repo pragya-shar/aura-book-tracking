@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -123,12 +124,12 @@ const Auth = () => {
       
       <div className="z-50 w-full max-w-sm sm:max-w-md relative">
         <Tabs defaultValue="login">
-          <TabsList className="grid w-full grid-cols-2 bg-black/95 backdrop-blur-md border-2 border-amber-500/70 rounded-b-none relative overflow-visible shadow-2xl shadow-amber-500/30 z-50">
-            <TabsTrigger value="login" className="data-[state=active]:bg-amber-500/30 data-[state=active]:text-amber-200 text-stone-200 font-medium z-50 relative">Login</TabsTrigger>
-            <TabsTrigger value="signup" className="data-[state=active]:bg-amber-500/30 data-[state=active]:text-amber-200 text-stone-200 font-medium z-50 relative">Sign Up</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 bg-black/60 backdrop-blur-md border border-amber-500/30 rounded-b-none relative overflow-visible shadow-xl shadow-amber-500/10 z-50">
+            <TabsTrigger value="login" className="data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-200 text-stone-200 font-medium z-50 relative">Login</TabsTrigger>
+            <TabsTrigger value="signup" className="data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-200 text-stone-200 font-medium z-50 relative">Sign Up</TabsTrigger>
           </TabsList>
           <TabsContent value="login">
-            <Card className="bg-black/95 backdrop-blur-md border-x-2 border-b-2 border-amber-500/70 text-stone-300 rounded-t-none shadow-2xl shadow-amber-500/30 z-50 relative">
+            <Card className="bg-black/60 backdrop-blur-md border-x border-b border-amber-500/30 text-stone-300 rounded-t-none shadow-xl shadow-amber-500/10 z-50 relative">
               <CardHeader className="pb-4">
                 <CardTitle className="text-amber-200 font-pixel tracking-wider text-xl">Login</CardTitle>
                 <CardDescription className="text-stone-200 font-playfair italic text-sm">Enter your credentials to access your account.</CardDescription>
@@ -139,7 +140,7 @@ const Auth = () => {
             </Card>
           </TabsContent>
           <TabsContent value="signup">
-            <Card className="bg-black/95 backdrop-blur-md border-x-2 border-b-2 border-amber-500/70 text-stone-300 rounded-t-none shadow-2xl shadow-amber-500/30 z-50 relative">
+            <Card className="bg-black/60 backdrop-blur-md border-x border-b border-amber-500/30 text-stone-300 rounded-t-none shadow-xl shadow-amber-500/10 z-50 relative">
               <CardHeader className="pb-4">
                 <CardTitle className="text-amber-200 font-pixel tracking-wider text-xl">Sign Up</CardTitle>
                 <CardDescription className="text-stone-200 font-playfair italic text-sm">Create a new account to start tracking your reading.</CardDescription>
