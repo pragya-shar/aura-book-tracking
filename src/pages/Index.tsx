@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import ParticleSystem from "@/components/ParticleSystem";
 import InteractiveButton from "@/components/InteractiveButton";
 import CascadingBookTitles from "@/components/CascadingBookTitles";
+import ReadingFacts from "@/components/ReadingFacts";
 
 const Index = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -48,8 +49,14 @@ const Index = () => {
           Uncover the mysteries of your reading adventures.
         </p>
       </div>
-      
+
+      {/* Reading Facts - appears after AURA animation */}
       <div className="animate-fade-in" style={{ animationDelay: '2s' }}>
+        <ReadingFacts />
+      </div>
+      
+      {/* Enter the Archives Button - appears after the fact */}
+      <div className="animate-fade-in" style={{ animationDelay: '4s' }}>
         <InteractiveButton />
       </div>
     </div>
