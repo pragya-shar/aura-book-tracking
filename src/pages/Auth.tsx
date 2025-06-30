@@ -120,11 +120,11 @@ const Auth = () => {
       </div>
       
       {/* Softer vignette effect */}
-      <div className="absolute inset-0 bg-black/20 [mask-image:radial-gradient(ellipse_at_center,transparent_40%,black)] z-0"></div>
+      <div className="absolute inset-0 bg-black/20 [mask-image:radial-gradient(ellipse_at_center,transparent_40%,black)] z-5"></div>
       
-      <div className="z-10 w-full max-w-sm sm:max-w-md relative">
+      <div className="z-20 w-full max-w-sm sm:max-w-md relative">
         <Tabs defaultValue="login">
-          <TabsList className="grid w-full grid-cols-2 bg-black/30 border border-amber-500/30 rounded-b-none relative overflow-visible">
+          <TabsList className="grid w-full grid-cols-2 bg-black/80 backdrop-blur-md border-2 border-amber-500/50 rounded-b-none relative overflow-visible shadow-2xl shadow-amber-500/20">
             {/* Hanging fairy lights */}
             <div className="absolute -top-2 left-0 right-0 z-10 overflow-visible">
               {/* Main wire across the top */}
@@ -188,14 +188,14 @@ const Auth = () => {
               })}
             </div>
             
-            <TabsTrigger value="login" className="data-[state=active]:bg-amber-500/10 data-[state=active]:text-amber-400 text-stone-400">Login</TabsTrigger>
-            <TabsTrigger value="signup" className="data-[state=active]:bg-amber-500/10 data-[state=active]:text-amber-400 text-stone-400">Sign Up</TabsTrigger>
+            <TabsTrigger value="login" className="data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-300 text-stone-300 font-medium">Login</TabsTrigger>
+            <TabsTrigger value="signup" className="data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-300 text-stone-300 font-medium">Sign Up</TabsTrigger>
           </TabsList>
           <TabsContent value="login">
-            <Card className="bg-black/30 border-x border-b border-amber-500/30 text-stone-300 rounded-t-none">
+            <Card className="bg-black/80 backdrop-blur-md border-x-2 border-b-2 border-amber-500/50 text-stone-300 rounded-t-none shadow-2xl shadow-amber-500/20">
               <CardHeader className="pb-4">
-                <CardTitle className="text-amber-400 font-pixel tracking-wider text-xl">Login</CardTitle>
-                <CardDescription className="text-stone-400 font-playfair italic text-sm">Enter your credentials to access your account.</CardDescription>
+                <CardTitle className="text-amber-300 font-pixel tracking-wider text-xl">Login</CardTitle>
+                <CardDescription className="text-stone-300 font-playfair italic text-sm">Enter your credentials to access your account.</CardDescription>
               </CardHeader>
               <CardContent className="pt-0">
                 <LoginForm />
@@ -203,10 +203,10 @@ const Auth = () => {
             </Card>
           </TabsContent>
           <TabsContent value="signup">
-            <Card className="bg-black/30 border-x border-b border-amber-500/30 text-stone-300 rounded-t-none">
+            <Card className="bg-black/80 backdrop-blur-md border-x-2 border-b-2 border-amber-500/50 text-stone-300 rounded-t-none shadow-2xl shadow-amber-500/20">
               <CardHeader className="pb-4">
-                <CardTitle className="text-amber-400 font-pixel tracking-wider text-xl">Sign Up</CardTitle>
-                <CardDescription className="text-stone-400 font-playfair italic text-sm">Create a new account to start tracking your reading.</CardDescription>
+                <CardTitle className="text-amber-300 font-pixel tracking-wider text-xl">Sign Up</CardTitle>
+                <CardDescription className="text-stone-300 font-playfair italic text-sm">Create a new account to start tracking your reading.</CardDescription>
               </CardHeader>
               <CardContent className="pt-0">
                 <SignUpForm />
