@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import ParticleSystem from "@/components/ParticleSystem";
 import InteractiveButton from "@/components/InteractiveButton";
 import CascadingBookTitles from "@/components/CascadingBookTitles";
+import ReadingFacts from "@/components/ReadingFacts";
 
 const Index = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -47,6 +48,11 @@ const Index = () => {
         <p className="font-playfair text-stone-400 mt-2 text-lg md:text-xl italic animate-fade-in [text-shadow:0_0_6px_rgba(251,191,36,0.3),0_0_12px_rgba(251,191,36,0.1)]" style={{ animationDelay: '1.2s' }}>
           Uncover the mysteries of your reading adventures.
         </p>
+      </div>
+
+      {/* Reading Facts */}
+      <div className="animate-fade-in" style={{ animationDelay: '1.8s' }}>
+        <ReadingFacts />
       </div>
       
       <div className="animate-fade-in" style={{ animationDelay: '2s' }}>
