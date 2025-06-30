@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 const AnimatedBookshelf = () => {
@@ -54,18 +55,33 @@ const AnimatedBookshelf = () => {
                 />
               ))}
             </div>
-            {/* Brighter and more yellow fairy lights for left shelf */}
+            {/* Warm yellow fairy lights with realistic glow */}
             <div className="absolute top-2 left-0 right-0 flex justify-between px-6">
               {[...Array(8)].map((_, lightIndex) => (
                 <div
                   key={`left-light-${shelfIndex}-${lightIndex}`}
-                  className="w-2 h-2 bg-yellow-200 rounded-full animate-pulse shadow-2xl shadow-yellow-200/100 border border-yellow-100/80"
-                  style={{
-                    animationDelay: `${lightIndex * 0.2 + shelfIndex * 0.5}s`,
-                    animationDuration: `${2 + Math.random()}s`,
-                    boxShadow: '0 0 12px #fef08a, 0 0 24px #facc15, 0 0 36px #eab308, 0 0 48px #ca8a04'
-                  }}
-                />
+                  className="relative"
+                >
+                  {/* Main light bulb */}
+                  <div
+                    className="w-3 h-3 bg-yellow-50 rounded-full animate-pulse border border-yellow-100"
+                    style={{
+                      animationDelay: `${lightIndex * 0.2 + shelfIndex * 0.5}s`,
+                      animationDuration: `${2 + Math.random()}s`,
+                      boxShadow: '0 0 8px #fef3c7, 0 0 16px #fbbf24, 0 0 24px #f59e0b, 0 0 32px #d97706',
+                      background: 'radial-gradient(circle, #fffbeb 0%, #fef3c7 50%, #fbbf24 100%)'
+                    }}
+                  />
+                  {/* Outer glow effect */}
+                  <div
+                    className="absolute inset-0 w-6 h-6 -translate-x-1.5 -translate-y-1.5 rounded-full opacity-60 animate-pulse"
+                    style={{
+                      background: 'radial-gradient(circle, transparent 30%, #fbbf24 50%, transparent 70%)',
+                      animationDelay: `${lightIndex * 0.2 + shelfIndex * 0.5}s`,
+                      animationDuration: `${2.5 + Math.random()}s`,
+                    }}
+                  />
+                </div>
               ))}
             </div>
           </div>
@@ -90,37 +106,67 @@ const AnimatedBookshelf = () => {
                 />
               ))}
             </div>
-            {/* Brighter and more yellow fairy lights for right shelf */}
+            {/* Warm yellow fairy lights with realistic glow */}
             <div className="absolute top-2 left-0 right-0 flex justify-between px-6">
               {[...Array(8)].map((_, lightIndex) => (
                 <div
                   key={`right-light-${shelfIndex}-${lightIndex}`}
-                  className="w-2 h-2 bg-yellow-200 rounded-full animate-pulse shadow-2xl shadow-yellow-200/100 border border-yellow-100/80"
-                  style={{
-                    animationDelay: `${lightIndex * 0.3 + shelfIndex * 0.7}s`,
-                    animationDuration: `${2.5 + Math.random()}s`,
-                    boxShadow: '0 0 12px #fef08a, 0 0 24px #facc15, 0 0 36px #eab308, 0 0 48px #ca8a04'
-                  }}
-                />
+                  className="relative"
+                >
+                  {/* Main light bulb */}
+                  <div
+                    className="w-3 h-3 bg-yellow-50 rounded-full animate-pulse border border-yellow-100"
+                    style={{
+                      animationDelay: `${lightIndex * 0.3 + shelfIndex * 0.7}s`,
+                      animationDuration: `${2.5 + Math.random()}s`,
+                      boxShadow: '0 0 8px #fef3c7, 0 0 16px #fbbf24, 0 0 24px #f59e0b, 0 0 32px #d97706',
+                      background: 'radial-gradient(circle, #fffbeb 0%, #fef3c7 50%, #fbbf24 100%)'
+                    }}
+                  />
+                  {/* Outer glow effect */}
+                  <div
+                    className="absolute inset-0 w-6 h-6 -translate-x-1.5 -translate-y-1.5 rounded-full opacity-60 animate-pulse"
+                    style={{
+                      background: 'radial-gradient(circle, transparent 30%, #fbbf24 50%, transparent 70%)',
+                      animationDelay: `${lightIndex * 0.3 + shelfIndex * 0.7}s`,
+                      animationDuration: `${3 + Math.random()}s`,
+                    }}
+                  />
+                </div>
               ))}
             </div>
           </div>
         ))}
       </div>
 
-      {/* Brighter and more yellow connecting fairy light strings */}
+      {/* Connecting fairy light string with warm yellow lights */}
       <div className="absolute top-16 left-64 right-64 h-1">
         <div className="flex justify-between items-center h-full">
           {[...Array(12)].map((_, i) => (
             <div
               key={`connect-light-${i}`}
-              className="w-2 h-2 bg-yellow-100 rounded-full animate-pulse shadow-2xl shadow-yellow-100/100 border border-yellow-50/90"
-              style={{
-                animationDelay: `${i * 0.15}s`,
-                animationDuration: `${1.5 + Math.random() * 0.5}s`,
-                boxShadow: '0 0 16px #fefce8, 0 0 32px #fef08a, 0 0 48px #facc15, 0 0 64px #eab308'
-              }}
-            />
+              className="relative"
+            >
+              {/* Main light bulb */}
+              <div
+                className="w-3 h-3 bg-yellow-50 rounded-full animate-pulse border border-yellow-100"
+                style={{
+                  animationDelay: `${i * 0.15}s`,
+                  animationDuration: `${1.5 + Math.random() * 0.5}s`,
+                  boxShadow: '0 0 10px #fef3c7, 0 0 20px #fbbf24, 0 0 30px #f59e0b, 0 0 40px #d97706',
+                  background: 'radial-gradient(circle, #fffbeb 0%, #fef3c7 50%, #fbbf24 100%)'
+                }}
+              />
+              {/* Outer glow effect */}
+              <div
+                className="absolute inset-0 w-6 h-6 -translate-x-1.5 -translate-y-1.5 rounded-full opacity-50 animate-pulse"
+                style={{
+                  background: 'radial-gradient(circle, transparent 30%, #fbbf24 50%, transparent 70%)',
+                  animationDelay: `${i * 0.15}s`,
+                  animationDuration: `${2 + Math.random() * 0.5}s`,
+                }}
+              />
+            </div>
           ))}
         </div>
       </div>
