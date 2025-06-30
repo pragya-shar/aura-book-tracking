@@ -127,7 +127,7 @@ export const BookSearch = ({ onFiltersChange, availableGenres, availableAuthors,
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label className="text-stone-400 text-xs">Status</Label>
-                  <Select value={filters.status} onValueChange={(value) => updateFilters({ status: value })}>
+                  <Select value={filters.status} onValueChange={(value) => updateFilters({ status: value as '' | 'to-read' | 'reading' | 'read' })}>
                     <SelectTrigger className="bg-black/30 border-amber-500/30">
                       <SelectValue placeholder="Any" />
                     </SelectTrigger>
