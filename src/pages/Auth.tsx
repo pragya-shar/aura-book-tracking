@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { SignUpForm } from '@/components/auth/SignUpForm';
+import AnimatedBookshelf from '@/components/AnimatedBookshelf';
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -19,6 +20,9 @@ const Auth = () => {
 
   return (
     <div className="flex items-center justify-center min-h-screen w-full bg-gradient-to-br from-[#1a1a1a] to-[#000000] text-stone-300 relative overflow-hidden p-4">
+      {/* Animated Bookshelf Background */}
+      <AnimatedBookshelf />
+      
       {/* Softer vignette effect */}
       <div className="absolute inset-0 bg-black/20 [mask-image:radial-gradient(ellipse_at_center,transparent_40%,black)] z-0"></div>
       
