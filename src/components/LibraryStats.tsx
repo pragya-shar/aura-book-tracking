@@ -24,84 +24,66 @@ export const LibraryStats = ({
   const readingProgress = totalBooks > 0 ? (readBooks / totalBooks) * 100 : 0;
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mb-6">
+    <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3 mb-4 sm:mb-6">
       <Card className="bg-black/30 border-amber-500/30">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-xs sm:text-sm font-pixel text-amber-400 flex items-center gap-1">
-            <BookOpen className="h-3 w-3 sm:h-4 sm:w-4" />
-            Total
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <div className="text-xl sm:text-2xl font-bold text-stone-300">{totalBooks}</div>
-          <p className="text-xs text-stone-500">books</p>
+        <CardContent className="p-2 sm:p-3 text-center">
+          <div className="flex items-center justify-center mb-1">
+            <BookOpen className="h-3 w-3 text-amber-400 mr-1" />
+            <span className="text-xs font-pixel text-amber-400">Total</span>
+          </div>
+          <div className="text-lg sm:text-xl font-bold text-stone-300">{totalBooks}</div>
         </CardContent>
       </Card>
 
       <Card className="bg-black/30 border-green-500/30">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-xs sm:text-sm font-pixel text-green-400 flex items-center gap-1">
-            <Target className="h-3 w-3 sm:h-4 sm:w-4" />
-            Read
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <div className="text-xl sm:text-2xl font-bold text-stone-300">{readBooks}</div>
-          <p className="text-xs text-stone-500">completed</p>
+        <CardContent className="p-2 sm:p-3 text-center">
+          <div className="flex items-center justify-center mb-1">
+            <Target className="h-3 w-3 text-green-400 mr-1" />
+            <span className="text-xs font-pixel text-green-400">Read</span>
+          </div>
+          <div className="text-lg sm:text-xl font-bold text-stone-300">{readBooks}</div>
         </CardContent>
       </Card>
 
       <Card className="bg-black/30 border-amber-500/30">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-xs sm:text-sm font-pixel text-amber-400 flex items-center gap-1">
-            <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4" />
-            Reading
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <div className="text-xl sm:text-2xl font-bold text-stone-300">{currentlyReading}</div>
-          <p className="text-xs text-stone-500">in progress</p>
+        <CardContent className="p-2 sm:p-3 text-center">
+          <div className="flex items-center justify-center mb-1">
+            <TrendingUp className="h-3 w-3 text-amber-400 mr-1" />
+            <span className="text-xs font-pixel text-amber-400">Reading</span>
+          </div>
+          <div className="text-lg sm:text-xl font-bold text-stone-300">{currentlyReading}</div>
         </CardContent>
       </Card>
 
       <Card className="bg-black/30 border-blue-500/30">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-xs sm:text-sm font-pixel text-blue-400 flex items-center gap-1">
-            <BookOpen className="h-3 w-3 sm:h-4 sm:w-4" />
-            To Read
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <div className="text-xl sm:text-2xl font-bold text-stone-300">{toReadBooks}</div>
-          <p className="text-xs text-stone-500">planned</p>
+        <CardContent className="p-2 sm:p-3 text-center">
+          <div className="flex items-center justify-center mb-1">
+            <BookOpen className="h-3 w-3 text-blue-400 mr-1" />
+            <span className="text-xs font-pixel text-blue-400">To Read</span>
+          </div>
+          <div className="text-lg sm:text-xl font-bold text-stone-300">{toReadBooks}</div>
         </CardContent>
       </Card>
 
       <Card className="bg-black/30 border-red-500/30">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-xs sm:text-sm font-pixel text-red-400 flex items-center gap-1">
-            <Heart className="h-3 w-3 sm:h-4 sm:w-4" />
-            Favorites
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <div className="text-xl sm:text-2xl font-bold text-stone-300">{favoriteBooks}</div>
-          <p className="text-xs text-stone-500">loved</p>
+        <CardContent className="p-2 sm:p-3 text-center">
+          <div className="flex items-center justify-center mb-1">
+            <Heart className="h-3 w-3 text-red-400 mr-1" />
+            <span className="text-xs font-pixel text-red-400">Favorites</span>
+          </div>
+          <div className="text-lg sm:text-xl font-bold text-stone-300">{favoriteBooks}</div>
         </CardContent>
       </Card>
 
       <Card className="bg-black/30 border-amber-500/30">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-xs sm:text-sm font-pixel text-amber-400 flex items-center gap-1">
-            <Star className="h-3 w-3 sm:h-4 sm:w-4" />
-            Rating
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <div className="text-xl sm:text-2xl font-bold text-stone-300">
+        <CardContent className="p-2 sm:p-3 text-center">
+          <div className="flex items-center justify-center mb-1">
+            <Star className="h-3 w-3 text-amber-400 mr-1" />
+            <span className="text-xs font-pixel text-amber-400">Rating</span>
+          </div>
+          <div className="text-lg sm:text-xl font-bold text-stone-300">
             {averageRating ? averageRating.toFixed(1) : '—'}
           </div>
-          <p className="text-xs text-stone-500">average</p>
         </CardContent>
       </Card>
     </div>
