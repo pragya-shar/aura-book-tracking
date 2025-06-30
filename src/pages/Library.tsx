@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { Loader2, BookOpen, PlusCircle, SortAsc } from 'lucide-react';
+import { Loader2, BookOpen, SortAsc } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
 import { EnhancedBookCard } from '@/components/EnhancedBookCard';
 import { LibraryStats } from '@/components/LibraryStats';
 import { ViewModeToggle, type ViewMode } from '@/components/ViewModeToggle';
 import { EmptyLibraryState } from '@/components/EmptyLibraryState';
+import { BookSearch } from '@/components/BookSearch';
 import { useEnhancedLibrary, useLibraryStats } from '@/hooks/useEnhancedLibrary';
 import {
   Select,
@@ -21,12 +21,40 @@ const Library = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [sortBy, setSortBy] = useState('created_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [searchFilters, setSearchFilters] = useState<any>({
+    search: '',
+    status: '',
+    genre: '',
+    author: '',
+    rating: [1, 5],
+    pageCount: [0, 1000],
+    publicationYear: [1900, new Date().getFullYear()],
+    tags: [],
+    favorite: null,
+  });
 
   const { data: books, isLoading, isError, error } = useEnhancedLibrary();
   const { data: stats } = useLibraryStats();
 
+  // Apply search filters
+  const filteredBooks = books ? books.filter(book => {
+    if (searchFilters.search && !book.title.toLowerCase().includes(searchFilters.search.toLowerCase()) && 
+        !book.authors?.some(author => author.toLowerCase().includes(searchFilters.search.toLowerCase()))) {
+      return false;
+    }
+    if (searchFilters.status && book.status !== searchFilters.status) return false;
+    if (searchFilters.genre && !book.genres?.includes(searchFilters.genre)) return false;
+    if (searchFilters.author && !book.authors?.includes(searchFilters.author)) return false;
+    if (book.rating && (book.rating < searchFilters.rating[0] || book.rating > searchFilters.rating[1])) return false;
+    if (book.page_count && (book.page_count < searchFilters.pageCount[0] || book.page_count > searchFilters.pageCount[1])) return false;
+    if (book.publication_year && (book.publication_year < searchFilters.publicationYear[0] || book.publication_year > searchFilters.publicationYear[1])) return false;
+    if (searchFilters.tags.length > 0 && !searchFilters.tags.some(tag => book.custom_tags?.includes(tag))) return false;
+    if (searchFilters.favorite !== null && book.is_favorite !== searchFilters.favorite) return false;
+    return true;
+  }) : [];
+
   // Sort books
-  const sortedBooks = books ? [...books].sort((a, b) => {
+  const sortedBooks = filteredBooks ? [...filteredBooks].sort((a, b) => {
     let aValue, bValue;
     
     switch (sortBy) {
@@ -80,18 +108,21 @@ const Library = () => {
 
   return (
     <div className="px-2 sm:px-0">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-3 sm:gap-0">
-        <div>
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-pixel tracking-widest text-amber-400">My Library</h1>
-          <p className="text-stone-400 font-playfair italic mt-1 text-xs sm:text-sm md:text-base">A collection of tales and whispers from your literary journeys.</p>
-        </div>
-        <Button asChild className="border-amber-500 text-amber-500 bg-transparent hover:bg-amber-500 hover:text-black transition-all duration-300 ease-in-out shadow-[0_0_15px_rgba(251,191,36,0.4)] hover:shadow-[0_0_25px_rgba(251,191,36,0.7)] text-xs sm:text-sm px-3 sm:px-4 py-2 sm:py-2 h-8 sm:h-10 w-full sm:w-auto" variant="outline">
-          <Link to="/add-book" className="flex items-center justify-center gap-2">
-            <PlusCircle className="h-3 w-3 sm:h-4 sm:w-4" />
-            <span>Add New Book</span>
-          </Link>
-        </Button>
+      <div className="mb-6">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-pixel tracking-widest text-amber-400">My Library</h1>
+        <p className="text-stone-400 font-playfair italic mt-1 text-xs sm:text-sm md:text-base">A collection of tales and whispers from your literary journeys.</p>
       </div>
+
+      {stats && <LibraryStats stats={stats} />}
+
+      {stats && (
+        <BookSearch
+          onFiltersChange={setSearchFilters}
+          availableGenres={stats.availableGenres}
+          availableAuthors={stats.availableAuthors}
+          availableTags={stats.availableTags}
+        />
+      )}
 
       {/* Simplified view controls */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-6">
@@ -126,9 +157,9 @@ const Library = () => {
           </div>
         </div>
 
-        {books && (
+        {sortedBooks && (
           <p className="text-xs sm:text-sm text-stone-400">
-            {books.length} book{books.length !== 1 ? 's' : ''} found
+            {sortedBooks.length} book{sortedBooks.length !== 1 ? 's' : ''} found
           </p>
         )}
       </div>
@@ -146,9 +177,32 @@ const Library = () => {
         </Alert>
       )}
 
-      {!isLoading && !isError && books?.length === 0 && <EmptyLibraryState />}
+      {!isLoading && !isError && sortedBooks?.length === 0 && books?.length === 0 && <EmptyLibraryState />}
 
-      {!isLoading && !isError && books && books.length > 0 && (
+      {!isLoading && !isError && sortedBooks?.length === 0 && books && books.length > 0 && (
+        <div className="text-center py-8">
+          <p className="text-stone-400 mb-4">No books match your current filters.</p>
+          <Button 
+            variant="outline" 
+            onClick={() => setSearchFilters({
+              search: '',
+              status: '',
+              genre: '',
+              author: '',
+              rating: [1, 5],
+              pageCount: [0, 1000],
+              publicationYear: [1900, new Date().getFullYear()],
+              tags: [],
+              favorite: null,
+            })}
+            className="border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
+          >
+            Clear Filters
+          </Button>
+        </div>
+      )}
+
+      {!isLoading && !isError && sortedBooks && sortedBooks.length > 0 && (
         <div className="pb-20 sm:pb-6">
           <div className={cn(getGridClasses(), 'justify-items-center')}>
             {sortedBooks.map((book) => (
