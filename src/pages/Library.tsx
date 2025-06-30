@@ -113,7 +113,16 @@ const Library = () => {
         <p className="text-stone-400 font-playfair italic mt-1 text-xs sm:text-sm md:text-base">A collection of tales and whispers from your literary journeys.</p>
       </div>
 
-      {stats && <LibraryStats stats={stats} />}
+      {stats && (
+        <LibraryStats 
+          totalBooks={stats.totalBooks}
+          readBooks={stats.readBooks}
+          currentlyReading={stats.currentlyReading}
+          toReadBooks={stats.toReadBooks}
+          favoriteBooks={stats.favoriteBooks}
+          averageRating={stats.averageRating}
+        />
+      )}
 
       {stats && (
         <BookSearch
