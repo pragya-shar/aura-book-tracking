@@ -21,7 +21,7 @@ import { cn } from '@/lib/utils';
 
 interface SearchFilters {
   search: string;
-  status: string;
+  status: '' | 'to-read' | 'reading' | 'read';
   genre: string;
   author: string;
   rating: number[];

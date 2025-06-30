@@ -21,7 +21,7 @@ import { Label } from '@/components/ui/label';
 
 interface SearchFilters {
   search: string;
-  status: string;
+  status: '' | 'to-read' | 'reading' | 'read';
   genre: string;
   author: string;
   rating: number[];
