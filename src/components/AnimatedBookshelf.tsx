@@ -97,8 +97,10 @@ const AnimatedBookshelf = () => {
         ))}
       </div>
 
-      {/* Subtle reading lamp effect */}
-      <div className="absolute top-12 left-1/2 transform -translate-x-1/2 w-32 h-32 bg-amber-400/5 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '6s' }} />
+      {/* More prominent reading lamp effect */}
+      <div className="absolute top-8 left-1/2 transform -translate-x-1/2 w-80 h-80 bg-amber-400/20 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '4s' }} />
+      <div className="absolute top-12 left-1/2 transform -translate-x-1/2 w-48 h-48 bg-amber-300/15 rounded-full blur-2xl animate-pulse" style={{ animationDuration: '5s' }} />
+      <div className="absolute top-16 left-1/2 transform -translate-x-1/2 w-24 h-24 bg-amber-200/25 rounded-full blur-xl animate-pulse" style={{ animationDuration: '3s' }} />
     </div>
   );
 };
