@@ -3,71 +3,19 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Tables } from '@/integrations/supabase/types';
 
-interface SearchFilters {
-  search: string;
-  status: '' | 'to-read' | 'reading' | 'read';
-  genre: string;
-  author: string;
-  rating: number[];
-  pageCount: number[];
-  publicationYear: number[];
-  tags: string[];
-  favorite: boolean | null;
-}
-
-export const useEnhancedLibrary = (filters?: SearchFilters) => {
+export const useEnhancedLibrary = () => {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ['enhanced-books', user?.id, filters],
+    queryKey: ['enhanced-books', user?.id],
     queryFn: async () => {
       if (!user) return null;
 
-      let query = supabase
+      const { data, error } = await supabase
         .from('books')
         .select('*')
-        .eq('user_id', user.id);
-
-      // Apply filters
-      if (filters) {
-        if (filters.search) {
-          query = query.or(`title.ilike.%${filters.search}%,authors.cs.{${filters.search}},description.ilike.%${filters.search}%`);
-        }
-        
-        if (filters.status && filters.status.length > 0) {
-          query = query.eq('status', filters.status);
-        }
-        
-        if (filters.genre) {
-          query = query.contains('genres', [filters.genre]);
-        }
-        
-        if (filters.author) {
-          query = query.contains('authors', [filters.author]);
-        }
-        
-        if (filters.rating[0] > 1 || filters.rating[1] < 5) {
-          query = query.gte('rating', filters.rating[0]).lte('rating', filters.rating[1]);
-        }
-        
-        if (filters.pageCount[0] > 0 || filters.pageCount[1] < 1000) {
-          query = query.gte('page_count', filters.pageCount[0]).lte('page_count', filters.pageCount[1]);
-        }
-        
-        if (filters.publicationYear[0] > 1900 || filters.publicationYear[1] < new Date().getFullYear()) {
-          query = query.gte('publication_year', filters.publicationYear[0]).lte('publication_year', filters.publicationYear[1]);
-        }
-        
-        if (filters.tags.length > 0) {
-          query = query.overlaps('custom_tags', filters.tags);
-        }
-        
-        if (filters.favorite !== null) {
-          query = query.eq('is_favorite', filters.favorite);
-        }
-      }
-
-      const { data, error } = await query.order('created_at', { ascending: false });
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
 
       if (error) {
         throw new Error(error.message);

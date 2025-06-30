@@ -1,10 +1,8 @@
-
 import React, { useState } from 'react';
 import { Loader2, BookOpen, PlusCircle, SortAsc } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { BookSearch } from '@/components/BookSearch';
 import { EnhancedBookCard } from '@/components/EnhancedBookCard';
 import { LibraryStats } from '@/components/LibraryStats';
 import { ViewModeToggle, type ViewMode } from '@/components/ViewModeToggle';
@@ -19,36 +17,12 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 
-interface SearchFilters {
-  search: string;
-  status: '' | 'to-read' | 'reading' | 'read';
-  genre: string;
-  author: string;
-  rating: number[];
-  pageCount: number[];
-  publicationYear: number[];
-  tags: string[];
-  favorite: boolean | null;
-}
-
 const Library = () => {
-  const [filters, setFilters] = useState<SearchFilters>({
-    search: '',
-    status: '',
-    genre: '',
-    author: '',
-    rating: [1, 5],
-    pageCount: [0, 1000],
-    publicationYear: [1900, new Date().getFullYear()],
-    tags: [],
-    favorite: null,
-  });
-  
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [sortBy, setSortBy] = useState('created_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
-  const { data: books, isLoading, isError, error } = useEnhancedLibrary(filters);
+  const { data: books, isLoading, isError, error } = useEnhancedLibrary();
   const { data: stats } = useLibraryStats();
 
   // Sort books
@@ -106,7 +80,7 @@ const Library = () => {
 
   return (
     <div className="px-2 sm:px-0">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 gap-3 sm:gap-0">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-3 sm:gap-0">
         <div>
           <h1 className="text-xl sm:text-2xl md:text-3xl font-pixel tracking-widest text-amber-400">My Library</h1>
           <p className="text-stone-400 font-playfair italic mt-1 text-xs sm:text-sm md:text-base">A collection of tales and whispers from your literary journeys.</p>
@@ -119,30 +93,8 @@ const Library = () => {
         </Button>
       </div>
 
-      {/* Library Statistics */}
-      {stats && (
-        <LibraryStats
-          totalBooks={stats.totalBooks}
-          readBooks={stats.readBooks}
-          currentlyReading={stats.currentlyReading}
-          toReadBooks={stats.toReadBooks}
-          favoriteBooks={stats.favoriteBooks}
-          averageRating={stats.averageRating}
-        />
-      )}
-
-      {/* Search and Filters */}
-      {stats && (
-        <BookSearch
-          onFiltersChange={setFilters}
-          availableGenres={stats.availableGenres}
-          availableAuthors={stats.availableAuthors}
-          availableTags={stats.availableTags}
-        />
-      )}
-
-      {/* View controls */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mt-4 sm:mt-6 mb-4 sm:mb-6">
+      {/* Simplified view controls */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-6">
         <div className="flex items-center gap-3 sm:gap-4">
           <ViewModeToggle viewMode={viewMode} onViewModeChange={setViewMode} />
           
