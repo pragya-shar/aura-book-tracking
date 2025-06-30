@@ -12,6 +12,34 @@ const Auth = () => {
   const navigate = useNavigate();
   const { session } = useAuth();
 
+  const bookTitles = [
+    "The Great Gatsby",
+    "To Kill a Mockingbird", 
+    "1984",
+    "Pride and Prejudice",
+    "The Catcher in the Rye",
+    "Lord of the Flies",
+    "The Hobbit",
+    "Harry Potter",
+    "The Chronicles of Narnia",
+    "Dune",
+    "Brave New World",
+    "The Lord of the Rings",
+    "Jane Eyre",
+    "Wuthering Heights",
+    "The Picture of Dorian Gray",
+    "Frankenstein",
+    "Dracula",
+    "The Adventures of Huckleberry Finn",
+    "Of Mice and Men",
+    "The Grapes of Wrath",
+    "Fahrenheit 451",
+    "The Handmaid's Tale",
+    "Gone Girl",
+    "The Girl with the Dragon Tattoo",
+    "The Hunger Games"
+  ];
+
   useEffect(() => {
     if (session) {
       navigate('/library');
@@ -23,11 +51,11 @@ const Auth = () => {
       {/* Animated Bookshelf Background */}
       <AnimatedBookshelf />
       
-      {/* Golden Confetti with Halo Lights */}
+      {/* Cascading Book Titles with Halo Lights */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-        {[...Array(20)].map((_, i) => (
+        {bookTitles.map((title, i) => (
           <div
-            key={`confetti-${i}`}
+            key={`book-title-${i}`}
             className="absolute animate-[cascade-fall_8s_linear_infinite]"
             style={{
               left: `${Math.random() * 100}%`,
@@ -37,28 +65,30 @@ const Auth = () => {
           >
             {/* Halo light effect */}
             <div
-              className="absolute w-8 h-8 rounded-full opacity-30 animate-pulse"
+              className="absolute w-12 h-8 rounded-full opacity-20 animate-pulse"
               style={{
-                background: 'radial-gradient(circle, #fbbf24 0%, transparent 70%)',
-                filter: 'blur(4px)',
+                background: 'radial-gradient(ellipse, #fbbf24 0%, transparent 70%)',
+                filter: 'blur(6px)',
                 transform: 'translate(-50%, -50%)',
               }}
             />
-            {/* Golden confetti piece */}
+            {/* Book title */}
             <div
-              className="w-3 h-3 bg-gradient-to-br from-yellow-300 via-amber-400 to-yellow-600 rounded-sm opacity-80"
+              className="text-amber-300/70 font-serif text-xs font-medium select-none"
               style={{
-                boxShadow: '0 0 8px #fbbf24, 0 0 16px #f59e0b',
-                transform: `rotate(${Math.random() * 360}deg)`,
+                textShadow: '0 0 12px #fbbf24, 0 0 20px #f59e0b, 0 2px 4px rgba(0, 0, 0, 0.5)',
+                transform: `rotate(${(i % 5 - 2) * 8}deg)`,
               }}
-            />
+            >
+              {title}
+            </div>
           </div>
         ))}
         
-        {/* Additional smaller confetti pieces */}
-        {[...Array(15)].map((_, i) => (
+        {/* Additional smaller book titles */}
+        {bookTitles.slice(0, 15).map((title, i) => (
           <div
-            key={`small-confetti-${i}`}
+            key={`small-book-title-${i}`}
             className="absolute animate-[cascade-fall_6s_linear_infinite]"
             style={{
               left: `${Math.random() * 100}%`,
@@ -68,21 +98,23 @@ const Auth = () => {
           >
             {/* Smaller halo */}
             <div
-              className="absolute w-4 h-4 rounded-full opacity-20 animate-pulse"
+              className="absolute w-8 h-6 rounded-full opacity-15 animate-pulse"
               style={{
-                background: 'radial-gradient(circle, #fbbf24 0%, transparent 60%)',
-                filter: 'blur(2px)',
+                background: 'radial-gradient(ellipse, #fbbf24 0%, transparent 60%)',
+                filter: 'blur(3px)',
                 transform: 'translate(-50%, -50%)',
               }}
             />
-            {/* Small confetti */}
+            {/* Small book title */}
             <div
-              className="w-2 h-2 bg-gradient-to-br from-yellow-200 via-amber-300 to-yellow-500 rounded-full opacity-70"
+              className="text-amber-300/50 font-serif text-xs select-none"
               style={{
-                boxShadow: '0 0 4px #fbbf24',
-                transform: `rotate(${Math.random() * 360}deg)`,
+                textShadow: '0 0 8px #fbbf24',
+                transform: `rotate(${(i % 3 - 1) * 10}deg)`,
               }}
-            />
+            >
+              {title.split(' ')[0]}
+            </div>
           </div>
         ))}
       </div>
