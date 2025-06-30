@@ -9,17 +9,104 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      book_list_assignments: {
+        Row: {
+          assigned_at: string
+          book_id: string
+          id: string
+          list_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          book_id: string
+          id?: string
+          list_id: string
+        }
+        Update: {
+          assigned_at?: string
+          book_id?: string
+          id?: string
+          list_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "book_list_assignments_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "book_list_assignments_list_id_fkey"
+            columns: ["list_id"]
+            isOneToOne: false
+            referencedRelation: "reading_lists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      book_shelf_assignments: {
+        Row: {
+          assigned_at: string
+          book_id: string
+          id: string
+          shelf_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          book_id: string
+          id?: string
+          shelf_id: string
+        }
+        Update: {
+          assigned_at?: string
+          book_id?: string
+          id?: string
+          shelf_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "book_shelf_assignments_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "book_shelf_assignments_shelf_id_fkey"
+            columns: ["shelf_id"]
+            isOneToOne: false
+            referencedRelation: "custom_shelves"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       books: {
         Row: {
           authors: string[] | null
           created_at: string
+          custom_tags: string[] | null
           description: string | null
+          edition: string | null
           finished_at: string | null
           gbooks_id: string | null
           genres: string[] | null
           id: string
           image_url: string | null
+          is_favorite: boolean | null
+          isbn: string | null
+          language: string | null
+          loan_date: string | null
+          loan_return_date: string | null
+          loan_to: string | null
           page_count: number | null
+          personal_review: string | null
+          publication_year: number | null
+          publisher: string | null
+          rating: number | null
+          reading_context: string | null
+          series_name: string | null
+          series_order: number | null
           status: Database["public"]["Enums"]["book_status"]
           title: string
           user_id: string
@@ -27,13 +114,28 @@ export type Database = {
         Insert: {
           authors?: string[] | null
           created_at?: string
+          custom_tags?: string[] | null
           description?: string | null
+          edition?: string | null
           finished_at?: string | null
           gbooks_id?: string | null
           genres?: string[] | null
           id?: string
           image_url?: string | null
+          is_favorite?: boolean | null
+          isbn?: string | null
+          language?: string | null
+          loan_date?: string | null
+          loan_return_date?: string | null
+          loan_to?: string | null
           page_count?: number | null
+          personal_review?: string | null
+          publication_year?: number | null
+          publisher?: string | null
+          rating?: number | null
+          reading_context?: string | null
+          series_name?: string | null
+          series_order?: number | null
           status?: Database["public"]["Enums"]["book_status"]
           title: string
           user_id: string
@@ -41,15 +143,114 @@ export type Database = {
         Update: {
           authors?: string[] | null
           created_at?: string
+          custom_tags?: string[] | null
           description?: string | null
+          edition?: string | null
           finished_at?: string | null
           gbooks_id?: string | null
           genres?: string[] | null
           id?: string
           image_url?: string | null
+          is_favorite?: boolean | null
+          isbn?: string | null
+          language?: string | null
+          loan_date?: string | null
+          loan_return_date?: string | null
+          loan_to?: string | null
           page_count?: number | null
+          personal_review?: string | null
+          publication_year?: number | null
+          publisher?: string | null
+          rating?: number | null
+          reading_context?: string | null
+          series_name?: string | null
+          series_order?: number | null
           status?: Database["public"]["Enums"]["book_status"]
           title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      custom_shelves: {
+        Row: {
+          color: string | null
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      reading_goals: {
+        Row: {
+          created_at: string
+          id: string
+          target_books: number
+          target_pages: number | null
+          user_id: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          target_books: number
+          target_pages?: number | null
+          user_id: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          target_books?: number
+          target_pages?: number | null
+          user_id?: string
+          year?: number
+        }
+        Relationships: []
+      }
+      reading_lists: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_wishlist: boolean | null
+          name: string
+          priority: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_wishlist?: boolean | null
+          name: string
+          priority?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_wishlist?: boolean | null
+          name?: string
+          priority?: number | null
           user_id?: string
         }
         Relationships: []

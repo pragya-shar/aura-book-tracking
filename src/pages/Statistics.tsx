@@ -2,7 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2, BarChart as BarChartIcon, Clock, BookOpen } from 'lucide-react';
+import { Loader2, BarChart as BarChartIcon, Clock, BookOpen, Target, Calendar, TrendingUp } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -16,19 +16,21 @@ import {
   Pie,
   Cell,
   Legend,
+  LineChart,
+  Line,
 } from 'recharts';
 import {
   ChartContainer,
   ChartTooltipContent,
   type ChartConfig,
 } from '@/components/ui/chart';
-import { differenceInDays } from 'date-fns';
+import { differenceInDays, format, startOfMonth, endOfMonth, eachMonthOfInterval, subMonths } from 'date-fns';
 
 const Statistics = () => {
   const { user } = useAuth();
 
   const { data: statsData, isLoading, isError, error } = useQuery({
-    queryKey: ['statistics', user?.id],
+    queryKey: ['enhanced-statistics', user?.id],
     queryFn: async () => {
       if (!user) return null;
 
@@ -40,7 +42,17 @@ const Statistics = () => {
 
       if (booksError) throw booksError;
       if (!readBooks || readBooks.length === 0) {
-        return { averageDays: 0, genreData: [], authorData: [] };
+        return { 
+          averageDays: 0, 
+          genreData: [], 
+          authorData: [], 
+          ratingData: [],
+          monthlyData: [],
+          yearlyGoals: [],
+          totalPagesRead: 0,
+          averageRating: 0,
+          readingVelocity: 0
+        };
       }
 
       const bookIds = readBooks.map((b) => b.id);
@@ -78,6 +90,7 @@ const Statistics = () => {
         ? Math.round(timeToFinishData.reduce((sum, days) => sum + days, 0) / timeToFinishData.length)
         : 0;
 
+      // Genre analysis
       const genreCounts = new Map<string, number>();
       readBooks.forEach((book) => {
         if (book.genres) {
@@ -88,6 +101,7 @@ const Statistics = () => {
       });
       const genreData = Array.from(genreCounts.entries()).map(([name, value]) => ({ name, value }));
 
+      // Author analysis
       const authorCounts = new Map<string, number>();
       readBooks.forEach((book) => {
         if (book.authors) {
@@ -98,20 +112,68 @@ const Statistics = () => {
       });
       const authorData = Array.from(authorCounts.entries()).map(([name, value]) => ({ name, value }));
 
-      return { averageDays, genreData, authorData };
+      // Rating distribution
+      const ratingCounts = new Map<number, number>();
+      readBooks.forEach((book) => {
+        if (book.rating) {
+          ratingCounts.set(book.rating, (ratingCounts.get(book.rating) || 0) + 1);
+        }
+      });
+      const ratingData = Array.from(ratingCounts.entries()).map(([rating, count]) => ({ 
+        rating: `${rating} star${rating !== 1 ? 's' : ''}`, 
+        count 
+      }));
+
+      // Monthly reading progress (last 12 months)
+      const now = new Date();
+      const twelveMonthsAgo = subMonths(now, 11);
+      const months = eachMonthOfInterval({ start: twelveMonthsAgo, end: now });
+      
+      const monthlyData = months.map(month => {
+        const monthStart = startOfMonth(month);
+        const monthEnd = endOfMonth(month);
+        
+        const booksReadThisMonth = readBooks.filter(book => {
+          if (!book.finished_at) return false;
+          const finishedDate = new Date(book.finished_at);
+          return finishedDate >= monthStart && finishedDate <= monthEnd;
+        });
+
+        return {
+          month: format(month, 'MMM yyyy'),
+          books: booksReadThisMonth.length,
+          pages: booksReadThisMonth.reduce((sum, book) => sum + (book.page_count || 0), 0)
+        };
+      });
+
+      // Calculate additional metrics
+      const totalPagesRead = readBooks.reduce((sum, book) => sum + (book.page_count || 0), 0);
+      const averageRating = readBooks.filter(b => b.rating).reduce((sum, book) => sum + (book.rating || 0), 0) / (readBooks.filter(b => b.rating).length || 1);
+      const readingVelocity = averageDays > 0 ? Math.round((readBooks.reduce((sum, book) => sum + (book.page_count || 300), 0) / readBooks.length) / averageDays) : 0;
+
+      return { 
+        averageDays, 
+        genreData, 
+        authorData, 
+        ratingData,
+        monthlyData,
+        totalPagesRead,
+        averageRating,
+        readingVelocity,
+        totalBooksRead: readBooks.length
+      };
     },
     enabled: !!user,
   });
   
-  const authorChartConfig = {
+  const chartConfig = {
     value: { label: "Books", color: "hsl(var(--chart-2))" },
-  } satisfies ChartConfig;
-
-  const genreChartConfig = {
-    value: { label: "Books", color: "hsl(var(--chart-1))" },
+    count: { label: "Books", color: "hsl(var(--chart-1))" },
+    books: { label: "Books", color: "hsl(var(--chart-1))" },
+    pages: { label: "Pages", color: "hsl(var(--chart-2))" },
   } satisfies ChartConfig;
   
-  const genreColors = ['#FBBF24', '#F59E0B', '#D97706', '#B45309', '#92400E', '#78350F'];
+  const ratingColors = ['#EF4444', '#F97316', '#EAB308', '#22C55E', '#10B981'];
 
   if (isLoading) {
     return (
@@ -134,7 +196,7 @@ const Statistics = () => {
     );
   }
 
-  if (!statsData || (statsData.averageDays === 0 && statsData.genreData.length === 0 && statsData.authorData.length === 0)) {
+  if (!statsData || statsData.totalBooksRead === 0) {
     return (
       <div className="px-2 sm:px-0 pb-20 sm:pb-6">
         <div className="mb-4 sm:mb-6">
@@ -159,32 +221,148 @@ const Statistics = () => {
         <h1 className="text-xl sm:text-2xl md:text-3xl font-pixel tracking-widest text-amber-400">Statistics</h1>
         <p className="text-stone-400 font-playfair italic mt-1 text-xs sm:text-sm md:text-base">Analyzing the archives of your reading history.</p>
       </div>
+
+      {/* Key Metrics */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6 mb-6">
+        <Card className="bg-black/30 border border-amber-500/30 text-stone-300">
+          <CardHeader className="pb-2">
+            <CardTitle className="font-playfair text-amber-400 flex items-center gap-2 text-sm">
+              <BookOpen className="h-4 w-4" />
+              Books Read
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-pixel text-amber-400">
+              {statsData.totalBooksRead}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-black/30 border border-amber-500/30 text-stone-300">
+          <CardHeader className="pb-2">
+            <CardTitle className="font-playfair text-amber-400 flex items-center gap-2 text-sm">
+              <Target className="h-4 w-4" />
+              Total Pages
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-pixel text-amber-400">
+              {statsData.totalPagesRead.toLocaleString()}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-black/30 border border-amber-500/30 text-stone-300">
+          <CardHeader className="pb-2">
+            <CardTitle className="font-playfair text-amber-400 flex items-center gap-2 text-sm">
+              <Clock className="h-4 w-4" />
+              Avg. Time
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-pixel text-amber-400">
+              {statsData.averageDays}
+            </div>
+            <p className="text-xs text-stone-400">days per book</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-black/30 border border-amber-500/30 text-stone-300">
+          <CardHeader className="pb-2">
+            <CardTitle className="font-playfair text-amber-400 flex items-center gap-2 text-sm">
+              <TrendingUp className="h-4 w-4" />
+              Reading Speed
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-pixel text-amber-400">
+              {statsData.readingVelocity}
+            </div>
+            <p className="text-xs text-stone-400">pages per day</p>
+          </CardContent>
+        </Card>
+      </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6 mt-4 sm:mt-6">
-        {statsData.averageDays > 0 && (
+        {/* Monthly Reading Progress */}
+        <Card className="lg:col-span-2 bg-black/30 border border-amber-500/30 text-stone-300">
+          <CardHeader className="pb-3 sm:pb-4 px-3 sm:px-6">
+            <CardTitle className="font-playfair text-amber-400 text-sm sm:text-base">
+              Reading Progress (Last 12 Months)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-3 sm:px-6">
+            <ChartContainer config={chartConfig} className="h-64 sm:h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={statsData.monthlyData} margin={{ top: 20, right: 10, bottom: 40, left: 10 }}>
+                  <XAxis 
+                    dataKey="month" 
+                    tickLine={false} 
+                    axisLine={false} 
+                    stroke="hsl(var(--muted-foreground))" 
+                    fontSize={10} 
+                    interval={0}
+                    angle={-45}
+                    textAnchor="end"
+                    height={40}
+                  />
+                  <YAxis 
+                    stroke="hsl(var(--muted-foreground))" 
+                    fontSize={10} 
+                    allowDecimals={false} 
+                    width={30}
+                  />
+                  <Tooltip cursor={{ fill: 'hsl(var(--muted))' }} content={<ChartTooltipContent />} />
+                  <Line 
+                    type="monotone" 
+                    dataKey="books" 
+                    stroke="var(--color-books)" 
+                    strokeWidth={2} 
+                    dot={{ fill: "var(--color-books)", strokeWidth: 2, r: 4 }}
+                    name="Books"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+
+        {/* Rating Distribution */}
+        {statsData.ratingData.length > 0 && (
           <Card className="bg-black/30 border border-amber-500/30 text-stone-300">
             <CardHeader className="pb-3 sm:pb-4 px-3 sm:px-6">
-              <CardTitle className="font-playfair text-amber-400 flex items-center gap-2 text-sm sm:text-base">
-                <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
-                Average Reading Time
+              <CardTitle className="font-playfair text-amber-400 text-sm sm:text-base">
+                Rating Distribution
               </CardTitle>
             </CardHeader>
             <CardContent className="px-3 sm:px-6">
-              <div className="text-center py-6 sm:py-8">
-                <div className="text-3xl sm:text-4xl font-pixel text-amber-400 mb-2">
-                  {statsData.averageDays}
-                </div>
-                <div className="text-base sm:text-lg text-stone-300 font-playfair">
-                  {statsData.averageDays === 1 ? 'day' : 'days'} per book
-                </div>
-                <p className="text-xs sm:text-sm text-stone-400 mt-2 font-playfair italic">
-                  Your average time to complete a book
-                </p>
-              </div>
+              <ChartContainer config={chartConfig} className="h-64 sm:h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={statsData.ratingData} margin={{ top: 20, right: 10, bottom: 40, left: 10 }}>
+                    <XAxis 
+                      dataKey="rating" 
+                      tickLine={false} 
+                      axisLine={false} 
+                      stroke="hsl(var(--muted-foreground))" 
+                      fontSize={10} 
+                      interval={0}
+                    />
+                    <YAxis 
+                      stroke="hsl(var(--muted-foreground))" 
+                      fontSize={10} 
+                      allowDecimals={false} 
+                      width={30}
+                    />
+                    <Tooltip cursor={{ fill: 'hsl(var(--muted))' }} content={<ChartTooltipContent />} />
+                    <Bar dataKey="count" name="Books" fill="var(--color-count)" radius={4} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </ChartContainer>
             </CardContent>
           </Card>
         )}
 
+        {/* Genre Distribution */}
         {statsData.genreData.length > 0 && (
           <Card className="bg-black/30 border border-amber-500/30 text-stone-300">
             <CardHeader className="pb-3 sm:pb-4 px-3 sm:px-6">
@@ -194,7 +372,7 @@ const Statistics = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="px-3 sm:px-6">
-              <ChartContainer config={genreChartConfig} className="h-64 sm:h-80">
+              <ChartContainer config={chartConfig} className="h-64 sm:h-80">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={statsData.genreData} margin={{ top: 20, right: 10, bottom: 40, left: 10 }}>
                     <XAxis 
@@ -223,16 +401,17 @@ const Statistics = () => {
           </Card>
         )}
 
+        {/* Author Analysis */}
         {statsData.authorData.length > 0 && (
           <Card className="lg:col-span-2 bg-black/30 border border-amber-500/30 text-stone-300">
             <CardHeader className="pb-3 sm:pb-4 px-3 sm:px-6">
               <CardTitle className="font-playfair text-amber-400 text-sm sm:text-base">Books by Author</CardTitle>
             </CardHeader>
             <CardContent className="px-3 sm:px-6">
-              <ChartContainer config={authorChartConfig} className="h-72 sm:h-96">
+              <ChartContainer config={chartConfig} className="h-72 sm:h-96">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={statsData.authorData} layout="vertical" margin={{ top: 20, right: 10, bottom: 5, left: 40 }}>
-                    <YAxis type="category" dataKey="name" tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" fontSize={10} width={80} interval={0} />
+                  <BarChart data={statsData.authorData.slice(0, 10)} layout="vertical" margin={{ top: 20, right: 10, bottom: 5, left: 40 }}>
+                    <YAxis type="category" dataKey="name" tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" fontSize={10} width={120} interval={0} />
                     <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={10} allowDecimals={false} />
                     <Tooltip cursor={{ fill: 'hsl(var(--muted))' }} content={<ChartTooltipContent indicator="dot" />} />
                     <Bar dataKey="value" name="Books" fill="var(--color-value)" radius={4} />
@@ -246,4 +425,5 @@ const Statistics = () => {
     </div>
   );
 };
+
 export default Statistics;
