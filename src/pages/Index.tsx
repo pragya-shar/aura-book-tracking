@@ -44,7 +44,7 @@ const Index = () => {
           <span className="font-melody text-8xl md:text-9xl animate-bounce" style={{ animationDelay: '0.5s', animationDuration: '2s', animationIterationCount: '1' }}>A</span>
           <span className="font-pixel ml-1 animate-fade-in" style={{ animationDelay: '0.8s' }}>URA</span>
         </h1>
-        <p className="font-playfair text-stone-400 mt-2 text-lg md:text-xl italic animate-fade-in" style={{ animationDelay: '1.2s' }}>
+        <p className="font-playfair text-stone-400 mt-2 text-lg md:text-xl italic animate-fade-in [text-shadow:0_0_6px_rgba(251,191,36,0.3),0_0_12px_rgba(251,191,36,0.1)]" style={{ animationDelay: '1.2s' }}>
           Uncover the mysteries of your reading adventures.
         </p>
       </div>
