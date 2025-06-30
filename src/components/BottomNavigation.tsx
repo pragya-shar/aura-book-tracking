@@ -1,7 +1,8 @@
 
-import { Home, BarChart, BookOpen, PlusSquare } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+import { Home, BarChart, BookOpen, PlusSquare, LogOut } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 const navigationItems = [
   { title: "Home", href: "/library", icon: Home },
@@ -12,12 +13,18 @@ const navigationItems = [
 
 const BottomNavigation = () => {
   const location = useLocation();
+  const navigate = useNavigate();
 
   const isLinkActive = (href: string) => {
     if (href === '/library') {
       return location.pathname === '/library' || location.pathname === '/';
     }
     return location.pathname.startsWith(href);
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate('/auth');
   };
 
   return (
@@ -48,6 +55,15 @@ const BottomNavigation = () => {
             </Link>
           );
         })}
+        <button
+          onClick={handleLogout}
+          className="flex flex-col items-center justify-center flex-1 py-2 px-1 transition-colors duration-200 text-stone-400 hover:text-red-400"
+        >
+          <LogOut className="h-5 w-5 mb-1" />
+          <span className="text-xs font-medium truncate max-w-full">
+            Logout
+          </span>
+        </button>
       </div>
     </nav>
   );
