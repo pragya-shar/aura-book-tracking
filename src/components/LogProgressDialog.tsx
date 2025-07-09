@@ -88,10 +88,11 @@ export function LogProgressDialog({ book, children }: LogProgressDialogProps) {
           .eq('id', book.id);
         
         if (updateError) throw updateError;
-      } else if (book.status === 'to-read') {
+      } else {
+        // If logging progress that's not finished, ensure book is marked as reading
         const { error: updateError } = await supabase
           .from('books')
-          .update({ status: 'reading' })
+          .update({ status: 'reading', finished_at: null })
           .eq('id', book.id);
 
         if (updateError) throw updateError;
