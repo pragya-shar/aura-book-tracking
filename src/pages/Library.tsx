@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Loader2, BookOpen, SortAsc } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { EnhancedBookCard } from '@/components/EnhancedBookCard';
+import { BookCard } from '@/components/BookCard';
 import { LibraryStats } from '@/components/LibraryStats';
 import { ViewModeToggle, type ViewMode } from '@/components/ViewModeToggle';
 import { EmptyLibraryState } from '@/components/EmptyLibraryState';
@@ -215,7 +215,7 @@ const Library = () => {
         <div className="pb-20 sm:pb-6">
           <div className={cn(getGridClasses(), 'justify-items-center')}>
             {sortedBooks.map((book) => (
-              <EnhancedBookCard key={book.id} book={book} />
+              <BookCard key={book.id} book={book} />
             ))}
           </div>
         </div>
