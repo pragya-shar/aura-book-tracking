@@ -12,6 +12,7 @@ import AddBook from "./pages/AddBook";
 import ReadingProgress from "./pages/ReadingProgress";
 import Statistics from "./pages/Statistics";
 import { AuthProvider } from "./contexts/AuthContext";
+import { FreighterProvider } from "./contexts/FreighterContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Auth from "./pages/Auth";
 import { ThemeProvider } from "next-themes";
@@ -24,21 +25,23 @@ const App = () => (
       <Toaster />
       <BrowserRouter>
         <TooltipProvider>
-          <AuthProvider>
-            <SidebarProvider>
-              <Routes>
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/" element={<Index />} />
-                <Route element={<ProtectedRoute><SharedLayout /></ProtectedRoute>}>
-                  <Route path="/library" element={<Library />} />
-                  <Route path="/add-book" element={<AddBook />} />
-                  <Route path="/progress" element={<ReadingProgress />} />
-                  <Route path="/statistics" element={<Statistics />} />
-                </Route>
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </SidebarProvider>
-          </AuthProvider>
+          <FreighterProvider>
+            <AuthProvider>
+              <SidebarProvider>
+                <Routes>
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/" element={<Index />} />
+                  <Route element={<ProtectedRoute><SharedLayout /></ProtectedRoute>}>
+                    <Route path="/library" element={<Library />} />
+                    <Route path="/add-book" element={<AddBook />} />
+                    <Route path="/progress" element={<ReadingProgress />} />
+                    <Route path="/statistics" element={<Statistics />} />
+                  </Route>
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </SidebarProvider>
+            </AuthProvider>
+          </FreighterProvider>
         </TooltipProvider>
       </BrowserRouter>
     </ThemeProvider>

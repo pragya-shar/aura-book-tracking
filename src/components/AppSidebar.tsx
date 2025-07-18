@@ -1,5 +1,5 @@
 
-import { Home, PlusSquare, BarChart, BookOpen, LogOut } from "lucide-react";
+import { Home, PlusSquare, BarChart, BookOpen, LogOut, Wallet } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useFreighter } from "@/contexts/FreighterContext";
 import { supabase } from "@/integrations/supabase/client";
 
 const menuItems = [
@@ -25,9 +26,15 @@ const AppSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isWalletConnected, walletAddress, disconnectWallet } = useFreighter();
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    if (user) {
+      await supabase.auth.signOut();
+    }
+    if (isWalletConnected) {
+      disconnectWallet();
+    }
     navigate('/auth');
   };
 
@@ -76,11 +83,23 @@ const AppSidebar = () => {
                 <span className="group-data-[collapsible=icon]:hidden ml-2">Add New Book</span>
             </Link>
         </SidebarMenuButton>
-        {user && (
+        {(user || (isWalletConnected && walletAddress)) && (
           <SidebarMenuButton onClick={handleLogout} tooltip="Logout" className="w-full justify-center text-stone-300 hover:bg-red-500/10 hover:text-red-400 border border-red-500/30">
             <LogOut />
             <span className="group-data-[collapsible=icon]:hidden ml-2">Logout</span>
           </SidebarMenuButton>
+        )}
+        
+        {isWalletConnected && walletAddress && (
+          <div className="text-xs text-stone-400 text-center group-data-[collapsible=icon]:hidden">
+            <div className="flex items-center justify-center gap-1 mb-1">
+              <Wallet className="w-3 h-3" />
+              <span>Wallet Connected</span>
+            </div>
+            <div className="font-mono text-[10px]">
+              {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
+            </div>
+          </div>
         )}
       </SidebarFooter>
     </Sidebar>

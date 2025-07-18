@@ -3,14 +3,18 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/contexts/AuthContext';
+import { useFreighter } from '@/contexts/FreighterContext';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { SignUpForm } from '@/components/auth/SignUpForm';
+import { FreighterWalletButton } from '@/components/auth/FreighterWalletButton';
 import AnimatedBookshelf from '@/components/AnimatedBookshelf';
 
 const Auth = () => {
   const navigate = useNavigate();
   const { session } = useAuth();
+  const { isWalletConnected, walletAddress } = useFreighter();
 
   const bookTitles = [
     "The Great Gatsby",
@@ -41,10 +45,10 @@ const Auth = () => {
   ];
 
   useEffect(() => {
-    if (session) {
+    if (session || (isWalletConnected && walletAddress)) {
       navigate('/library');
     }
-  }, [session, navigate]);
+  }, [session, isWalletConnected, walletAddress, navigate]);
 
   return (
     <div className="flex items-center justify-center min-h-screen w-full bg-gradient-to-br from-[#1a1a1a] to-[#000000] text-stone-300 relative overflow-hidden p-2 sm:p-4">
@@ -118,6 +122,32 @@ const Auth = () => {
             </Card>
           </TabsContent>
         </Tabs>
+        
+        {/* Wallet Connection Section */}
+        <div className="mt-6">
+          <div className="text-center mb-4">
+            <Separator className="bg-amber-500/30" />
+            <p className="text-amber-200/70 text-sm mt-2 font-medium">OR</p>
+            <Separator className="bg-amber-500/30" />
+          </div>
+          
+          <Card className="bg-black/60 backdrop-blur-md border-purple-500/30 text-stone-300 shadow-xl shadow-purple-500/10">
+            <CardHeader className="pb-3 px-4 sm:px-6 pt-4 sm:pt-6">
+              <CardTitle className="text-purple-200 font-pixel tracking-wider text-lg sm:text-xl">Connect Wallet</CardTitle>
+              <CardDescription className="text-stone-200 font-playfair italic text-xs sm:text-sm">
+                Connect your Freighter Stellar wallet for decentralized access.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-0 px-4 sm:px-6 pb-4 sm:pb-6">
+              <FreighterWalletButton 
+                onSuccess={(address) => {
+                  console.log('Wallet connected:', address);
+                }}
+                className="w-full"
+              />
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Loader2, BookOpen, SortAsc } from 'lucide-react';
+import { Loader2, BookOpen, SortAsc, Wallet } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { EnhancedBookCard } from '@/components/EnhancedBookCard';
@@ -7,7 +7,10 @@ import { LibraryStats } from '@/components/LibraryStats';
 import { ViewModeToggle, type ViewMode } from '@/components/ViewModeToggle';
 import { EmptyLibraryState } from '@/components/EmptyLibraryState';
 import { BookSearch } from '@/components/BookSearch';
+import { WalletInfo } from '@/components/WalletInfo';
+import { WalletDemo } from '@/components/WalletDemo';
 import { useEnhancedLibrary, useLibraryStats } from '@/hooks/useEnhancedLibrary';
+import { useFreighter } from '@/contexts/FreighterContext';
 import {
   Select,
   SelectContent,
@@ -21,6 +24,7 @@ const Library = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [sortBy, setSortBy] = useState('created_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [showWallet, setShowWallet] = useState(false);
   const [searchFilters, setSearchFilters] = useState<any>({
     search: '',
     status: '',
@@ -35,6 +39,7 @@ const Library = () => {
 
   const { data: books, isLoading, isError, error } = useEnhancedLibrary();
   const { data: stats } = useLibraryStats();
+  const { isWalletConnected } = useFreighter();
 
   // Apply search filters
   const filteredBooks = books ? books.filter(book => {
@@ -132,6 +137,31 @@ const Library = () => {
           availableTags={stats.availableTags}
         />
       )}
+
+      {/* Wallet Section */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-pixel tracking-wider text-purple-400 flex items-center gap-2">
+            <Wallet className="w-5 h-5" />
+            Stellar Wallet
+          </h2>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowWallet(!showWallet)}
+            className="border-purple-500/30 text-purple-400 hover:bg-purple-500/10"
+          >
+            {showWallet ? 'Hide' : 'Show'} Wallet
+          </Button>
+        </div>
+        
+        {showWallet && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <WalletInfo />
+            <WalletDemo />
+          </div>
+        )}
+      </div>
 
       {/* Simplified view controls */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-6">
