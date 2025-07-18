@@ -11,6 +11,7 @@ import Library from "./pages/Library";
 import AddBook from "./pages/AddBook";
 import ReadingProgress from "./pages/ReadingProgress";
 import Statistics from "./pages/Statistics";
+import Wallet from "./pages/Wallet";
 import { AuthProvider } from "./contexts/AuthContext";
 import { FreighterProvider } from "./contexts/FreighterContext";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -31,12 +32,13 @@ const App = () => (
                 <Routes>
                   <Route path="/auth" element={<Auth />} />
                   <Route path="/" element={<Index />} />
-                  <Route element={<ProtectedRoute><SharedLayout /></ProtectedRoute>}>
-                    <Route path="/library" element={<Library />} />
-                    <Route path="/add-book" element={<AddBook />} />
-                    <Route path="/progress" element={<ReadingProgress />} />
-                    <Route path="/statistics" element={<Statistics />} />
-                  </Route>
+                                  <Route element={<ProtectedRoute><SharedLayout /></ProtectedRoute>}>
+                  <Route path="/library" element={<Library />} />
+                  <Route path="/add-book" element={<AddBook />} />
+                  <Route path="/progress" element={<ReadingProgress />} />
+                  <Route path="/statistics" element={<Statistics />} />
+                  <Route path="/wallet" element={<Wallet />} />
+                </Route>
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </SidebarProvider>

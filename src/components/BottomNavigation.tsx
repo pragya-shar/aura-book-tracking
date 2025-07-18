@@ -1,19 +1,24 @@
 
-import { Home, BarChart, BookOpen, PlusSquare, LogOut } from "lucide-react";
+import { Home, BarChart, BookOpen, PlusSquare, LogOut, Wallet } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useFreighter } from "@/contexts/FreighterContext";
 
 const navigationItems = [
   { title: "Home", href: "/library", icon: Home },
   { title: "Progress", href: "/progress", icon: BookOpen },
   { title: "Statistics", href: "/statistics", icon: BarChart },
+  { title: "Wallet", href: "/wallet", icon: Wallet },
   { title: "Add Book", href: "/add-book", icon: PlusSquare },
 ];
 
 const BottomNavigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { isWalletConnected, disconnectWallet } = useFreighter();
 
   const isLinkActive = (href: string) => {
     if (href === '/library') {
@@ -23,7 +28,12 @@ const BottomNavigation = () => {
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    if (user) {
+      await supabase.auth.signOut();
+    }
+    if (isWalletConnected) {
+      disconnectWallet();
+    }
     navigate('/auth');
   };
 
@@ -55,15 +65,17 @@ const BottomNavigation = () => {
             </Link>
           );
         })}
-        <button
-          onClick={handleLogout}
-          className="flex flex-col items-center justify-center flex-1 py-2 px-1 transition-colors duration-200 text-stone-400 hover:text-red-400"
-        >
-          <LogOut className="h-5 w-5 mb-1" />
-          <span className="text-xs font-medium truncate max-w-full">
-            Logout
-          </span>
-        </button>
+        {(user || isWalletConnected) && (
+          <button
+            onClick={handleLogout}
+            className="flex flex-col items-center justify-center flex-1 py-2 px-1 transition-colors duration-200 text-stone-400 hover:text-red-400"
+          >
+            <LogOut className="h-5 w-5 mb-1" />
+            <span className="text-xs font-medium truncate max-w-full">
+              Logout
+            </span>
+          </button>
+        )}
       </div>
     </nav>
   );

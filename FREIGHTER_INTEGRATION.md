@@ -68,6 +68,12 @@ Interactive demo component showcasing wallet features:
 - Payment transactions
 - Transaction history
 
+### Wallet Page (`src/pages/Wallet.tsx`)
+Dedicated page for wallet management and blockchain features:
+- Clean, focused interface for wallet operations
+- Side-by-side layout of wallet info and demo features
+- Accessible through main navigation
+
 ## Usage
 
 ### Basic Wallet Connection
@@ -191,9 +197,10 @@ export const NETWORK_CONFIGS = {
 3. If wallet is chosen, Freighter extension prompts for connection
 4. Upon successful connection, user is redirected to the library
 5. Wallet status is displayed in the sidebar
+6. Users can access full wallet features through the dedicated Wallet page
 
 ### Wallet Features Access
-1. Users can toggle wallet features in the Library page
+1. Users can access wallet features through the dedicated Wallet page in the navigation
 2. Wallet info shows connection status and account details
 3. Demo section allows testing message signing and payments
 4. All wallet operations include proper error handling and user feedback
