@@ -16,6 +16,7 @@ export const FreighterWalletButton = ({ onSuccess, className }: FreighterWalletB
     isWalletConnected, 
     walletAddress, 
     isWalletLinked,
+    isWalletLoginInProgress,
     connectWallet, 
     disconnectWallet,
     linkWalletToAccount,
@@ -98,6 +99,20 @@ export const FreighterWalletButton = ({ onSuccess, className }: FreighterWalletB
           <CheckCircle className="w-4 h-4 mr-2" />
           Connected: {walletAddress.slice(0, 8)}...{walletAddress.slice(-8)}
         </Button>
+        
+        {/* Show wallet login status */}
+        {isWalletLoginInProgress && (
+          <div className="text-center p-2 bg-blue-500/10 border border-blue-500/30 rounded-md">
+            <p className="text-xs text-blue-200">Checking linked account...</p>
+          </div>
+        )}
+        
+        {/* Show error message if any */}
+        {error && (
+          <div className="text-center p-2 bg-red-500/10 border border-red-500/30 rounded-md">
+            <p className="text-xs text-red-200">{error}</p>
+          </div>
+        )}
         
         {user && (
           <div className="flex flex-col gap-1">

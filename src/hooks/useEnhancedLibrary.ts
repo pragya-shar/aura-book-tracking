@@ -1,20 +1,25 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useWalletUser } from './useWalletUser';
 import type { Tables } from '@/integrations/supabase/types';
 
 export const useEnhancedLibrary = () => {
   const { user } = useAuth();
+  const walletUser = useWalletUser();
+
+  // Use wallet user ID if available, otherwise fall back to email user
+  const userId = walletUser.userId || user?.id;
 
   return useQuery({
-    queryKey: ['enhanced-books', user?.id],
+    queryKey: ['enhanced-books', userId],
     queryFn: async () => {
-      if (!user) return null;
+      if (!userId) return null;
 
       const { data, error } = await supabase
         .from('books')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -23,22 +28,26 @@ export const useEnhancedLibrary = () => {
 
       return data;
     },
-    enabled: !!user,
+    enabled: !!userId,
   });
 };
 
 export const useLibraryStats = () => {
   const { user } = useAuth();
+  const walletUser = useWalletUser();
+
+  // Use wallet user ID if available, otherwise fall back to email user
+  const userId = walletUser.userId || user?.id;
 
   return useQuery({
-    queryKey: ['library-stats', user?.id],
+    queryKey: ['library-stats', userId],
     queryFn: async () => {
-      if (!user) return null;
+      if (!userId) return null;
 
       const { data: books, error } = await supabase
         .from('books')
         .select('*')
-        .eq('user_id', user.id);
+        .eq('user_id', userId);
 
       if (error) throw error;
 
@@ -66,6 +75,6 @@ export const useLibraryStats = () => {
         averageRating: books?.filter(b => b.rating).reduce((acc, b) => acc + (b.rating || 0), 0) / (books?.filter(b => b.rating).length || 1) || 0,
       };
     },
-    enabled: !!user,
+    enabled: !!userId,
   });
 };

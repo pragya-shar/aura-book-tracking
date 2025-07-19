@@ -186,4 +186,43 @@ export class WalletService {
       return { data: null, error: 'An unexpected error occurred' };
     }
   }
+
+  /**
+   * Check if wallet can be used for login (i.e., is linked to an account)
+   */
+  static async canWalletLogin(walletAddress: string): Promise<{
+    canLogin: boolean;
+    message: string;
+    profile?: any;
+  }> {
+    try {
+      const { data: profile, error } = await this.getUserByWalletAddress(walletAddress);
+      
+      if (error || !profile) {
+        return {
+          canLogin: false,
+          message: 'Wallet not linked to any account'
+        };
+      }
+
+      if (!profile.user_id) {
+        return {
+          canLogin: false,
+          message: 'Wallet profile incomplete'
+        };
+      }
+
+      return {
+        canLogin: true,
+        message: 'Wallet is linked to an account',
+        profile
+      };
+    } catch (error) {
+      console.error('Error checking wallet login capability:', error);
+      return {
+        canLogin: false,
+        message: 'Error checking wallet status'
+      };
+    }
+  }
 } 

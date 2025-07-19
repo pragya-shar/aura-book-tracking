@@ -1,6 +1,7 @@
 import { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import { WalletService } from '@/services/walletService';
+import { supabase } from '@/integrations/supabase/client';
 import {
   isConnected,
   isAllowed,
@@ -29,6 +30,7 @@ interface FreighterContextType {
   signMessageWithWallet: (message: string) => Promise<string>;
   loading: boolean;
   error: string | null;
+  isWalletLoginInProgress: boolean;
 }
 
 const FreighterContext = createContext<FreighterContextType | undefined>(undefined);
@@ -43,6 +45,7 @@ export const FreighterProvider = ({ children }: { children: ReactNode }) => {
   const [isWalletLinked, setIsWalletLinked] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isWalletLoginInProgress, setIsWalletLoginInProgress] = useState(false);
 
   // Check if Freighter is available and connected
   const checkWalletConnection = async () => {
@@ -103,7 +106,8 @@ export const FreighterProvider = ({ children }: { children: ReactNode }) => {
         throw new Error(access.error);
       }
 
-      setWalletAddress(access.address);
+      const address = access.address;
+      setWalletAddress(address);
 
       // Get network information
       const networkInfo = await getNetwork();
@@ -117,6 +121,22 @@ export const FreighterProvider = ({ children }: { children: ReactNode }) => {
       }
 
       setIsWalletConnected(true);
+
+      // Check if wallet is linked to an existing account
+      const loginCheck = await WalletService.canWalletLogin(address);
+      
+      if (loginCheck.canLogin && loginCheck.profile) {
+        // Wallet is linked to an existing account
+        setIsWalletLinked(true);
+        
+        // If user is not logged in, inform them about the linked account
+        if (!user) {
+          setError('🎉 Wallet connected! This wallet is linked to your account. You can now access your data. If you want to see your email, please log in with your email address.');
+        } else if (user.id !== loginCheck.profile.user_id) {
+          // User is logged in but with a different account
+          setError('⚠️ This wallet is linked to a different account. Please log out and log in with the correct account.');
+        }
+      }
     } catch (err) {
       console.error('Error connecting wallet:', err);
       setError(err instanceof Error ? err.message : 'Failed to connect wallet');
@@ -288,7 +308,8 @@ export const FreighterProvider = ({ children }: { children: ReactNode }) => {
     signTransactionWithWallet,
     signMessageWithWallet,
     loading,
-    error
+    error,
+    isWalletLoginInProgress
   };
 
   return (

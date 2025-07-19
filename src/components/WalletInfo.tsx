@@ -14,6 +14,8 @@ export const WalletInfo = () => {
     network, 
     networkDetails, 
     isWalletLinked,
+    isWalletLoginInProgress,
+    error,
     disconnectWallet,
     connectWallet,
     linkWalletToAccount,
@@ -142,6 +144,19 @@ export const WalletInfo = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Show wallet login status */}
+        {isWalletLoginInProgress && (
+          <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-md">
+            <p className="text-sm text-blue-200 text-center">Checking linked account...</p>
+          </div>
+        )}
+        
+        {/* Show error message if any */}
+        {error && (
+          <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-md">
+            <p className="text-sm text-red-200 text-center">{error}</p>
+          </div>
+        )}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-sm text-stone-400">Address:</span>

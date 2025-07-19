@@ -2,6 +2,7 @@ import React from 'react';
 import { Wallet } from 'lucide-react';
 import { WalletInfo } from '@/components/WalletInfo';
 import { WalletDemo } from '@/components/WalletDemo';
+import { UserInfo } from '@/components/UserInfo';
 
 const WalletPage = () => {
   return (
@@ -16,9 +17,13 @@ const WalletPage = () => {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <WalletInfo />
         <WalletDemo />
+      </div>
+
+      <div className="grid grid-cols-1 gap-6">
+        <UserInfo />
       </div>
     </div>
   );
