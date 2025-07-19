@@ -26,8 +26,8 @@ const App = () => (
       <Toaster />
       <BrowserRouter>
         <TooltipProvider>
-          <FreighterProvider>
-            <AuthProvider>
+          <AuthProvider>
+            <FreighterProvider>
               <SidebarProvider>
                 <Routes>
                   <Route path="/auth" element={<Auth />} />
@@ -42,8 +42,8 @@ const App = () => (
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </SidebarProvider>
-            </AuthProvider>
-          </FreighterProvider>
+            </FreighterProvider>
+          </AuthProvider>
         </TooltipProvider>
       </BrowserRouter>
     </ThemeProvider>

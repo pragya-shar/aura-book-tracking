@@ -1,4 +1,6 @@
 import { createContext, useState, useEffect, useContext, ReactNode } from 'react';
+import { useAuth } from './AuthContext';
+import { WalletService } from '@/services/walletService';
 import {
   isConnected,
   isAllowed,
@@ -18,8 +20,11 @@ interface FreighterContextType {
   walletAddress: string | null;
   network: string | null;
   networkDetails: any | null;
+  isWalletLinked: boolean;
   connectWallet: () => Promise<void>;
   disconnectWallet: () => void;
+  linkWalletToAccount: () => Promise<void>;
+  unlinkWalletFromAccount: () => Promise<void>;
   signTransactionWithWallet: (xdr: string, network?: string) => Promise<string>;
   signMessageWithWallet: (message: string) => Promise<string>;
   loading: boolean;
@@ -29,11 +34,13 @@ interface FreighterContextType {
 const FreighterContext = createContext<FreighterContextType | undefined>(undefined);
 
 export const FreighterProvider = ({ children }: { children: ReactNode }) => {
+  const { user } = useAuth();
   const [isWalletConnected, setIsWalletConnected] = useState(false);
   const [isWalletAllowed, setIsWalletAllowed] = useState(false);
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [network, setNetwork] = useState<string | null>(null);
   const [networkDetails, setNetworkDetails] = useState<any | null>(null);
+  const [isWalletLinked, setIsWalletLinked] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -173,6 +180,65 @@ export const FreighterProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Link wallet to user account
+  const linkWalletToAccount = async () => {
+    if (!user) {
+      setError('Please log in to link your wallet');
+      return;
+    }
+
+    if (!walletAddress) {
+      setError('Please connect your wallet first');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const result = await WalletService.linkWalletToUser(walletAddress, network || 'PUBLIC');
+      
+      if (result.success) {
+        setIsWalletLinked(true);
+        setError(null);
+      } else {
+        setError(result.message);
+      }
+    } catch (err) {
+      console.error('Error linking wallet to account:', err);
+      setError('Failed to link wallet to account');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Unlink wallet from user account
+  const unlinkWalletFromAccount = async () => {
+    if (!user) {
+      setError('Please log in to unlink your wallet');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const result = await WalletService.unlinkWalletFromUser();
+      
+      if (result.success) {
+        setIsWalletLinked(false);
+        setError(null);
+      } else {
+        setError(result.message);
+      }
+    } catch (err) {
+      console.error('Error unlinking wallet from account:', err);
+      setError('Failed to unlink wallet from account');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Watch for wallet changes
   useEffect(() => {
     if (isWalletConnected) {
@@ -194,14 +260,31 @@ export const FreighterProvider = ({ children }: { children: ReactNode }) => {
     checkWalletConnection();
   }, []);
 
+  // Check if wallet is linked to user account
+  useEffect(() => {
+    const checkWalletLinkStatus = async () => {
+      if (user && walletAddress) {
+        const { data: profile } = await WalletService.getUserWalletProfile();
+        setIsWalletLinked(profile?.wallet_address === walletAddress);
+      } else {
+        setIsWalletLinked(false);
+      }
+    };
+
+    checkWalletLinkStatus();
+  }, [user, walletAddress]);
+
   const value = {
     isWalletConnected,
     isWalletAllowed,
     walletAddress,
     network,
     networkDetails,
+    isWalletLinked,
     connectWallet,
     disconnectWallet,
+    linkWalletToAccount,
+    unlinkWalletFromAccount,
     signTransactionWithWallet,
     signMessageWithWallet,
     loading,

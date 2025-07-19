@@ -2,17 +2,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useFreighter } from '@/contexts/FreighterContext';
-import { Wallet, Copy, ExternalLink, LogOut, RefreshCw } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { Wallet, Copy, ExternalLink, LogOut, RefreshCw, Link, Unlink, User } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 export const WalletInfo = () => {
+  const { user } = useAuth();
   const { 
     isWalletConnected, 
     walletAddress, 
     network, 
     networkDetails, 
+    isWalletLinked,
     disconnectWallet,
     connectWallet,
+    linkWalletToAccount,
+    unlinkWalletFromAccount,
     loading 
   } = useFreighter();
 
@@ -62,6 +67,38 @@ export const WalletInfo = () => {
       toast({
         title: "Reconnection Failed",
         description: "Failed to reconnect to wallet",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleLinkWallet = async () => {
+    try {
+      await linkWalletToAccount();
+      toast({
+        title: "Wallet Linked!",
+        description: "Your wallet is now linked to your account",
+      });
+    } catch (err) {
+      toast({
+        title: "Link Failed",
+        description: err instanceof Error ? err.message : "Failed to link wallet",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUnlinkWallet = async () => {
+    try {
+      await unlinkWalletFromAccount();
+      toast({
+        title: "Wallet Unlinked",
+        description: "Your wallet has been unlinked from your account",
+      });
+    } catch (err) {
+      toast({
+        title: "Unlink Failed",
+        description: err instanceof Error ? err.message : "Failed to unlink wallet",
         variant: "destructive",
       });
     }
@@ -141,6 +178,30 @@ export const WalletInfo = () => {
               </span>
             </div>
           )}
+
+          {user && (
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-stone-400">Account Status:</span>
+              <div className="flex items-center gap-2">
+                <Badge 
+                  variant={isWalletLinked ? 'default' : 'secondary'}
+                  className={isWalletLinked ? 'bg-green-500/20 text-green-200 border-green-500/30' : 'bg-stone-500/20 text-stone-300 border-stone-500/30'}
+                >
+                  <User className="w-3 h-3 mr-1" />
+                  {isWalletLinked ? 'Linked' : 'Not Linked'}
+                </Badge>
+              </div>
+            </div>
+          )}
+
+          {user && (
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-stone-400">Email:</span>
+              <span className="text-sm text-stone-300">
+                {user.email}
+              </span>
+            </div>
+          )}
         </div>
 
         <div className="flex gap-2 pt-2">
@@ -163,6 +224,34 @@ export const WalletInfo = () => {
             Disconnect
           </Button>
         </div>
+
+        {user && (
+          <div className="flex gap-2 pt-2">
+            {isWalletLinked ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleUnlinkWallet}
+                className="flex-1 bg-red-500/10 border-red-500/30 text-red-200 hover:bg-red-500/20 hover:border-red-500/50"
+                disabled={loading}
+              >
+                <Unlink className="w-3 h-3 mr-1" />
+                Unlink Account
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleLinkWallet}
+                className="flex-1 bg-green-500/10 border-green-500/30 text-green-200 hover:bg-green-500/20 hover:border-green-500/50"
+                disabled={loading}
+              >
+                <Link className="w-3 h-3 mr-1" />
+                Link Account
+              </Button>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
