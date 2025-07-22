@@ -25,3 +25,16 @@ dist-ssr
 
 # Environment variables
 .env
+
+# Stellar development files (contains sensitive seed phrases)
+.stellar/
+aura-coin-contract/.stellar/
+
+# Additional security patterns
+*.key
+*.pem
+*secret*
+*private*
+seed_phrase*
+secret_key*
+private_key*

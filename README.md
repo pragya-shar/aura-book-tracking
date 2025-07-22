@@ -4,6 +4,16 @@
 
 **URL**: https://lovable.dev/projects/d64bade7-a846-4aae-acad-684bca67bbad
 
+## Security Notice ⚠️
+
+**Important**: This project contains sensitive files that should never be committed to version control:
+
+- `.stellar/` directory contains seed phrases and private keys
+- Any files with `*secret*`, `*private*`, `*.key`, or `*.pem` extensions
+- Environment files (`.env`)
+
+These files are automatically ignored by `.gitignore`. If you see any sensitive files in your repository, please remove them immediately and regenerate new keys.
+
 ## How can I edit this code?
 
 There are several ways of editing your application.
