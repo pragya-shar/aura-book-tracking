@@ -27,7 +27,7 @@ const App = () => (
       <BrowserRouter>
         <TooltipProvider>
           <AuthProvider>
-            <FreighterProvider>
+          <FreighterProvider>
               <SidebarProvider>
                 <Routes>
                   <Route path="/auth" element={<Auth />} />
@@ -43,7 +43,7 @@ const App = () => (
                 </Routes>
               </SidebarProvider>
             </FreighterProvider>
-          </AuthProvider>
+            </AuthProvider>
         </TooltipProvider>
       </BrowserRouter>
     </ThemeProvider>

@@ -31,13 +31,13 @@ export const BookCard = ({ book }: BookCardProps) => {
 
         {/* Book cover or placeholder */}
         <div className="relative mb-3">
-          {book.image_url ? (
-            <img 
-              src={book.image_url} 
-              alt={`Cover of ${book.title}`} 
+        {book.image_url ? (
+            <img
+                src={book.image_url}
+                alt={`Cover of ${book.title}`}
               className="w-full h-32 sm:h-40 object-cover rounded-md" 
             />
-          ) : (
+        ) : (
             <div className="w-full h-32 sm:h-40 bg-black/30 rounded-md flex items-center justify-center border border-amber-500/20">
               <BookOpen className="w-8 h-8 text-stone-500" />
             </div>
@@ -110,8 +110,8 @@ export const BookCard = ({ book }: BookCardProps) => {
                   +{book.custom_tags.length - 2}
                 </Badge>
               )}
-            </div>
-          )}
+          </div>
+        )}
 
           {/* Reading context */}
           {book.reading_context && (

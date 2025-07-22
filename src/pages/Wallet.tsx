@@ -3,6 +3,7 @@ import { Wallet } from 'lucide-react';
 import { WalletInfo } from '@/components/WalletInfo';
 import { WalletDemo } from '@/components/WalletDemo';
 import { UserInfo } from '@/components/UserInfo';
+import { AuraCoinBalance } from '@/components/AuraCoinBalance';
 
 const WalletPage = () => {
   return (
@@ -22,7 +23,8 @@ const WalletPage = () => {
         <WalletDemo />
       </div>
 
-      <div className="grid grid-cols-1 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <AuraCoinBalance />
         <UserInfo />
       </div>
     </div>

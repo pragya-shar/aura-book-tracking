@@ -18,7 +18,7 @@ export const FreighterWalletButton = ({ onSuccess, className }: FreighterWalletB
     isWalletLinked,
     isWalletLoginInProgress,
     connectWallet, 
-    disconnectWallet,
+    disconnectWallet, 
     linkWalletToAccount,
     unlinkWalletFromAccount,
     loading, 
