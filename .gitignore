@@ -30,6 +30,23 @@ dist-ssr
 .stellar/
 aura-coin-contract/.stellar/
 
+# Rust build artifacts
+target/
+aura-coin-contract/target/
+**/target/
+
+# Build artifacts
+*.wasm
+*.dylib
+*.so
+*.dll
+*.exe
+*.o
+*.a
+*.rlib
+*.rmeta
+*.d
+
 # Additional security patterns
 *.key
 *.pem
