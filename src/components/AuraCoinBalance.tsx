@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useFreighter } from '@/contexts/FreighterContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { 
   getBalance, 
@@ -16,6 +17,7 @@ import {
   getContractExplorerUrl,
   AURACOIN_CONFIG 
 } from '@/utils/auraCoinUtils';
+import { AuraCoinRewardService } from '@/services/auraCoinRewardService';
 import { 
   Coins, 
   Send, 
@@ -23,10 +25,13 @@ import {
   Flame, 
   ExternalLink, 
   RefreshCw, 
-  Loader2 
+  Loader2,
+  Gift,
+  BookOpen
 } from 'lucide-react';
 
 export const AuraCoinBalance = () => {
+  const { user } = useAuth();
   const { isWalletConnected, walletAddress, signTransactionWithWallet } = useFreighter();
   
   const [balance, setBalance] = useState<string>('0');
@@ -36,6 +41,8 @@ export const AuraCoinBalance = () => {
   const [transferAmount, setTransferAmount] = useState('10');
   const [transferTo, setTransferTo] = useState('');
   const [burnAmount, setBurnAmount] = useState('5');
+  const [pendingRewards, setPendingRewards] = useState<any[]>([]);
+  const [totalRewards, setTotalRewards] = useState(0);
 
   // Load token info and balance
   const loadData = async () => {
@@ -59,6 +66,21 @@ export const AuraCoinBalance = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Load pending rewards
+  const loadPendingRewards = async () => {
+    if (!user) return;
+    
+    try {
+      const rewards = await AuraCoinRewardService.getPendingRewards(user.id);
+      setPendingRewards(rewards);
+      
+      const total = await AuraCoinRewardService.getUserTotalRewards(user.id);
+      setTotalRewards(total);
+    } catch (error) {
+      console.error('Error loading pending rewards:', error);
     }
   };
 
@@ -134,7 +156,7 @@ export const AuraCoinBalance = () => {
         walletAddress,
         transferTo.trim(),
         parseInt(transferAmount),
-        (xdr) => signTransactionWithWallet(xdr, 'testnet')
+        async (xdr) => signTransactionWithWallet(xdr, 'testnet')
       );
       
       toast({
@@ -170,7 +192,7 @@ export const AuraCoinBalance = () => {
       await burnTokens(
         walletAddress,
         parseInt(burnAmount),
-        (xdr) => signTransactionWithWallet(xdr, 'testnet')
+        async (xdr) => signTransactionWithWallet(xdr, 'testnet')
       );
       
       toast({
@@ -190,12 +212,72 @@ export const AuraCoinBalance = () => {
     }
   };
 
+  // Claim all pending rewards
+  const handleClaimAllRewards = async () => {
+    if (!user || !isWalletConnected || !walletAddress) {
+      toast({
+        title: "Wallet Required",
+        description: "Please connect your wallet to claim rewards",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (pendingRewards.length === 0) {
+      toast({
+        title: "No Rewards",
+        description: "No pending rewards to claim",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const result = await AuraCoinRewardService.rewardMultipleBooks(
+        pendingRewards,
+        async (xdr) => signTransactionWithWallet(xdr, 'testnet')
+      );
+
+      if (result.success) {
+        toast({
+          title: "🎉 Rewards Claimed!",
+          description: result.message,
+        });
+        await loadPendingRewards(); // Refresh pending rewards
+        await loadData(); // Refresh balance
+      } else {
+        toast({
+          title: "Claim Failed",
+          description: result.error || "Failed to claim rewards",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error claiming rewards:', error);
+      toast({
+        title: "Claim Failed",
+        description: error instanceof Error ? error.message : "Failed to claim rewards",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Load data when wallet connects
   useEffect(() => {
     if (isWalletConnected && walletAddress) {
       loadData();
     }
   }, [isWalletConnected, walletAddress]);
+
+  // Load pending rewards when user changes
+  useEffect(() => {
+    if (user) {
+      loadPendingRewards();
+    }
+  }, [user]);
 
   if (!isWalletConnected) {
     return (
@@ -267,6 +349,57 @@ export const AuraCoinBalance = () => {
             Available Balance
           </div>
         </div>
+
+        {/* Book Rewards Section */}
+        {user && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-purple-200 flex items-center gap-2">
+                <BookOpen className="w-5 h-5" />
+                Book Rewards
+              </h3>
+              <Badge variant="outline" className="text-purple-400">
+                {pendingRewards.length} pending
+              </Badge>
+            </div>
+            
+            {pendingRewards.length > 0 ? (
+              <div className="space-y-2">
+                <div className="p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-green-400 font-medium">
+                        {pendingRewards.length} books completed
+                      </div>
+                      <div className="text-sm text-stone-400">
+                        Ready to claim rewards
+                      </div>
+                    </div>
+                    <Button
+                      onClick={handleClaimAllRewards}
+                      disabled={loading}
+                      size="sm"
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      <Gift className="w-4 h-4 mr-2" />
+                      Claim All
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="text-xs text-stone-500">
+                  Total earned: {totalRewards} AURA tokens
+                </div>
+              </div>
+            ) : (
+              <div className="p-3 bg-stone-800/50 border border-stone-700 rounded-lg">
+                <div className="text-center text-stone-400 text-sm">
+                  No pending rewards. Complete books to earn AURA tokens!
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Actions */}
         <div className="space-y-4">
@@ -364,14 +497,17 @@ export const AuraCoinBalance = () => {
 
         {/* Refresh Button */}
         <Button
-          onClick={loadData}
+          onClick={() => {
+            loadData();
+            loadPendingRewards();
+          }}
           disabled={loading}
           variant="outline"
           size="sm"
           className="w-full border-purple-500/30 text-purple-300 hover:bg-purple-500/10"
         >
           <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-          Refresh Balance
+          Refresh Balance & Rewards
         </Button>
       </CardContent>
     </Card>

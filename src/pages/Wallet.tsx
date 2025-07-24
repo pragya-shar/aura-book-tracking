@@ -4,6 +4,7 @@ import { WalletInfo } from '@/components/WalletInfo';
 import { WalletDemo } from '@/components/WalletDemo';
 import { UserInfo } from '@/components/UserInfo';
 import { AuraCoinBalance } from '@/components/AuraCoinBalance';
+import { AuraCoinTest } from '@/components/AuraCoinTest';
 
 const WalletPage = () => {
   return (
@@ -26,6 +27,11 @@ const WalletPage = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <AuraCoinBalance />
         <UserInfo />
+      </div>
+
+      {/* AuraCoin Contract Test */}
+      <div className="mb-6">
+        <AuraCoinTest />
       </div>
     </div>
   );
