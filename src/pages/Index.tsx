@@ -1,15 +1,17 @@
 
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import ParticleSystem from "@/components/ParticleSystem";
+import React, { useState, useEffect, Suspense, lazy } from 'react';
+
+// Lazy load heavy components
+const ParticleSystem = lazy(() => import("@/components/ParticleSystem"));
+const CascadingBookTitles = lazy(() => import("@/components/CascadingBookTitles"));
+const ReadingFacts = lazy(() => import("@/components/ReadingFacts"));
+
+// Keep InteractiveButton as regular import since it's likely lightweight
 import InteractiveButton from "@/components/InteractiveButton";
-import CascadingBookTitles from "@/components/CascadingBookTitles";
-import ReadingFacts from "@/components/ReadingFacts";
-import { Button } from "@/components/ui/button";
-import { Coins } from "lucide-react";
 
 const Index = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [showHeavyComponents, setShowHeavyComponents] = useState(false);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -21,6 +23,15 @@ const Index = () => {
 
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
+  // Load heavy components after a delay to improve initial render
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowHeavyComponents(true);
+    }, 500); // Load heavy components after 500ms
+
+    return () => clearTimeout(timer);
   }, []);
 
   return (
@@ -36,13 +47,18 @@ const Index = () => {
       {/* Softer vignette effect */}
       <div className="absolute inset-0 bg-black/20 [mask-image:radial-gradient(ellipse_at_center,transparent_40%,black)] animate-pulse" style={{ animationDuration: '4s' }}></div>
 
-      {/* Cascading Book Titles */}
-      <CascadingBookTitles />
+      {/* Lazy loaded heavy components */}
+      {showHeavyComponents && (
+        <Suspense fallback={null}>
+          {/* Cascading Book Titles */}
+          <CascadingBookTitles />
 
-      {/* Particle System */}
-      <ParticleSystem />
+          {/* Particle System */}
+          <ParticleSystem />
+        </Suspense>
+      )}
 
-      {/* Main content with entrance animations */}
+      {/* Main content with entrance animations - Load immediately */}
       <div className="mb-8 z-10 px-4 animate-fade-in">
         <h1 className="text-6xl md:text-8xl font-bold tracking-wider flex items-baseline justify-center text-amber-400 [text-shadow:0_0_8px_rgba(251,191,36,0.5),0_0_20px_rgba(251,191,36,0.3)] animate-scale-in">
           <span className="font-melody text-8xl md:text-9xl animate-bounce" style={{ animationDelay: '0.5s', animationDuration: '2s', animationIterationCount: '1' }}>A</span>
@@ -53,9 +69,13 @@ const Index = () => {
         </p>
       </div>
 
-      {/* Reading Facts - appears after AURA animation */}
+      {/* Reading Facts - Load after components are ready */}
       <div className="animate-fade-in" style={{ animationDelay: '2s' }}>
-        <ReadingFacts />
+        {showHeavyComponents && (
+          <Suspense fallback={<div className="w-64 h-16 bg-gray-800/50 rounded animate-pulse"></div>}>
+            <ReadingFacts />
+          </Suspense>
+        )}
       </div>
       
       {/* Enter the Archives Button - appears after the fact */}
@@ -63,20 +83,7 @@ const Index = () => {
         <InteractiveButton />
       </div>
 
-      {/* Test Mint Button - New feature! */}
-      <div className="animate-fade-in mt-4" style={{ animationDelay: '5s' }}>
-        <Link to="/test-mint">
-          <Button 
-            className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg shadow-lg border border-green-500/30 backdrop-blur-sm transition-all duration-300 hover:scale-105"
-          >
-            <Coins className="w-5 h-5 mr-2" />
-            🎉 Test Your AuraCoin Contract!
-          </Button>
-        </Link>
-        <p className="text-xs text-stone-500 mt-2 animate-pulse">
-          ✨ Your contract is deployed and ready for testing!
-        </p>
-      </div>
+
     </div>
   );
 };
