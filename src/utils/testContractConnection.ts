@@ -14,14 +14,14 @@ import {
 
 // Test different contract IDs
 const TEST_CONTRACT_IDS = [
-  'CA5UBCFVK2E57D3P3AZSKK2T2N6G7TQNXIQUEZGFX56FPW4B7OFINBUD', // Original
+  import.meta.env.VITE_AURA_CONTRACT_ID || 'CA5UBCFVK2E57D3P3AZSKK2T2N6G7TQNXIQUEZGFX56FPW4B7OFINBUD', // From env
   'CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABSC4', // Test contract
   'CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABSC5', // Another test
 ];
 
 // Initialize servers
-const horizonServer = new Horizon.Server('https://horizon-testnet.stellar.org');
-const sorobanServer = new StellarRpc.Server('https://soroban-testnet.stellar.org');
+const horizonServer = new Horizon.Server(import.meta.env.VITE_STELLAR_HORIZON_URL || 'https://horizon-testnet.stellar.org');
+const sorobanServer = new StellarRpc.Server(import.meta.env.VITE_STELLAR_RPC_URL || 'https://soroban-testnet.stellar.org');
 
 export const testContractIds = async () => {
   console.log('🔍 Testing contract IDs on Stellar testnet...');

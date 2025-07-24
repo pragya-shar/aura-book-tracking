@@ -17,6 +17,7 @@ import { FreighterProvider } from "./contexts/FreighterContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Auth from "./pages/Auth";
 import { ThemeProvider } from "next-themes";
+import { AuraCoinTest } from "./components/AuraCoinTest";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +39,7 @@ const App = () => (
                   <Route path="/progress" element={<ReadingProgress />} />
                   <Route path="/statistics" element={<Statistics />} />
                   <Route path="/wallet" element={<Wallet />} />
+                  <Route path="/test-mint" element={<AuraCoinTest />} />
                 </Route>
                   <Route path="*" element={<NotFound />} />
                 </Routes>

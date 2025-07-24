@@ -102,11 +102,12 @@ export const AuraCoinBalance = () => {
       console.log('Amount to mint:', mintAmount);
       
       await mintTokens(
-        walletAddress,
-        parseInt(mintAmount),
+        walletAddress, // recipient
+        parseInt(mintAmount), // amount
+        walletAddress, // owner address (user is the owner/minter)
         async (xdr) => {
           console.log('Signing transaction...');
-          const signedXdr = await signTransactionWithWallet(xdr, 'testnet');
+          const signedXdr = await signTransactionWithWallet(xdr, 'TESTNET');
           console.log('Transaction signed successfully');
           return signedXdr;
         }
@@ -156,7 +157,7 @@ export const AuraCoinBalance = () => {
         walletAddress,
         transferTo.trim(),
         parseInt(transferAmount),
-        async (xdr) => signTransactionWithWallet(xdr, 'testnet')
+        async (xdr) => signTransactionWithWallet(xdr, 'TESTNET')
       );
       
       toast({
@@ -192,7 +193,7 @@ export const AuraCoinBalance = () => {
       await burnTokens(
         walletAddress,
         parseInt(burnAmount),
-        async (xdr) => signTransactionWithWallet(xdr, 'testnet')
+        async (xdr) => signTransactionWithWallet(xdr, 'TESTNET')
       );
       
       toast({
@@ -236,7 +237,8 @@ export const AuraCoinBalance = () => {
     try {
       const result = await AuraCoinRewardService.rewardMultipleBooks(
         pendingRewards,
-        async (xdr) => signTransactionWithWallet(xdr, 'testnet')
+        walletAddress, // owner address (user is the owner/minter)
+        async (xdr) => signTransactionWithWallet(xdr, 'TESTNET')
       );
 
       if (result.success) {

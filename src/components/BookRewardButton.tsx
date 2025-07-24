@@ -72,7 +72,8 @@ export const BookRewardButton: React.FC<BookRewardButtonProps> = ({
 
       const result = await AuraCoinRewardService.rewardSingleBook(
         completionData,
-        async (xdr) => signTransactionWithWallet(xdr, 'testnet')
+        walletAddress, // owner address (user is the owner/minter)
+        async (xdr) => signTransactionWithWallet(xdr, 'TESTNET')
       );
 
       if (result.success) {

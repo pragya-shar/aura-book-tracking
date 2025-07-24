@@ -20,19 +20,28 @@ import {
   Address,
   xdr,
   BASE_FEE,
-  rpc as StellarRpc
+  rpc as StellarRpc,
+  nativeToScVal
 } from '@stellar/stellar-sdk';
 
 // AuraCoin Contract Configuration
 export const AURACOIN_CONFIG = {
-  CONTRACT_ID: 'CA5UBCFVK2E57D3P3AZSKK2T2N6G7TQNXIQUEZGFX56FPW4B7OFINBUD',
+  CONTRACT_ID: import.meta.env.VITE_AURA_CONTRACT_ID || 'CA5UBCFVK2E57D3P3AZSKK2T2N6G7TQNXIQUEZGFX56FPW4B7OFINBUD',
   NETWORK: 'testnet' as const,
-  RPC_URL: 'https://soroban-testnet.stellar.org',
-  NETWORK_PASSPHRASE: 'Test SDF Network ; September 2015'
+  RPC_URL: import.meta.env.VITE_STELLAR_RPC_URL || 'https://soroban-testnet.stellar.org',
+  NETWORK_PASSPHRASE: Networks.TESTNET // Force testnet network passphrase
 };
 
+// Debug logging for network configuration
+console.log('🔧 AuraCoin Configuration:', {
+  CONTRACT_ID: AURACOIN_CONFIG.CONTRACT_ID,
+  NETWORK: AURACOIN_CONFIG.NETWORK,
+  RPC_URL: AURACOIN_CONFIG.RPC_URL,
+  NETWORK_PASSPHRASE: AURACOIN_CONFIG.NETWORK_PASSPHRASE
+});
+
 // Initialize Horizon server for account operations
-const horizonServer = new Horizon.Server('https://horizon-testnet.stellar.org');
+const horizonServer = new Horizon.Server(import.meta.env.VITE_STELLAR_HORIZON_URL || 'https://horizon-testnet.stellar.org');
 
 // Initialize Soroban RPC server for contract operations
 const sorobanServer = new StellarRpc.Server(AURACOIN_CONFIG.RPC_URL);
@@ -47,12 +56,13 @@ const addressToScVal = (address: string) => {
   return Address.fromString(address).toScVal();
 };
 
-// Helper function to convert amount to XDR
-const amountToScVal = (amount: string) => {
-  return xdr.ScVal.scvI128(new xdr.Int128Parts({ 
-    lo: xdr.Int64.fromString(amount), 
-    hi: xdr.Int64.fromString('0') 
-  }));
+// Helper function to convert amount to XDR (using proper i128 for token amounts)
+const amountToScVal = (amount: number) => {
+  // Convert to the smallest unit (7 decimal places for AuraCoin, like Stellar native assets)
+  const amountInSmallestUnit = Math.floor(amount * Math.pow(10, 7));
+  
+  // Use the Stellar SDK's nativeToScVal method which handles the encoding properly
+  return nativeToScVal(amountInSmallestUnit, { type: "i128" });
 };
 
 // Helper function to convert XDR to native value
@@ -119,6 +129,7 @@ const createAndSubmitSorobanTransaction = async (
 ) => {
   try {
     console.log(`🔧 Creating Soroban transaction for ${method}...`);
+    console.log(`🌐 Network passphrase: ${AURACOIN_CONFIG.NETWORK_PASSPHRASE}`);
     
     // Get the source account
     const account = await sorobanServer.getAccount(sourceAccount);
@@ -177,30 +188,34 @@ const createAndSubmitSorobanTransaction = async (
   }
 };
 
-// Mint tokens (owner only) - This is the main function for rewarding users
+// Mint tokens (owner only) - Using user's Freighter wallet since they are the owner
 export const mintTokens = async (
-  accountAddress: string,
+  recipientAddress: string,
   amount: number,
+  ownerAddress: string,
   signTransaction: (xdr: string) => Promise<string>
 ): Promise<void> => {
   try {
-    console.log(`🎯 Starting mint operation for ${amount} AURA tokens to ${accountAddress}`);
+    console.log(`🎯 Starting mint operation for ${amount} AURA tokens`);
+    console.log(`👤 Owner/Minter: ${ownerAddress}`);
+    console.log(`🎁 Recipient: ${recipientAddress}`);
     
     const contract = createContract();
-    const recipient = addressToScVal(accountAddress);
-    const amountVal = amountToScVal(amount.toString());
+    const recipient = addressToScVal(recipientAddress);
+    const amountVal = amountToScVal(amount);
     
-    // Based on the contract structure, the mint function takes (account, amount)
-    // where account is the recipient address
+    console.log('🔧 Creating mint transaction...');
+    
+    // Create and submit the mint transaction using owner's wallet
     await createAndSubmitSorobanTransaction(
-      accountAddress,
+      ownerAddress, // Use owner's address as the source account
       contract,
       'mint',
       [recipient, amountVal],
       signTransaction
     );
     
-    console.log(`✅ Successfully minted ${amount} AURA tokens to ${accountAddress}`);
+    console.log(`✅ Successfully minted ${amount} AURA tokens to ${recipientAddress}`);
   } catch (error) {
     console.error('❌ Error minting tokens:', error);
     throw error;
@@ -220,7 +235,7 @@ export const transferTokens = async (
     const contract = createContract();
     const from = addressToScVal(fromAddress);
     const to = addressToScVal(toAddress);
-    const amountVal = amountToScVal(amount.toString());
+    const amountVal = amountToScVal(amount);
     
     // Create and submit the transfer transaction
     await createAndSubmitSorobanTransaction(
@@ -249,7 +264,7 @@ export const burnTokens = async (
     
     const contract = createContract();
     const from = addressToScVal(fromAddress);
-    const amountVal = amountToScVal(amount.toString());
+    const amountVal = amountToScVal(amount);
     
     // Create and submit the burn transaction
     await createAndSubmitSorobanTransaction(
@@ -285,17 +300,20 @@ export const getContractExplorerUrl = (): string => {
 };
 
 // Format balance for display
-export const formatBalance = (balance: string, decimals: number = 18): string => {
+export const formatBalance = (balance: string | number): string => {
   try {
-    const balanceNum = parseFloat(balance);
-    const formatted = balanceNum / Math.pow(10, decimals);
-    return formatted.toLocaleString('en-US', { 
-      minimumFractionDigits: 2, 
-      maximumFractionDigits: 6 
+    const balanceNum = typeof balance === 'string' ? parseFloat(balance) : balance;
+    if (isNaN(balanceNum)) return '0';
+    
+    // Convert from smallest unit to display units (7 decimals)
+    const displayBalance = balanceNum / Math.pow(10, 7);
+    return displayBalance.toLocaleString('en-US', { 
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 7 
     });
   } catch (error) {
     console.error('Error formatting balance:', error);
-    return '0.00';
+    return '0';
   }
 };
 
@@ -320,17 +338,18 @@ export const calculateBookReward = (pages: number, difficulty: 'easy' | 'medium'
   return Math.floor(baseReward * difficultyMultiplier[difficulty]);
 };
 
-// Mint tokens for completing a book
+// Mint tokens for completing a book using owner's wallet
 export const rewardBookCompletion = async (
   walletAddress: string,
   bookReward: BookReward,
+  ownerAddress: string,
   signTransaction: (xdr: string) => Promise<string>
 ): Promise<void> => {
   try {
     console.log(`📚 Rewarding book completion: "${bookReward.title}" (${bookReward.pages} pages)`);
     console.log(`💰 Reward amount: ${bookReward.rewardAmount} AURA tokens`);
     
-    await mintTokens(walletAddress, bookReward.rewardAmount, signTransaction);
+    await mintTokens(walletAddress, bookReward.rewardAmount, ownerAddress, signTransaction);
     
     console.log(`🎉 Successfully rewarded ${bookReward.rewardAmount} AURA tokens for completing "${bookReward.title}"`);
   } catch (error) {
@@ -339,10 +358,11 @@ export const rewardBookCompletion = async (
   }
 };
 
-// Batch reward for multiple books
+// Batch reward for multiple books using owner's wallet
 export const rewardMultipleBooks = async (
   walletAddress: string,
   bookRewards: BookReward[],
+  ownerAddress: string,
   signTransaction: (xdr: string) => Promise<string>
 ): Promise<void> => {
   try {
@@ -351,7 +371,7 @@ export const rewardMultipleBooks = async (
     console.log(`📚 Rewarding completion of ${bookRewards.length} books`);
     console.log(`💰 Total reward: ${totalReward} AURA tokens`);
     
-    await mintTokens(walletAddress, totalReward, signTransaction);
+    await mintTokens(walletAddress, totalReward, ownerAddress, signTransaction);
     
     console.log(`🎉 Successfully rewarded ${totalReward} AURA tokens for completing ${bookRewards.length} books`);
   } catch (error) {

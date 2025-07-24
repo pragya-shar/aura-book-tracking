@@ -1,9 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import ParticleSystem from "@/components/ParticleSystem";
 import InteractiveButton from "@/components/InteractiveButton";
 import CascadingBookTitles from "@/components/CascadingBookTitles";
 import ReadingFacts from "@/components/ReadingFacts";
+import { Button } from "@/components/ui/button";
+import { Coins } from "lucide-react";
 
 const Index = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -58,6 +61,21 @@ const Index = () => {
       {/* Enter the Archives Button - appears after the fact */}
       <div className="animate-fade-in" style={{ animationDelay: '4s' }}>
         <InteractiveButton />
+      </div>
+
+      {/* Test Mint Button - New feature! */}
+      <div className="animate-fade-in mt-4" style={{ animationDelay: '5s' }}>
+        <Link to="/test-mint">
+          <Button 
+            className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg shadow-lg border border-green-500/30 backdrop-blur-sm transition-all duration-300 hover:scale-105"
+          >
+            <Coins className="w-5 h-5 mr-2" />
+            🎉 Test Your AuraCoin Contract!
+          </Button>
+        </Link>
+        <p className="text-xs text-stone-500 mt-2 animate-pulse">
+          ✨ Your contract is deployed and ready for testing!
+        </p>
       </div>
     </div>
   );

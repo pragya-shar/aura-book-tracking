@@ -8,7 +8,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { 
   rewardBookCompletion, 
-  rewardMultipleBooks, 
+  rewardMultipleBooks as mintMultipleBookRewards, 
   calculateBookReward,
   BookReward 
 } from '@/utils/auraCoinUtils';
@@ -36,6 +36,7 @@ export class AuraCoinRewardService {
    */
   static async rewardSingleBook(
     completionData: BookCompletionData,
+    ownerAddress: string,
     signTransaction: (xdr: string) => Promise<string>
   ): Promise<RewardResult> {
     try {
@@ -58,6 +59,7 @@ export class AuraCoinRewardService {
       await rewardBookCompletion(
         completionData.walletAddress,
         bookReward,
+        ownerAddress,
         signTransaction
       );
 
@@ -85,6 +87,7 @@ export class AuraCoinRewardService {
    */
   static async rewardMultipleBooks(
     completions: BookCompletionData[],
+    ownerAddress: string,
     signTransaction: (xdr: string) => Promise<string>
   ): Promise<RewardResult> {
     try {
@@ -103,9 +106,10 @@ export class AuraCoinRewardService {
       const totalReward = bookRewards.reduce((sum, book) => sum + book.rewardAmount, 0);
 
       // Mint tokens for all books
-      await rewardMultipleBooks(
+      await mintMultipleBookRewards(
         completions[0].walletAddress, // All completions should have the same wallet
         bookRewards,
+        ownerAddress,
         signTransaction
       );
 

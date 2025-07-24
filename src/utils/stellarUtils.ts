@@ -4,8 +4,8 @@ import { Horizon, TransactionBuilder, Networks, Asset, Operation } from '@stella
 export const NETWORK_CONFIGS = {
   TESTNET: {
     networkPassphrase: Networks.TESTNET,
-    serverUrl: 'https://horizon-testnet.stellar.org',
-    sorobanRpcUrl: 'https://soroban-testnet.stellar.org'
+    serverUrl: import.meta.env.VITE_STELLAR_HORIZON_URL || 'https://horizon-testnet.stellar.org',
+    sorobanRpcUrl: import.meta.env.VITE_STELLAR_RPC_URL || 'https://soroban-testnet.stellar.org'
   },
   PUBLIC: {
     networkPassphrase: Networks.PUBLIC,

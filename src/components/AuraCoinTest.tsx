@@ -92,9 +92,10 @@ export const AuraCoinTest = () => {
       console.log(`💰 Amount to mint: ${mintAmount}`);
       
       await mintTokens(
-        walletAddress,
-        parseInt(mintAmount),
-        async (xdr) => signTransactionWithWallet(xdr, 'testnet')
+        walletAddress, // recipient
+        parseInt(mintAmount), // amount
+        walletAddress, // owner address (user is the owner/minter)
+        async (xdr) => signTransactionWithWallet(xdr, 'TESTNET') // sign function - uppercase!
       );
       
       toast({
