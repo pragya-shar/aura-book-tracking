@@ -65,7 +65,8 @@ const Index = () => {
           <span className="font-pixel ml-1 animate-fade-in" style={{ animationDelay: '0.8s' }}>URA</span>
         </h1>
         <p className="font-playfair text-stone-400 mt-2 text-lg md:text-xl italic animate-fade-in [text-shadow:0_0_6px_rgba(251,191,36,0.3),0_0_12px_rgba(251,191,36,0.1)]" style={{ animationDelay: '1.2s' }}>
-          Uncover the mysteries of your reading adventures.
+          Uncover the mysteries of your reading adventures,<br />
+          <span className="text-amber-300 font-semibold [text-shadow:0_0_8px_rgba(251,191,36,0.6),0_0_16px_rgba(251,191,36,0.4)]">And earn AURA coins through Stellar!</span>
         </p>
       </div>
 
