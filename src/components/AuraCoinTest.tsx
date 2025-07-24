@@ -14,7 +14,8 @@ import {
   ExternalLink,
   CheckCircle,
   AlertCircle,
-  Wifi
+  Wifi,
+  Plus
 } from 'lucide-react';
 
 export const AuraCoinTest = () => {
@@ -107,6 +108,53 @@ export const AuraCoinTest = () => {
       toast({
         title: "Minting Failed",
         description: error instanceof Error ? error.message : "Failed to mint tokens",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddTokenToFreighter = async () => {
+    if (!isWalletConnected) {
+      toast({
+        title: "Wallet Not Connected",
+        description: "Please connect your Freighter wallet first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setLoading(true);
+      console.log('🪙 Adding AuraCoin to Freighter wallet...');
+      
+      // Use Freighter API to add token
+      const freighterApi = (window as any).freighterApi;
+      if (!freighterApi) {
+        throw new Error('Freighter API not available');
+      }
+
+      const result = await freighterApi.addToken({
+        contractId: AURACOIN_CONFIG.CONTRACT_ID,
+        networkPassphrase: AURACOIN_CONFIG.NETWORK_PASSPHRASE
+      });
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      toast({
+        title: "🎉 Token Added to Freighter!",
+        description: "AuraCoin has been added to your Freighter wallet. You should now see your balance!",
+      });
+      
+      console.log('✅ Successfully added AuraCoin to Freighter wallet');
+    } catch (error) {
+      console.error('❌ Failed to add token to Freighter:', error);
+      toast({
+        title: "Failed to Add Token",
+        description: error instanceof Error ? error.message : "Failed to add token to Freighter",
         variant: "destructive",
       });
     } finally {
@@ -250,6 +298,19 @@ export const AuraCoinTest = () => {
               )}
               Mint Tokens
             </Button>
+
+            <Button
+              onClick={handleAddTokenToFreighter}
+              disabled={loading || !isWalletConnected}
+              className="bg-green-600 hover:bg-green-700 disabled:bg-stone-600"
+            >
+              {loading ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Plus className="w-4 h-4 mr-2" />
+              )}
+              Add Token to Freighter
+            </Button>
           </div>
         </div>
 
@@ -261,8 +322,9 @@ export const AuraCoinTest = () => {
             <div>2. Click "Test Connection" to verify network connectivity</div>
             <div>3. Click "Get Token Info" to verify contract connection</div>
             <div>4. Enter an amount and click "Mint Tokens" to test minting</div>
-            <div>5. Check the console for detailed logs</div>
-            <div>6. Verify the transaction on Stellar Explorer</div>
+            <div>5. Click "Add Token to Freighter" to see your tokens in your wallet</div>
+            <div>6. Check the console for detailed logs</div>
+            <div>7. Verify the transaction on Stellar Explorer</div>
           </div>
         </div>
       </CardContent>
