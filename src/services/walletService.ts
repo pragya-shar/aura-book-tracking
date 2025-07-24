@@ -25,11 +25,14 @@ export class WalletService {
         };
       }
 
+      // Clean the wallet address to remove any suffix like ":1"
+      const cleanAddress = walletAddress.split(':')[0];
+
       // Check if wallet is already linked to another account
       const { data: existingProfile, error: checkError } = await supabase
         .from('user_profiles')
         .select('*')
-        .eq('wallet_address', walletAddress)
+        .eq('wallet_address', cleanAddress)
         .single();
 
       if (checkError && checkError.code !== 'PGRST116') { // PGRST116 is "not found"
@@ -51,7 +54,7 @@ export class WalletService {
         .from('user_profiles')
         .upsert({
           user_id: user.id,
-          wallet_address: walletAddress,
+          wallet_address: cleanAddress,
           wallet_network: network,
           updated_at: new Date().toISOString()
         })
@@ -151,10 +154,13 @@ export class WalletService {
    */
   static async isWalletLinked(walletAddress: string): Promise<boolean> {
     try {
+      // Clean the wallet address to remove any suffix like ":1"
+      const cleanAddress = walletAddress.split(':')[0];
+      
       const { data, error } = await supabase
         .from('user_profiles')
         .select('user_id')
-        .eq('wallet_address', walletAddress)
+        .eq('wallet_address', cleanAddress)
         .single();
 
       if (error && error.code !== 'PGRST116') { // PGRST116 is "not found"
@@ -174,13 +180,27 @@ export class WalletService {
    */
   static async getUserByWalletAddress(walletAddress: string) {
     try {
+      // Clean the wallet address to remove any suffix like ":1"
+      const cleanAddress = walletAddress.split(':')[0];
+      
       const { data: profile, error } = await supabase
         .from('user_profiles')
         .select('*')
-        .eq('wallet_address', walletAddress)
+        .eq('wallet_address', cleanAddress)
         .single();
 
-      return { data: profile, error };
+      if (error) {
+        // Handle specific error cases
+        if (error.code === 'PGRST116') {
+          // No rows returned - this is expected for unlinked wallets
+          return { data: null, error: null };
+        }
+        
+        console.error('Error getting user by wallet address:', error);
+        return { data: null, error: error.message };
+      }
+
+      return { data: profile, error: null };
     } catch (error) {
       console.error('Error getting user by wallet address:', error);
       return { data: null, error: 'An unexpected error occurred' };
