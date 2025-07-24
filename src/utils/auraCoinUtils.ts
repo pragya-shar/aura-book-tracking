@@ -1,19 +1,8 @@
 /**
  * AuraCoin Smart Contract Integration
  * 
- * NOTE: This is a simplified implementation that demonstrates the UI and transaction flow.
- * The actual Soroban contract interactions require more complex XDR encoding and Soroban RPC calls.
- * 
- * Current implementation:
- * - Uses standard Stellar payment operations as placeholders
- * - Provides the complete UI flow for minting, transferring, and burning
- * - Ready for integration with real Soroban contract calls
- * 
- * To implement real contract calls, you would need to:
- * 1. Use Soroban RPC for contract simulation and calls
- * 2. Properly encode contract parameters as XDR
- * 3. Use invokeHostFunction operations with correct parameters
- * 4. Handle contract-specific authentication and authorization
+ * This implementation provides a working foundation for AuraCoin token operations.
+ * Currently uses Stellar payments as placeholders, ready for Soroban integration.
  */
 
 import { 
@@ -40,11 +29,11 @@ export interface AuraCoinContract {
   name(): Promise<string>;
   symbol(): Promise<string>;
   decimals(): Promise<number>;
-  total_supply(): Promise<string>;
-  balance(account: string): Promise<string>;
-  mint(account: string, amount: number): Promise<void>;
-  transfer(from: string, to: string, amount: number): Promise<void>;
-  burn(from: string, amount: number): Promise<void>;
+  totalSupply(): Promise<string>;
+  balance(address: string): Promise<string>;
+  mint(to: string, amount: string): Promise<void>;
+  transfer(from: string, to: string, amount: string): Promise<void>;
+  burn(from: string, amount: string): Promise<void>;
   paused(): Promise<boolean>;
 }
 
@@ -205,42 +194,22 @@ export const isPaused = async (): Promise<boolean> => {
   }
 };
 
-// Format balance for display
-export const formatBalance = (balance: string, decimals: number = 18): string => {
-  const balanceNum = parseFloat(balance);
-  const formatted = balanceNum / Math.pow(10, decimals);
-  return formatted.toLocaleString('en-US', { 
-    minimumFractionDigits: 2, 
-    maximumFractionDigits: 6 
-  });
-};
-
 // Get contract explorer URL
 export const getContractExplorerUrl = (): string => {
   return `https://stellar.expert/explorer/testnet/contract/${AURACOIN_CONFIG.CONTRACT_ID}`;
 };
 
-// Test function to verify integration
-export const testAuraCoinIntegration = async (): Promise<boolean> => {
+// Format balance for display
+export const formatBalance = (balance: string, decimals: number = 18): string => {
   try {
-    console.log('🧪 Testing AuraCoin Integration...');
-    
-    // Test token info
-    const tokenInfo = await getTokenInfo();
-    console.log('✅ Token Info:', tokenInfo);
-    
-    // Test balance
-    const balance = await getBalance('GCYXOOV2VEQ2XXYO2DHLJ6JRZFAPEZKYOO5EUPWSPMELTW4IKJW3WGEI');
-    console.log('✅ Balance:', balance);
-    
-    // Test pause status
-    const isPausedStatus = await isPaused();
-    console.log('✅ Pause Status:', isPausedStatus);
-    
-    console.log('🎉 AuraCoin Integration Test Passed!');
-    return true;
+    const balanceNum = parseFloat(balance);
+    const formatted = balanceNum / Math.pow(10, decimals);
+    return formatted.toLocaleString('en-US', { 
+      minimumFractionDigits: 2, 
+      maximumFractionDigits: 6 
+    });
   } catch (error) {
-    console.error('❌ AuraCoin Integration Test Failed:', error);
-    return false;
+    console.error('Error formatting balance:', error);
+    return '0.00';
   }
 }; 

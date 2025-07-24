@@ -35,13 +35,6 @@ export class WalletService {
         .eq('wallet_address', cleanAddress)
         .single();
 
-      if (checkError && checkError.code !== 'PGRST116') { // PGRST116 is "not found"
-        return {
-          success: false,
-          message: 'Error checking wallet status'
-        };
-      }
-
       if (existingProfile && existingProfile.user_id !== user.id) {
         return {
           success: false,
@@ -49,19 +42,18 @@ export class WalletService {
         };
       }
 
-      // Update or create user profile with wallet address
-      const { data: profile, error: updateError } = await supabase
+      // Update the user's profile with wallet information
+      const { error: updateError } = await supabase
         .from('user_profiles')
-        .upsert({
-          user_id: user.id,
+        .update({ 
           wallet_address: cleanAddress,
           wallet_network: network,
           updated_at: new Date().toISOString()
         })
-        .select()
-        .single();
+        .eq('user_id', user.id);
 
       if (updateError) {
+        console.error('Error linking wallet to user:', updateError);
         return {
           success: false,
           message: 'Failed to link wallet to account'
@@ -70,14 +62,13 @@ export class WalletService {
 
       return {
         success: true,
-        message: 'Wallet successfully linked to your account',
-        profile
+        message: 'Wallet successfully linked to account'
       };
     } catch (error) {
-      console.error('Error linking wallet:', error);
+      console.error('Error linking wallet to user:', error);
       return {
         success: false,
-        message: 'An unexpected error occurred'
+        message: 'Failed to link wallet to account'
       };
     }
   }
@@ -197,13 +188,13 @@ export class WalletService {
         }
         
         console.error('Error getting user by wallet address:', error);
-        return { data: null, error: error.message };
+        return { data: null, error };
       }
 
       return { data: profile, error: null };
     } catch (error) {
       console.error('Error getting user by wallet address:', error);
-      return { data: null, error: 'An unexpected error occurred' };
+      return { data: null, error };
     }
   }
 

@@ -75,10 +75,19 @@ export const AuraCoinBalance = () => {
 
     setLoading(true);
     try {
+      console.log('Starting mint operation...');
+      console.log('Wallet address:', walletAddress);
+      console.log('Amount to mint:', mintAmount);
+      
       await mintTokens(
         walletAddress,
         parseInt(mintAmount),
-        (xdr) => signTransactionWithWallet(xdr, 'testnet')
+        async (xdr) => {
+          console.log('Signing transaction...');
+          const signedXdr = await signTransactionWithWallet(xdr, 'testnet');
+          console.log('Transaction signed successfully');
+          return signedXdr;
+        }
       );
       
       toast({
@@ -88,6 +97,7 @@ export const AuraCoinBalance = () => {
       
       await loadData(); // Refresh balance
     } catch (error) {
+      console.error('Minting error details:', error);
       toast({
         title: "Minting Failed",
         description: error instanceof Error ? error.message : "Failed to mint tokens",

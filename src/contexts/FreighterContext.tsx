@@ -123,19 +123,24 @@ export const FreighterProvider = ({ children }: { children: ReactNode }) => {
       setIsWalletConnected(true);
 
       // Check if wallet is linked to an existing account
-      const loginCheck = await WalletService.canWalletLogin(address);
-      
-      if (loginCheck.canLogin && loginCheck.profile) {
-        // Wallet is linked to an existing account
-        setIsWalletLinked(true);
+      try {
+        const loginCheck = await WalletService.canWalletLogin(address);
         
-        // If user is not logged in, inform them about the linked account
-        if (!user) {
-          setError('🎉 Wallet connected! This wallet is linked to your account. You can now access your data. If you want to see your email, please log in with your email address.');
-        } else if (user.id !== loginCheck.profile.user_id) {
-          // User is logged in but with a different account
-          setError('⚠️ This wallet is linked to a different account. Please log out and log in with the correct account.');
+        if (loginCheck.canLogin && loginCheck.profile) {
+          // Wallet is linked to an existing account
+          setIsWalletLinked(true);
+          
+          // If user is not logged in, inform them about the linked account
+          if (!user) {
+            setError('🎉 Wallet connected! This wallet is linked to your account. You can now access your data. If you want to see your email, please log in with your email address.');
+          } else if (user.id !== loginCheck.profile.user_id) {
+            // User is logged in but with a different account
+            setError('⚠️ This wallet is linked to a different account. Please log out and log in with the correct account.');
+          }
         }
+      } catch (linkError) {
+        console.warn('Error checking wallet link status:', linkError);
+        // Don't fail the connection if link check fails
       }
     } catch (err) {
       console.error('Error connecting wallet:', err);
