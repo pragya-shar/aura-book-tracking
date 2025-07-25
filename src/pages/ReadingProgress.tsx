@@ -19,22 +19,36 @@ type BookWithProgress = Tables<'books'> & {
 };
 
 const ReadingProgress = () => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: books, isLoading, isError, error } = useQuery({
     queryKey: ['reading-progress', user?.id],
     queryFn: async (): Promise<BookWithProgress[] | null> => {
-      if (!user) return null;
+      if (!user) {
+        console.log('No user found, returning null');
+        return null;
+      }
+
+      console.log('Fetching reading progress for user:', user.id);
 
       const [booksRes, logsRes] = await Promise.all([
         supabase.from('books').select('*').eq('user_id', user.id).order('title', { ascending: true }),
         supabase.from('reading_logs').select('*').eq('user_id', user.id).order('created_at', { ascending: false })
       ]);
 
-      if (booksRes.error) throw new Error(booksRes.error.message);
-      if (logsRes.error) throw new Error(logsRes.error.message);
+      console.log('Books response:', booksRes);
+      console.log('Logs response:', logsRes);
+
+      if (booksRes.error) {
+        console.error('Books error:', booksRes.error);
+        throw new Error(booksRes.error.message);
+      }
+      if (logsRes.error) {
+        console.error('Logs error:', logsRes.error);
+        throw new Error(logsRes.error.message);
+      }
       
       const booksData = booksRes.data || [];
       const logsData = logsRes.data || [];
@@ -53,7 +67,7 @@ const ReadingProgress = () => {
 
       return booksWithProgress;
     },
-    enabled: !!user,
+    enabled: !!user && !loading,
   });
 
   const updatePageCountMutation = useMutation({
