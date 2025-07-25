@@ -57,6 +57,3 @@ aura-coin-contract/target/
 seed_phrase*
 secret_key*
 private_key*
-
-# Documentation files (not for public repository)
-AURACOIN_BACKEND_PLAN.md
