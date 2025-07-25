@@ -5,245 +5,209 @@
  * when they complete reading books.
  */
 
-import { supabase } from '@/integrations/supabase/client';
-import { 
-  rewardBookCompletion, 
-  rewardMultipleBooks as mintMultipleBookRewards, 
-  calculateBookReward,
-  BookReward 
-} from '@/utils/auraCoinUtils';
+import { supabase } from '@/integrations/supabase/client'
 
-export interface BookCompletionData {
-  bookId: string;
-  title: string;
-  pages: number;
-  difficulty?: 'easy' | 'medium' | 'hard';
-  completedAt: Date;
-  userId: string;
-  walletAddress: string;
+export interface AuraCoinRewardResponse {
+  success: boolean
+  reward_created?: boolean
+  reward_amount?: number
+  reward_id?: string
+  message?: string
+  error?: string
 }
 
-export interface RewardResult {
-  success: boolean;
-  rewardAmount: number;
-  message: string;
-  error?: string;
+export interface ProcessRewardsResponse {
+  success: boolean
+  results: Array<{
+    id: string
+    status: 'success' | 'error'
+    message?: string
+    transaction_hash?: string
+    reward_amount?: number
+    wallet_address?: string
+  }>
+  summary: {
+    total_processed: number
+    successful: number
+    failed: number
+    total_amount: number
+  }
+}
+
+export interface TestAuraCoinResponse {
+  success: boolean
+  user_profile?: any
+  books_count?: number
+  books?: any[]
+  reading_logs_count?: number
+  reading_logs?: any[]
+  pending_rewards_count?: number
+  pending_rewards?: any[]
+  pending_summary?: any
+  completed_summary?: any
+  system_status?: {
+    database_connected: boolean
+    functions_available: boolean
+    wallet_configured: boolean
+  }
+  error?: string
 }
 
 export class AuraCoinRewardService {
   /**
-   * Reward a user for completing a single book
+   * Detect book completion and create pending reward
    */
-  static async rewardSingleBook(
-    completionData: BookCompletionData,
-    ownerAddress: string,
-    signTransaction: (xdr: string) => Promise<string>
-  ): Promise<RewardResult> {
+  static async detectBookCompletion(readingLogId: string): Promise<AuraCoinRewardResponse> {
     try {
-      // Calculate reward based on book details
-      const rewardAmount = calculateBookReward(
-        completionData.pages, 
-        completionData.difficulty || 'medium'
-      );
-
-      // Create book reward object
-      const bookReward: BookReward = {
-        bookId: completionData.bookId,
-        title: completionData.title,
-        pages: completionData.pages,
-        rewardAmount,
-        completedAt: completionData.completedAt
-      };
-
-      // Mint tokens for the user
-      await rewardBookCompletion(
-        completionData.walletAddress,
-        bookReward,
-        ownerAddress,
-        signTransaction
-      );
-
-      // Log the reward in the database
-      await this.logReward(completionData, rewardAmount);
-
-      return {
-        success: true,
-        rewardAmount,
-        message: `Successfully rewarded ${rewardAmount} AURA tokens for completing "${completionData.title}"`
-      };
-    } catch (error) {
-      console.error('Error rewarding single book:', error);
-      return {
-        success: false,
-        rewardAmount: 0,
-        message: 'Failed to reward book completion',
-        error: error instanceof Error ? error.message : 'Unknown error'
-      };
-    }
-  }
-
-  /**
-   * Reward a user for completing multiple books
-   */
-  static async rewardMultipleBooks(
-    completions: BookCompletionData[],
-    ownerAddress: string,
-    signTransaction: (xdr: string) => Promise<string>
-  ): Promise<RewardResult> {
-    try {
-      // Calculate rewards for all books
-      const bookRewards: BookReward[] = completions.map(completion => ({
-        bookId: completion.bookId,
-        title: completion.title,
-        pages: completion.pages,
-        rewardAmount: calculateBookReward(
-          completion.pages, 
-          completion.difficulty || 'medium'
-        ),
-        completedAt: completion.completedAt
-      }));
-
-      const totalReward = bookRewards.reduce((sum, book) => sum + book.rewardAmount, 0);
-
-      // Mint tokens for all books
-      await mintMultipleBookRewards(
-        completions[0].walletAddress, // All completions should have the same wallet
-        bookRewards,
-        ownerAddress,
-        signTransaction
-      );
-
-      // Log all rewards in the database
-      for (const completion of completions) {
-        const rewardAmount = calculateBookReward(
-          completion.pages, 
-          completion.difficulty || 'medium'
-        );
-        await this.logReward(completion, rewardAmount);
-      }
-
-      return {
-        success: true,
-        rewardAmount: totalReward,
-        message: `Successfully rewarded ${totalReward} AURA tokens for completing ${completions.length} books`
-      };
-    } catch (error) {
-      console.error('Error rewarding multiple books:', error);
-      return {
-        success: false,
-        rewardAmount: 0,
-        message: 'Failed to reward book completions',
-        error: error instanceof Error ? error.message : 'Unknown error'
-      };
-    }
-  }
-
-  /**
-   * Get pending rewards for a user
-   */
-  static async getPendingRewards(userId: string): Promise<BookCompletionData[]> {
-    try {
-      const { data: readingLogs, error } = await supabase
-        .from('reading_logs')
-        .select(`
-          *,
-          books (
-            id,
-            title
-          )
-        `)
-        .eq('user_id', userId)
-        .eq('status', 'completed')
-        .order('date', { ascending: true });
+      const { data, error } = await supabase.functions.invoke('detect-book-completion', {
+        body: { reading_log_id: readingLogId }
+      })
 
       if (error) {
-        console.error('Error fetching pending rewards:', error);
-        return [];
+        console.error('Error calling detect-book-completion:', error)
+        return {
+          success: false,
+          error: error.message
+        }
       }
 
-      // Get user's wallet address
-      const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('wallet_address')
-        .eq('user_id', userId)
-        .single();
-
-      if (!profile?.wallet_address) {
-        console.warn('User has no linked wallet address');
-        return [];
-      }
-
-      return readingLogs.map(log => ({
-        bookId: log.book_id,
-        title: log.books.title,
-        pages: 100, // Default pages since not in schema
-        difficulty: 'medium' as const,
-        completedAt: new Date(log.date),
-        userId,
-        walletAddress: profile.wallet_address
-      }));
+      return data as AuraCoinRewardResponse
     } catch (error) {
-      console.error('Error getting pending rewards:', error);
-      return [];
+      console.error('Error in detectBookCompletion:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      }
     }
   }
 
   /**
-   * Log reward in the database (simplified version)
+   * Process pending rewards (admin function)
    */
-  private static async logReward(
-    completionData: BookCompletionData, 
-    rewardAmount: number
-  ): Promise<void> {
+  static async processRewards(rewardIds: string[]): Promise<ProcessRewardsResponse> {
     try {
-      // For now, just log to console since we don't have the rewards table
-      console.log(`🎉 Reward logged: ${rewardAmount} AURA tokens for "${completionData.title}"`);
-      console.log(`📊 User: ${completionData.userId}, Wallet: ${completionData.walletAddress}`);
-      
-      // In a full implementation, you would insert into a rewards table here
-      // For now, we'll just mark the reading log as processed by updating notes
-      const { error } = await supabase
-        .from('reading_logs')
-        .update({ 
-          notes: `Rewarded with ${rewardAmount} AURA tokens on ${new Date().toISOString()}` 
-        })
-        .eq('book_id', completionData.bookId)
-        .eq('user_id', completionData.userId)
-        .eq('status', 'completed');
+      const { data, error } = await supabase.functions.invoke('process-rewards', {
+        body: { reward_ids: rewardIds }
+      })
 
       if (error) {
-        console.error('Error updating reading log:', error);
+        console.error('Error calling process-rewards:', error)
+        return {
+          success: false,
+          results: [],
+          summary: {
+            total_processed: 0,
+            successful: 0,
+            failed: 1,
+            total_amount: 0
+          }
+        }
       }
+
+      return data as ProcessRewardsResponse
     } catch (error) {
-      console.error('Error logging reward:', error);
+      console.error('Error in processRewards:', error)
+      return {
+        success: false,
+        results: [],
+        summary: {
+          total_processed: 0,
+          successful: 0,
+          failed: 1,
+          total_amount: 0
+        }
+      }
     }
   }
 
   /**
-   * Get user's total rewards (simplified version)
+   * Test AuraCoin system status
    */
-  static async getUserTotalRewards(userId: string): Promise<number> {
+  static async testAuraCoinSystem(userId: string): Promise<TestAuraCoinResponse> {
     try {
-      // For now, return a placeholder since we don't have a rewards table
-      // In a full implementation, you would query the rewards table
-      return 0;
+      const { data, error } = await supabase.functions.invoke('test-aura-coin', {
+        body: { user_id: userId }
+      })
+
+      if (error) {
+        console.error('Error calling test-aura-coin:', error)
+        return {
+          success: false,
+          error: error.message
+        }
+      }
+
+      return data as TestAuraCoinResponse
     } catch (error) {
-      console.error('Error getting user total rewards:', error);
-      return 0;
+      console.error('Error in testAuraCoinSystem:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      }
     }
   }
 
   /**
-   * Get user's reward history (simplified version)
+   * Get user's pending rewards using database function
    */
-  static async getUserRewardHistory(userId: string): Promise<any[]> {
+  static async getUserPendingRewards(userId: string) {
     try {
-      // For now, return empty array since we don't have a rewards table
-      // In a full implementation, you would query the rewards table
-      return [];
+      const { data, error } = await supabase.rpc('get_user_pending_rewards', {
+        user_uuid: userId
+      })
+
+      if (error) {
+        console.error('Error getting pending rewards:', error)
+        return { total_pending: 0, total_amount: 0 }
+      }
+
+      return data?.[0] || { total_pending: 0, total_amount: 0 }
     } catch (error) {
-      console.error('Error getting reward history:', error);
-      return [];
+      console.error('Error in getUserPendingRewards:', error)
+      return { total_pending: 0, total_amount: 0 }
+    }
+  }
+
+  /**
+   * Get user's completed rewards using database function
+   */
+  static async getUserCompletedRewards(userId: string) {
+    try {
+      const { data, error } = await supabase.rpc('get_user_completed_rewards', {
+        user_uuid: userId
+      })
+
+      if (error) {
+        console.error('Error getting completed rewards:', error)
+        return { total_completed: 0, total_amount: 0 }
+      }
+
+      return data?.[0] || { total_completed: 0, total_amount: 0 }
+    } catch (error) {
+      console.error('Error in getUserCompletedRewards:', error)
+      return { total_completed: 0, total_amount: 0 }
+    }
+  }
+
+  /**
+   * Mark a reward as processed (admin function)
+   */
+  static async markRewardProcessed(rewardId: string, transactionHash?: string) {
+    try {
+      const { data, error } = await supabase.rpc('mark_reward_processed', {
+        reward_id: rewardId,
+        transaction_hash: transactionHash
+      })
+
+      if (error) {
+        console.error('Error marking reward as processed:', error)
+        return false
+      }
+
+      return data
+    } catch (error) {
+      console.error('Error in markRewardProcessed:', error)
+      return false
     }
   }
 } 
