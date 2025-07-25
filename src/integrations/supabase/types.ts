@@ -12,74 +12,33 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          operationName?: string
+          query?: string
+          variables?: Json
+          extensions?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
-      aura_coin_rewards: {
-        Row: {
-          book_id: string
-          book_pages: number
-          book_title: string
-          completed_at: string
-          created_at: string
-          difficulty: string
-          id: string
-          minted_at: string
-          reading_log_id: string | null
-          reward_amount: number
-          rewarded_at: string
-          transaction_hash: string | null
-          user_id: string
-          wallet_address: string
-        }
-        Insert: {
-          book_id: string
-          book_pages: number
-          book_title: string
-          completed_at: string
-          created_at?: string
-          difficulty: string
-          id?: string
-          minted_at?: string
-          reading_log_id?: string | null
-          reward_amount: number
-          rewarded_at?: string
-          transaction_hash?: string | null
-          user_id: string
-          wallet_address: string
-        }
-        Update: {
-          book_id?: string
-          book_pages?: number
-          book_title?: string
-          completed_at?: string
-          created_at?: string
-          difficulty?: string
-          id?: string
-          minted_at?: string
-          reading_log_id?: string | null
-          reward_amount?: number
-          rewarded_at?: string
-          transaction_hash?: string | null
-          user_id?: string
-          wallet_address?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "aura_coin_rewards_book_id_fkey"
-            columns: ["book_id"]
-            isOneToOne: false
-            referencedRelation: "books"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "aura_coin_rewards_reading_log_id_fkey"
-            columns: ["reading_log_id"]
-            isOneToOne: false
-            referencedRelation: "reading_logs"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       book_list_assignments: {
         Row: {
           assigned_at: string
@@ -158,7 +117,6 @@ export type Database = {
           created_at: string
           custom_tags: string[] | null
           description: string | null
-          difficulty: string | null
           edition: string | null
           finished_at: string | null
           gbooks_id: string | null
@@ -189,7 +147,6 @@ export type Database = {
           created_at?: string
           custom_tags?: string[] | null
           description?: string | null
-          difficulty?: string | null
           edition?: string | null
           finished_at?: string | null
           gbooks_id?: string | null
@@ -220,7 +177,6 @@ export type Database = {
           created_at?: string
           custom_tags?: string[] | null
           description?: string | null
-          difficulty?: string | null
           edition?: string | null
           finished_at?: string | null
           gbooks_id?: string | null
@@ -274,6 +230,59 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      pending_rewards: {
+        Row: {
+          book_id: string
+          book_pages: number
+          book_title: string
+          completed_at: string
+          created_at: string | null
+          id: string
+          processed_at: string | null
+          reward_amount: number
+          status: string | null
+          transaction_hash: string | null
+          user_id: string
+          wallet_address: string
+        }
+        Insert: {
+          book_id: string
+          book_pages: number
+          book_title: string
+          completed_at: string
+          created_at?: string | null
+          id?: string
+          processed_at?: string | null
+          reward_amount: number
+          status?: string | null
+          transaction_hash?: string | null
+          user_id: string
+          wallet_address: string
+        }
+        Update: {
+          book_id?: string
+          book_pages?: number
+          book_title?: string
+          completed_at?: string
+          created_at?: string | null
+          id?: string
+          processed_at?: string | null
+          reward_amount?: number
+          status?: string | null
+          transaction_hash?: string | null
+          user_id?: string
+          wallet_address?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pending_rewards_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reading_goals: {
         Row: {
@@ -341,8 +350,6 @@ export type Database = {
           id: string
           notes: string | null
           reward_amount: number | null
-          rewarded: boolean | null
-          rewarded_at: string | null
           status: string | null
           user_id: string
         }
@@ -354,8 +361,6 @@ export type Database = {
           id?: string
           notes?: string | null
           reward_amount?: number | null
-          rewarded?: boolean | null
-          rewarded_at?: string | null
           status?: string | null
           user_id: string
         }
@@ -367,8 +372,6 @@ export type Database = {
           id?: string
           notes?: string | null
           reward_amount?: number | null
-          rewarded?: boolean | null
-          rewarded_at?: string | null
           status?: string | null
           user_id?: string
         }
@@ -414,7 +417,32 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_completed_rewards: {
+        Args: { user_uuid: string }
+        Returns: {
+          total_completed: number
+          total_amount: number
+        }[]
+      }
+      get_user_pending_rewards: {
+        Args: { user_uuid: string }
+        Returns: {
+          total_pending: number
+          total_amount: number
+        }[]
+      }
+      mark_reward_processed: {
+        Args: { reward_id: string; transaction_hash?: string }
+        Returns: boolean
+      }
+      verify_aura_coin_integrity: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          check_name: string
+          status: string
+          details: string
+        }[]
+      }
     }
     Enums: {
       book_status: "to-read" | "reading" | "read"
@@ -543,6 +571,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       book_status: ["to-read", "reading", "read"],
