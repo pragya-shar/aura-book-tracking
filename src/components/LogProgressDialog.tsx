@@ -128,9 +128,15 @@ export function LogProgressDialog({ book, children }: LogProgressDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent 
+        className="sm:max-w-[425px]"
+        aria-describedby="log-progress-description"
+      >
         <DialogHeader>
           <DialogTitle>Log Progress for {book.title}</DialogTitle>
+          <DialogDescription id="log-progress-description" className="sr-only">
+            Update your reading progress for {book.title}
+          </DialogDescription>
           <DialogDescription>
             {book.page_count 
               ? `You are on page ${currentPage} of ${book.page_count}.` 

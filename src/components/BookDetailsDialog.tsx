@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -111,7 +112,10 @@ export function BookDetailsDialog({ book, children }: BookDetailsDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto bg-black/90 border-amber-500/30">
+      <DialogContent 
+        className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto bg-black/90 border-amber-500/30"
+        aria-describedby="book-details-description"
+      >
         <DialogHeader>
           <DialogTitle className="font-playfair text-amber-400 text-xl">
             {book.title}
@@ -121,6 +125,9 @@ export function BookDetailsDialog({ book, children }: BookDetailsDialogProps) {
               by {book.authors.join(', ')}
             </p>
           )}
+          <DialogDescription id="book-details-description" className="sr-only">
+            Book details and reading progress for {book.title}
+          </DialogDescription>
         </DialogHeader>
 
         <div className="flex gap-4 mb-6">

@@ -74,11 +74,11 @@ export const AuraCoinBalance = () => {
     if (!user) return;
     
     try {
-      const rewards = await AuraCoinRewardService.getPendingRewards(user.id);
-      setPendingRewards(rewards);
+      const pendingRewards = await AuraCoinRewardService.getUserPendingRewards(user.id);
+      setPendingRewards(pendingRewards);
       
-      const total = await AuraCoinRewardService.getUserTotalRewards(user.id);
-      setTotalRewards(total);
+      const completedRewards = await AuraCoinRewardService.getUserCompletedRewards(user.id);
+      setTotalRewards(completedRewards);
     } catch (error) {
       console.error('Error loading pending rewards:', error);
     }

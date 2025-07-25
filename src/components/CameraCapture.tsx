@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -87,9 +88,15 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture }) => {
           Scan with Camera
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[625px]">
+      <DialogContent 
+        className="sm:max-w-[625px]"
+        aria-describedby="camera-capture-description"
+      >
         <DialogHeader>
           <DialogTitle>Scan Book</DialogTitle>
+          <DialogDescription id="camera-capture-description" className="sr-only">
+            Use your camera to scan book covers or barcodes
+          </DialogDescription>
         </DialogHeader>
         <div className="relative">
           <video ref={videoRef} autoPlay playsInline className="w-full h-auto rounded-md bg-muted" />

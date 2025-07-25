@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -92,9 +93,15 @@ const ISBNBarcodeScanner: React.FC<ISBNBarcodeScannerProps> = ({ onCapture }) =>
           Scan ISBN Barcode
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[625px]">
+      <DialogContent 
+        className="sm:max-w-[625px]"
+        aria-describedby="barcode-scanner-description"
+      >
         <DialogHeader>
-          <DialogTitle className="text-amber-400 font-pixel">Scan ISBN Barcode</DialogTitle>
+                      <DialogTitle className="text-amber-400 font-pixel">Scan ISBN Barcode</DialogTitle>
+            <DialogDescription id="barcode-scanner-description" className="sr-only">
+              Scan ISBN barcode to automatically add book information
+            </DialogDescription>
           <p className="text-stone-400 text-sm">Position the ISBN barcode within the camera view for best results</p>
         </DialogHeader>
         <div className="relative">
