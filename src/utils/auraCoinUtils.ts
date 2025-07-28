@@ -26,9 +26,9 @@ import {
 
 // AuraCoin Contract Configuration
 export const AURACOIN_CONFIG = {
-  CONTRACT_ID: import.meta.env.VITE_AURA_CONTRACT_ID || 'CA5UBCFVK2E57D3P3AZSKK2T2N6G7TQNXIQUEZGFX56FPW4B7OFINBUD',
+  CONTRACT_ID: 'CCJ53OFOFCS7XDVBWIJNXUBG7PIAASHBXPGCRJTYFRY3546X6F7Q3V2T', // Your real AURA contract
   NETWORK: 'testnet' as const,
-  RPC_URL: import.meta.env.VITE_STELLAR_RPC_URL || 'https://soroban-testnet.stellar.org',
+  RPC_URL: 'https://soroban-testnet.stellar.org',
   NETWORK_PASSPHRASE: Networks.TESTNET // Force testnet network passphrase
 };
 
@@ -41,7 +41,7 @@ console.log('🔧 AuraCoin Configuration:', {
 });
 
 // Initialize Horizon server for account operations
-const horizonServer = new Horizon.Server(import.meta.env.VITE_STELLAR_HORIZON_URL || 'https://horizon-testnet.stellar.org');
+const horizonServer = new Horizon.Server('https://horizon-testnet.stellar.org');
 
 // Initialize Soroban RPC server for contract operations
 const sorobanServer = new StellarRpc.Server(AURACOIN_CONFIG.RPC_URL);
