@@ -295,7 +295,7 @@ export const AuraCoinBalance = () => {
     return () => subscription.unsubscribe();
   }, [user]);
 
-  // Load wallet connection and balance
+  // Load wallet connection and balance (run once on mount)
   useEffect(() => {
     const loadWalletConnection = async () => {
       try {
@@ -307,7 +307,7 @@ export const AuraCoinBalance = () => {
     };
     
     loadWalletConnection();
-  }, [connectWallet]);
+  }, []); // Remove connectWallet dependency to prevent infinite loop
 
   // Load data when wallet connects
   useEffect(() => {

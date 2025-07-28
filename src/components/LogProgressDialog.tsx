@@ -70,11 +70,16 @@ export function LogProgressDialog({ book, children }: LogProgressDialogProps) {
       if (!user) throw new Error("User not authenticated.");
       if (!book.id) throw new Error("Book ID is missing.");
 
+      const isBookCompleted = book.page_count && values.currentPage >= book.page_count;
+      
       const { data, error } = await supabase.from("reading_logs").insert({
         user_id: user.id,
         book_id: book.id,
         current_page: values.currentPage,
         notes: null,
+        reward_created: false, // Will be set to true by trigger if completion detected
+        reward_amount: isBookCompleted ? book.page_count : null,
+        completed_at: isBookCompleted ? new Date().toISOString() : null,
       });
 
       if (error) throw error;
