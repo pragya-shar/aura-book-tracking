@@ -344,34 +344,40 @@ export type Database = {
       reading_logs: {
         Row: {
           book_id: string
+          completed_at: string | null
           created_at: string
           current_page: number
           date: string
           id: string
           notes: string | null
           reward_amount: number | null
+          reward_created: boolean | null
           status: string | null
           user_id: string
         }
         Insert: {
           book_id: string
+          completed_at?: string | null
           created_at?: string
           current_page: number
           date?: string
           id?: string
           notes?: string | null
           reward_amount?: number | null
+          reward_created?: boolean | null
           status?: string | null
           user_id: string
         }
         Update: {
           book_id?: string
+          completed_at?: string | null
           created_at?: string
           current_page?: number
           date?: string
           id?: string
           notes?: string | null
           reward_amount?: number | null
+          reward_created?: boolean | null
           status?: string | null
           user_id?: string
         }
@@ -434,6 +440,10 @@ export type Database = {
       mark_reward_processed: {
         Args: { reward_id: string; transaction_hash?: string }
         Returns: boolean
+      }
+      trigger_book_completion_for_user: {
+        Args: { user_uuid: string }
+        Returns: number
       }
       verify_aura_coin_integrity: {
         Args: Record<PropertyKey, never>
