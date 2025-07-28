@@ -1,144 +1,192 @@
 // @ts-nocheck - This file runs in Deno runtime, not Node.js
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
+import { corsHeaders } from '../_shared/cors.ts'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+console.log("Hello from detect-book-completion function!")
+
+interface BookCompletionRequest {
+  user_id: string
+  book_id: string
+  current_page: number
+  force_check?: boolean
+}
+
+interface BookCompletionResponse {
+  success: boolean
+  message: string
+  reward_created?: boolean
+  reward_amount?: number
+  pending_reward_id?: string
+  error?: string
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    const supabase = createClient(
-      // @ts-ignore - Deno runtime
+    // Initialize Supabase client
+    const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      // @ts-ignore - Deno runtime
-      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { reading_log_id } = await req.json()
+    // Parse request body
+    const { user_id, book_id, current_page, force_check = false }: BookCompletionRequest = await req.json()
 
-    if (!reading_log_id) {
-      throw new Error('reading_log_id is required')
+    console.log(`📚 Checking book completion for user ${user_id}, book ${book_id}, page ${current_page}`)
+
+    // Validate input
+    if (!user_id || !book_id || typeof current_page !== 'number') {
+      throw new Error('Missing required fields: user_id, book_id, current_page')
     }
 
-    // Get reading log details with book information
-    const { data: readingLog, error: logError } = await supabase
-      .from('reading_logs')
-      .select(`
-        *,
-        books!inner(page_count, title)
-      `)
-      .eq('id', reading_log_id)
+    // Get book details
+    const { data: book, error: bookError } = await supabaseClient
+      .from('books')
+      .select('id, title, page_count, user_id')
+      .eq('id', book_id)
+      .eq('user_id', user_id)
       .single()
 
-    if (logError) {
-      console.error('Error fetching reading log:', logError)
-      throw logError
+    if (bookError || !book) {
+      throw new Error(`Book not found or not owned by user: ${bookError?.message}`)
     }
 
-    if (!readingLog) {
-      throw new Error('Reading log not found')
-    }
+    console.log(`📖 Book "${book.title}" has ${book.page_count} pages, user at page ${current_page}`)
 
-    // Get user's wallet address separately
-    const { data: userProfile, error: profileError } = await supabase
-      .from('user_profiles')
-      .select('wallet_address')
-      .eq('user_id', readingLog.user_id)
-      .single()
-
-    if (profileError) {
-      console.error('Error fetching user profile:', profileError)
-      throw new Error('User profile not found - wallet address required')
-    }
-
-    if (!userProfile?.wallet_address) {
-      throw new Error('User wallet address not configured')
-    }
-
-    // Check if book is completed
-    if (readingLog.current_page >= readingLog.books.page_count) {
-      // Check if pending reward already exists
-      const { data: existingReward, error: checkError } = await supabase
-        .from('pending_rewards')
-        .select('id')
-        .eq('user_id', readingLog.user_id)
-        .eq('book_id', readingLog.book_id)
-        .single()
-
-      if (checkError && checkError.code !== 'PGRST116') { // PGRST116 = no rows returned
-        console.error('Error checking existing reward:', checkError)
-        throw checkError
-      }
-
-      if (existingReward) {
-        return new Response(
-          JSON.stringify({ 
-            success: true, 
-            reward_created: false,
-            message: 'Reward already exists for this book'
-          }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        )
-      }
-
-              // Create pending reward
-        const { data: newReward, error: rewardError } = await supabase
-          .from('pending_rewards')
-          .insert({
-            user_id: readingLog.user_id,
-            book_id: readingLog.book_id,
-            wallet_address: userProfile.wallet_address,
-            reward_amount: readingLog.books.page_count, // 1 AURA per page
-            book_title: readingLog.books.title,
-            book_pages: readingLog.books.page_count,
-            completed_at: readingLog.created_at,
-            status: 'pending'
-          })
-          .select()
-          .single()
-
-      if (rewardError) {
-        console.error('Error creating pending reward:', rewardError)
-        throw rewardError
-      }
-
+    // Check if book is completed (1 AURA per page rule)
+    const isCompleted = current_page >= book.page_count
+    
+    if (!isCompleted && !force_check) {
       return new Response(
-        JSON.stringify({ 
-          success: true, 
-          reward_created: true,
-          reward_amount: readingLog.books.page_count,
-          reward_id: newReward.id,
-          message: `Created pending reward of ${readingLog.books.page_count} AURA for "${readingLog.books.title}"`
-        }),
+        JSON.stringify({
+          success: true,
+          message: `Book not yet completed. ${current_page}/${book.page_count} pages read.`,
+          reward_created: false
+        } as BookCompletionResponse),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
+    // Check if reward already exists
+    const { data: existingReward } = await supabaseClient
+      .from('pending_rewards')
+      .select('id, status, reward_amount')
+      .eq('user_id', user_id)
+      .eq('book_id', book_id)
+      .single()
+
+    if (existingReward && !force_check) {
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: `Reward already exists (${existingReward.status}): ${existingReward.reward_amount} AURA`,
+          reward_created: false,
+          reward_amount: existingReward.reward_amount,
+          pending_reward_id: existingReward.id
+        } as BookCompletionResponse),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Get user's wallet address
+    const { data: userProfile } = await supabaseClient
+      .from('user_profiles')
+      .select('wallet_address')
+      .eq('user_id', user_id)
+      .single()
+
+    if (!userProfile?.wallet_address) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          message: 'User has no wallet linked. Cannot create reward.',
+          reward_created: false,
+          error: 'NO_WALLET'
+        } as BookCompletionResponse),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Calculate reward amount (1 AURA per page)
+    const rewardAmount = book.page_count
+
+    console.log(`💰 Creating reward: ${rewardAmount} AURA (1 per page) for wallet ${userProfile.wallet_address}`)
+
+    // Create or update reading log
+    const { data: readingLog, error: logError } = await supabaseClient
+      .from('reading_logs')
+      .upsert({
+        user_id,
+        book_id,
+        current_page,
+        reward_amount: rewardAmount,
+        reward_created: true,
+        completed_at: new Date().toISOString()
+      }, {
+        onConflict: 'user_id,book_id'
+      })
+      .select()
+      .single()
+
+    if (logError) {
+      console.error('Error creating reading log:', logError)
+      throw new Error(`Failed to create reading log: ${logError.message}`)
+    }
+
+    // Create pending reward (1 AURA per page)
+    const { data: pendingReward, error: rewardError } = await supabaseClient
+      .from('pending_rewards')
+      .upsert({
+        user_id,
+        book_id,
+        reading_log_id: readingLog.id,
+        wallet_address: userProfile.wallet_address,
+        reward_amount: rewardAmount,
+        book_title: book.title,
+        book_pages: book.page_count,
+        completed_at: new Date().toISOString(),
+        status: 'pending'
+      }, {
+        onConflict: 'user_id,book_id'
+      })
+      .select()
+      .single()
+
+    if (rewardError) {
+      console.error('Error creating pending reward:', rewardError)
+      throw new Error(`Failed to create pending reward: ${rewardError.message}`)
+    }
+
+    console.log(`✅ Successfully created ${rewardAmount} AURA reward for completing "${book.title}"`)
+
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        reward_created: false,
-        message: 'Book not yet completed',
-        current_page: readingLog.current_page,
-        total_pages: readingLog.books.page_count
-      }),
+      JSON.stringify({
+        success: true,
+        message: `Book completion reward created: ${rewardAmount} AURA (1 per page)`,
+        reward_created: true,
+        reward_amount: rewardAmount,
+        pending_reward_id: pendingReward.id
+      } as BookCompletionResponse),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 
   } catch (error) {
-    console.error('Function error:', error)
+    console.error('Error in detect-book-completion:', error)
     return new Response(
-      JSON.stringify({ 
-        error: error.message,
-        success: false 
-      }),
-      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({
+        success: false,
+        message: 'Internal server error',
+        error: error.message
+      } as BookCompletionResponse),
+      { 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
     )
   }
 }) 

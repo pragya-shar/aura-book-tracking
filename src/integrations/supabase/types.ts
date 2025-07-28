@@ -423,6 +423,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_book_completion_status: {
+        Args: { user_uuid: string; book_uuid: string }
+        Returns: {
+          is_completed: boolean
+          current_progress: number
+          total_pages: number
+          reward_created: boolean
+          pending_reward_exists: boolean
+        }[]
+      }
       get_user_completed_rewards: {
         Args: { user_uuid: string }
         Returns: {
@@ -444,6 +454,10 @@ export type Database = {
       trigger_book_completion_for_user: {
         Args: { user_uuid: string }
         Returns: number
+      }
+      trigger_completion_for_log: {
+        Args: { log_id: string }
+        Returns: boolean
       }
       verify_aura_coin_integrity: {
         Args: Record<PropertyKey, never>

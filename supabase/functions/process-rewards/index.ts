@@ -1,138 +1,213 @@
 // @ts-nocheck - This file runs in Deno runtime, not Node.js
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
+import { corsHeaders } from '../_shared/cors.ts'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+console.log("Hello from process-rewards function!")
+
+interface ProcessRewardsRequest {
+  user_id?: string // Optional: process specific user's rewards
+  reward_ids?: string[] // Optional: process specific reward IDs
+  max_rewards?: number // Optional: limit number of rewards to process
+  dry_run?: boolean // Optional: preview what would be processed
+}
+
+interface ProcessRewardsResponse {
+  success: boolean
+  message: string
+  processed_count: number
+  total_amount: number
+  rewards_processed: Array<{
+    id: string
+    user_id: string
+    book_title: string
+    reward_amount: number
+    wallet_address: string
+    status: string
+  }>
+  dry_run?: boolean
+  error?: string
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    const supabase = createClient(
-      // @ts-ignore - Deno runtime
+    // Initialize Supabase client
+    const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      // @ts-ignore - Deno runtime
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '' // Use service role for admin operations
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { reward_ids } = await req.json()
+    // Parse request body
+    const { 
+      user_id, 
+      reward_ids, 
+      max_rewards = 50, 
+      dry_run = false 
+    }: ProcessRewardsRequest = await req.json()
 
-    if (!reward_ids || !Array.isArray(reward_ids) || reward_ids.length === 0) {
-      throw new Error('reward_ids array is required and must not be empty')
+    console.log(`🔄 Processing rewards - user: ${user_id || 'all'}, max: ${max_rewards}, dry_run: ${dry_run}`)
+
+    // Build query for pending rewards
+    let query = supabaseClient
+      .from('pending_rewards')
+      .select('*')
+      .eq('status', 'pending')
+      .order('created_at', { ascending: true })
+      .limit(max_rewards)
+
+    // Filter by user if specified
+    if (user_id) {
+      query = query.eq('user_id', user_id)
     }
 
-    const results = []
+    // Filter by specific reward IDs if specified
+    if (reward_ids && reward_ids.length > 0) {
+      query = query.in('id', reward_ids)
+    }
 
-    for (const rewardId of reward_ids) {
-      try {
-        // Get pending reward
-        const { data: reward, error: fetchError } = await supabase
-          .from('pending_rewards')
-          .select('*')
-          .eq('id', rewardId)
-          .eq('status', 'pending')
-          .single()
+    const { data: pendingRewards, error: queryError } = await query
 
-        if (fetchError) {
-          results.push({ 
-            id: rewardId, 
-            status: 'error', 
-            message: 'Reward not found or already processed' 
-          })
-          continue
-        }
+    if (queryError) {
+      throw new Error(`Failed to fetch pending rewards: ${queryError.message}`)
+    }
 
-        // Update status to processing
-        await supabase
-          .from('pending_rewards')
-          .update({ status: 'processing' })
-          .eq('id', rewardId)
+    if (!pendingRewards || pendingRewards.length === 0) {
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: 'No pending rewards found to process',
+          processed_count: 0,
+          total_amount: 0,
+          rewards_processed: []
+        } as ProcessRewardsResponse),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
 
-        // TODO: Integrate with AuraCoin contract minting
-        // This is where you'll call your AuraCoin contract to mint tokens
-        // const transactionHash = await mintAuraCoins(reward.wallet_address, reward.reward_amount)
-        
-        // For now, simulate successful minting
-        const transactionHash = `simulated_tx_${Date.now()}_${rewardId}`
+    console.log(`📋 Found ${pendingRewards.length} pending rewards to process`)
 
-        // Update reward as completed using the database function
-        const { data: processResult, error: processError } = await supabase
-          .rpc('mark_reward_processed', {
-            reward_id: rewardId,
-            transaction_hash: transactionHash
-          })
+    // Calculate total AURA amount (remember: 1 AURA per page)
+    const totalAmount = pendingRewards.reduce((sum, reward) => sum + reward.reward_amount, 0)
 
-        if (processError) {
-          // Mark as failed
-          await supabase
-            .from('pending_rewards')
-            .update({ status: 'failed' })
-            .eq('id', rewardId)
+    console.log(`💰 Total amount to process: ${totalAmount} AURA (1 AURA per page rule)`)
 
-          results.push({ 
-            id: rewardId, 
-            status: 'error', 
-            message: processError.message 
-          })
-        } else {
-          results.push({ 
-            id: rewardId, 
-            status: 'success', 
-            transaction_hash: transactionHash,
+    // If dry run, just return what would be processed
+    if (dry_run) {
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: `Dry run: Would process ${pendingRewards.length} rewards totaling ${totalAmount} AURA`,
+          processed_count: pendingRewards.length,
+          total_amount: totalAmount,
+          rewards_processed: pendingRewards.map(reward => ({
+            id: reward.id,
+            user_id: reward.user_id,
+            book_title: reward.book_title,
             reward_amount: reward.reward_amount,
-            wallet_address: reward.wallet_address
+            wallet_address: reward.wallet_address,
+            status: reward.status
+          })),
+          dry_run: true
+        } as ProcessRewardsResponse),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Process rewards (mark as processing, then completed)
+    const processedRewards = []
+    
+    for (const reward of pendingRewards) {
+      try {
+        console.log(`⚙️ Processing reward ${reward.id}: ${reward.reward_amount} AURA for "${reward.book_title}"`)
+
+        // Mark as processing
+        await supabaseClient
+          .from('pending_rewards')
+          .update({ 
+            status: 'processing',
+            processed_at: new Date().toISOString()
           })
-        }
+          .eq('id', reward.id)
+
+        // Here you would integrate with actual AuraCoin minting
+        // For now, we'll simulate successful processing
+        
+        // Simulate AuraCoin minting delay
+        await new Promise(resolve => setTimeout(resolve, 100))
+
+        // Mark as completed with mock transaction hash
+        const mockTxHash = `tx_${reward.id.slice(0, 8)}_${Date.now()}`
+        
+        await supabaseClient
+          .from('pending_rewards')
+          .update({ 
+            status: 'completed',
+            transaction_hash: mockTxHash,
+            processed_at: new Date().toISOString()
+          })
+          .eq('id', reward.id)
+
+        processedRewards.push({
+          id: reward.id,
+          user_id: reward.user_id,
+          book_title: reward.book_title,
+          reward_amount: reward.reward_amount,
+          wallet_address: reward.wallet_address,
+          status: 'completed'
+        })
+
+        console.log(`✅ Completed reward ${reward.id}: ${reward.reward_amount} AURA`)
 
       } catch (error) {
+        console.error(`❌ Failed to process reward ${reward.id}:`, error)
+        
         // Mark as failed
-        await supabase
+        await supabaseClient
           .from('pending_rewards')
-          .update({ status: 'failed' })
-          .eq('id', rewardId)
-
-        results.push({ 
-          id: rewardId, 
-          status: 'error', 
-          message: error.message 
-        })
+          .update({ 
+            status: 'failed',
+            processed_at: new Date().toISOString()
+          })
+          .eq('id', reward.id)
       }
     }
 
-    // Calculate summary
-    const successful = results.filter(r => r.status === 'success').length
-    const failed = results.filter(r => r.status === 'error').length
-    const totalAmount = results
-      .filter(r => r.status === 'success')
-      .reduce((sum, r) => sum + (r.reward_amount || 0), 0)
+    const successCount = processedRewards.length
+    const processedAmount = processedRewards.reduce((sum, reward) => sum + reward.reward_amount, 0)
+
+    console.log(`🎉 Successfully processed ${successCount}/${pendingRewards.length} rewards (${processedAmount} AURA)`)
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        results,
-        summary: {
-          total_processed: reward_ids.length,
-          successful,
-          failed,
-          total_amount: totalAmount
-        }
-      }),
+      JSON.stringify({
+        success: true,
+        message: `Successfully processed ${successCount} rewards totaling ${processedAmount} AURA`,
+        processed_count: successCount,
+        total_amount: processedAmount,
+        rewards_processed: processedRewards
+      } as ProcessRewardsResponse),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 
   } catch (error) {
-    console.error('Function error:', error)
+    console.error('Error in process-rewards:', error)
     return new Response(
-      JSON.stringify({ 
-        error: error.message,
-        success: false 
-      }),
-      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({
+        success: false,
+        message: 'Internal server error',
+        processed_count: 0,
+        total_amount: 0,
+        rewards_processed: [],
+        error: error.message
+      } as ProcessRewardsResponse),
+      { 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
     )
   }
 }) 

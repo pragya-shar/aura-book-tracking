@@ -109,34 +109,75 @@ export const getTokenInfo = async () => {
 // Get balance for a specific address
 export const getBalance = async (accountAddress: string): Promise<string> => {
   try {
-    // For now, return a placeholder balance
-    // In a full implementation, you would call the contract via Soroban RPC
+    console.log(`🔍 Querying balance for address: ${accountAddress}`);
+    
+    const contract = createContract();
+    const addressScVal = addressToScVal(accountAddress);
+    
+    // Create a temporary account for balance query (no transaction needed)
+    const sourceAccount = await horizonServer.loadAccount(accountAddress);
+    
+    // Build a transaction to simulate the balance call
+    const transaction = new TransactionBuilder(sourceAccount, {
+      fee: BASE_FEE,
+      networkPassphrase: AURACOIN_CONFIG.NETWORK_PASSPHRASE,
+    })
+      .addOperation(contract.call('balance', addressScVal))
+      .setTimeout(180)
+      .build();
+
+    // Simulate the transaction to get the balance without submitting
+    const simulation = await sorobanServer.simulateTransaction(transaction);
+    
+    // Check if the simulation was successful
+    if (StellarRpc.Api.isSimulationError(simulation)) {
+      console.warn('Balance query simulation error:', simulation.error);
+      return '0';
+    }
+    
+    if (StellarRpc.Api.isSimulationSuccess(simulation) && simulation.result && simulation.result.retval) {
+      // Parse the return value - it should be the balance as a number
+      const balanceScVal = simulation.result.retval;
+      const balanceValue = scValToNative(balanceScVal);
+      
+      console.log(`✅ Raw balance retrieved: ${balanceValue}`);
+      
+      // Convert from contract units to display units (keep full amount to show proper reward numbers)
+      const displayBalance = typeof balanceValue === 'bigint' 
+        ? balanceValue.toString() 
+        : balanceValue.toString();
+        
+      console.log(`💰 Display balance: ${displayBalance} AURA`);
+      return displayBalance;
+    }
+    
+    console.log('No balance data in simulation result');
     return '0';
   } catch (error) {
     console.error('Error getting balance:', error);
+    // If there's an error (like account doesn't exist), return 0
     return '0';
   }
 };
 
-// Create and submit Soroban transaction for contract calls
+// Create and submit a Soroban transaction
 const createAndSubmitSorobanTransaction = async (
-  sourceAccount: string,
+  sourceAddress: string,
   contract: Contract,
   method: string,
   args: any[],
-  signTransaction: (xdr: string) => Promise<string>,
-  fee: string = BASE_FEE
-) => {
+  signTransaction: (xdr: string, network?: string) => Promise<string>
+): Promise<any> => {
   try {
-    console.log(`🔧 Creating Soroban transaction for ${method}...`);
-    console.log(`🌐 Network passphrase: ${AURACOIN_CONFIG.NETWORK_PASSPHRASE}`);
+    console.log('🔧 Creating Soroban transaction for', method + '...');
+    console.log('🌐 Network passphrase:', AURACOIN_CONFIG.NETWORK_PASSPHRASE);
+
+    // Get source account details
+    const sourceAccount = await horizonServer.loadAccount(sourceAddress);
     
-    // Get the source account
-    const account = await sorobanServer.getAccount(sourceAccount);
-    
-    // Create transaction builder
-    const transaction = new TransactionBuilder(account, {
-      fee,
+    // Build the transaction
+    const transaction = new TransactionBuilder(sourceAccount, {
+      fee: BASE_FEE,
       networkPassphrase: AURACOIN_CONFIG.NETWORK_PASSPHRASE,
     })
       .addOperation(contract.call(method, ...args))
@@ -150,8 +191,8 @@ const createAndSubmitSorobanTransaction = async (
     
     console.log('✍️ Signing transaction...');
     
-    // Sign the transaction
-    const signedXdr = await signTransaction(preparedTransaction.toXDR());
+    // Sign the transaction with explicit TESTNET parameter
+    const signedXdr = await signTransaction(preparedTransaction.toXDR(), 'TESTNET');
     const signedTransaction = TransactionBuilder.fromXDR(
       signedXdr, 
       AURACOIN_CONFIG.NETWORK_PASSPHRASE
@@ -179,13 +220,13 @@ const createAndSubmitSorobanTransaction = async (
   }
 };
 
-// Mint tokens (owner only) - Using user's Freighter wallet since they are the owner
+// Mint tokens to an address (owner/admin function)
 export const mintTokens = async (
   recipientAddress: string,
   amount: number,
   ownerAddress: string,
-  signTransaction: (xdr: string) => Promise<string>
-): Promise<void> => {
+  signTransaction: (xdr: string, network?: string) => Promise<string>
+): Promise<{ status: string; hash: string } | void> => {
   try {
     console.log(`🎯 Starting mint operation for ${amount} AURA tokens`);
     console.log(`👤 Owner/Minter: ${ownerAddress}`);
@@ -198,7 +239,7 @@ export const mintTokens = async (
     console.log('🔧 Creating mint transaction...');
     
     // Create and submit the mint transaction using owner's wallet
-    await createAndSubmitSorobanTransaction(
+    const result = await createAndSubmitSorobanTransaction(
       ownerAddress, // Use owner's address as the source account
       contract,
       'mint',
@@ -207,6 +248,7 @@ export const mintTokens = async (
     );
     
     console.log(`✅ Successfully minted ${amount} AURA tokens to ${recipientAddress}`);
+    return result;
   } catch (error) {
     console.error('❌ Error minting tokens:', error);
     throw error;
@@ -218,19 +260,23 @@ export const transferTokens = async (
   fromAddress: string,
   toAddress: string,
   amount: number,
-  signTransaction: (xdr: string) => Promise<string>
+  signTransaction: (xdr: string, network?: string) => Promise<string>
 ): Promise<void> => {
   try {
-    console.log(`🔄 Starting transfer of ${amount} AURA tokens from ${fromAddress} to ${toAddress}`);
+    console.log(`🎯 Starting transfer of ${amount} AURA tokens`);
+    console.log(`📤 From: ${fromAddress}`);
+    console.log(`📥 To: ${toAddress}`);
     
     const contract = createContract();
     const from = addressToScVal(fromAddress);
     const to = addressToScVal(toAddress);
     const amountVal = amountToScVal(amount);
     
+    console.log('🔧 Creating transfer transaction...');
+    
     // Create and submit the transfer transaction
     await createAndSubmitSorobanTransaction(
-      fromAddress,
+      fromAddress, // Source account is the sender
       contract,
       'transfer',
       [from, to, amountVal],
@@ -248,18 +294,21 @@ export const transferTokens = async (
 export const burnTokens = async (
   fromAddress: string,
   amount: number,
-  signTransaction: (xdr: string) => Promise<string>
+  signTransaction: (xdr: string, network?: string) => Promise<string>
 ): Promise<void> => {
   try {
-    console.log(`🔥 Starting burn of ${amount} AURA tokens from ${fromAddress}`);
+    console.log(`🎯 Starting burn of ${amount} AURA tokens`);
+    console.log(`🔥 From: ${fromAddress}`);
     
     const contract = createContract();
     const from = addressToScVal(fromAddress);
     const amountVal = amountToScVal(amount);
     
+    console.log('🔧 Creating burn transaction...');
+    
     // Create and submit the burn transaction
     await createAndSubmitSorobanTransaction(
-      fromAddress,
+      fromAddress, // Source account is the burner
       contract,
       'burn',
       [from, amountVal],

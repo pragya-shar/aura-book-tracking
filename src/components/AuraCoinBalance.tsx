@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { useFreighter } from '@/contexts/FreighterContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   getBalance, 
   getTokenInfo, 
@@ -27,12 +28,22 @@ import {
   RefreshCw, 
   Loader2,
   Gift,
-  BookOpen
+  BookOpen,
+  Clock
 } from 'lucide-react';
+
+interface PendingReward {
+  id: string
+  book_title: string
+  reward_amount: number
+  book_pages: number
+  completed_at: string
+  status: 'pending' | 'processing' | 'completed' | 'failed'
+}
 
 export const AuraCoinBalance = () => {
   const { user } = useAuth();
-  const { isWalletConnected, walletAddress, signTransactionWithWallet } = useFreighter();
+  const { isWalletConnected, walletAddress, signTransactionWithWallet, connectWallet } = useFreighter();
   
   const [balance, setBalance] = useState<string>('0');
   const [tokenInfo, setTokenInfo] = useState<any>(null);
@@ -41,8 +52,8 @@ export const AuraCoinBalance = () => {
   const [transferAmount, setTransferAmount] = useState('10');
   const [transferTo, setTransferTo] = useState('');
   const [burnAmount, setBurnAmount] = useState('5');
-  const [pendingRewards, setPendingRewards] = useState<any[]>([]);
-  const [totalRewards, setTotalRewards] = useState(0);
+  const [pendingRewards, setPendingRewards] = useState<PendingReward[]>([]);
+  const [totalCompletedRewards, setTotalCompletedRewards] = useState(0);
 
   // Load token info and balance
   const loadData = async () => {
@@ -69,24 +80,39 @@ export const AuraCoinBalance = () => {
     }
   };
 
-  // Load pending rewards
+  // Load pending rewards from database
   const loadPendingRewards = async () => {
     if (!user) return;
     
     try {
-      const pendingRewards = await AuraCoinRewardService.getUserPendingRewards(user.id);
-      setPendingRewards(pendingRewards);
+      const { data, error } = await supabase
+        .from('pending_rewards')
+        .select('id, book_title, reward_amount, book_pages, completed_at, status')
+        .eq('user_id', user.id)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
       
-      const completedRewards = await AuraCoinRewardService.getUserCompletedRewards(user.id);
-      setTotalRewards(completedRewards);
+      // Cast status to the expected type since database returns string | null
+      const typedRewards = data?.map(reward => ({
+        ...reward,
+        status: (reward.status || 'pending') as 'pending' | 'processing' | 'completed' | 'failed'
+      })) || [];
+      
+      setPendingRewards(typedRewards);
     } catch (error) {
       console.error('Error loading pending rewards:', error);
+      setPendingRewards([]);
     }
   };
 
+  // Calculate total pending amount
+  const totalPendingAmount = pendingRewards.reduce((sum, reward) => sum + reward.reward_amount, 0);
+
   // Mint tokens
   const handleMint = async () => {
-    if (!isWalletConnected || !walletAddress) {
+    if (!isWalletConnected || !walletAddress || !user) {
       toast({
         title: "Wallet Not Connected",
         description: "Please connect your wallet first",
@@ -98,29 +124,52 @@ export const AuraCoinBalance = () => {
     setLoading(true);
     try {
       console.log('Starting mint operation...');
-      console.log('Wallet address:', walletAddress);
-      console.log('Amount to mint:', mintAmount);
-      
-      await mintTokens(
-        walletAddress, // recipient
-        parseInt(mintAmount), // amount
-        walletAddress, // owner address (user is the owner/minter)
-        async (xdr) => {
-          console.log('Signing transaction...');
-          const signedXdr = await signTransactionWithWallet(xdr, 'TESTNET');
-          console.log('Transaction signed successfully');
-          return signedXdr;
-        }
+      const result = await mintTokens(
+        walletAddress, // to address (owner mints to themselves)
+        parseInt(mintAmount, 10),
+        walletAddress, // from address (owner's address)
+        signTransactionWithWallet
       );
+
+      // Update pending rewards status to 'completed' after successful mint
+      if (result && result.hash) {
+        const mintedAmount = parseInt(mintAmount, 10);
+        
+        // Update pending rewards that match the minted amount
+        const { error: updateError } = await supabase
+          .from('pending_rewards')
+          .update({ 
+            status: 'completed', 
+            processed_at: new Date().toISOString(),
+            transaction_hash: result.hash 
+          })
+          .eq('user_id', user.id)
+          .eq('status', 'pending')
+          .lte('reward_amount', mintedAmount); // Update rewards up to the minted amount
+          
+        if (updateError) {
+          console.warn('Failed to update pending rewards status:', updateError);
+          toast({
+            title: "Partial Success", 
+            description: `Tokens minted successfully, but failed to update reward status: ${updateError.message}`,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Tokens Minted & Rewards Processed!",
+            description: `Successfully minted ${mintAmount} AURA tokens and updated pending rewards`,
+          });
+        }
+      } else {
+        toast({
+          title: "Tokens Minted!",
+          description: `Successfully minted ${mintAmount} AURA tokens`,
+        });
+      }
       
-      toast({
-        title: "Tokens Minted!",
-        description: `Successfully minted ${mintAmount} AURA tokens`,
-      });
-      
-      await loadData(); // Refresh balance
+      await loadData(); // Refresh balance and pending rewards
     } catch (error) {
-      console.error('Minting error details:', error);
+      console.error('Minting error:', error);
       toast({
         title: "Minting Failed",
         description: error instanceof Error ? error.message : "Failed to mint tokens",
@@ -133,19 +182,10 @@ export const AuraCoinBalance = () => {
 
   // Transfer tokens
   const handleTransfer = async () => {
-    if (!isWalletConnected || !walletAddress) {
+    if (!isWalletConnected || !walletAddress || !transferTo) {
       toast({
-        title: "Wallet Not Connected",
-        description: "Please connect your wallet first",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!transferTo.trim()) {
-      toast({
-        title: "Invalid Address",
-        description: "Please enter a valid recipient address",
+        title: "Invalid Input",
+        description: "Please ensure wallet is connected and recipient address is provided",
         variant: "destructive",
       });
       return;
@@ -153,19 +193,20 @@ export const AuraCoinBalance = () => {
 
     setLoading(true);
     try {
-      await transferTokens(
-        walletAddress,
-        transferTo.trim(),
-        parseInt(transferAmount),
-        async (xdr) => signTransactionWithWallet(xdr, 'TESTNET')
+      const result = await transferTokens(
+        walletAddress, // from address
+        transferTo, // to address
+        parseInt(transferAmount, 10),
+        signTransactionWithWallet
       );
-      
+
       toast({
         title: "Transfer Successful!",
-        description: `Sent ${transferAmount} AURA to ${transferTo.slice(0, 8)}...`,
+        description: `Successfully transferred ${transferAmount} AURA tokens`,
       });
       
       await loadData(); // Refresh balance
+      setTransferTo(''); // Clear form
     } catch (error) {
       toast({
         title: "Transfer Failed",
@@ -190,12 +231,12 @@ export const AuraCoinBalance = () => {
 
     setLoading(true);
     try {
-      await burnTokens(
-        walletAddress,
-        parseInt(burnAmount),
-        async (xdr) => signTransactionWithWallet(xdr, 'TESTNET')
+      const result = await burnTokens(
+        walletAddress, // from address (owner burns their own tokens)
+        parseInt(burnAmount, 10),
+        signTransactionWithWallet
       );
-      
+
       toast({
         title: "Tokens Burned!",
         description: `Successfully burned ${burnAmount} AURA tokens`,
@@ -213,59 +254,60 @@ export const AuraCoinBalance = () => {
     }
   };
 
-  // Claim all pending rewards
+  // Claim all pending rewards (Note: This is for user display, actual processing is admin-only)
   const handleClaimAllRewards = async () => {
-    if (!user || !isWalletConnected || !walletAddress) {
-      toast({
-        title: "Wallet Required",
-        description: "Please connect your wallet to claim rewards",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (pendingRewards.length === 0) {
-      toast({
-        title: "No Rewards",
-        description: "No pending rewards to claim",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const result = await AuraCoinRewardService.rewardMultipleBooks(
-        pendingRewards,
-        walletAddress, // owner address (user is the owner/minter)
-        async (xdr) => signTransactionWithWallet(xdr, 'TESTNET')
-      );
-
-      if (result.success) {
-        toast({
-          title: "🎉 Rewards Claimed!",
-          description: result.message,
-        });
-        await loadPendingRewards(); // Refresh pending rewards
-        await loadData(); // Refresh balance
-      } else {
-        toast({
-          title: "Claim Failed",
-          description: result.error || "Failed to claim rewards",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error('Error claiming rewards:', error);
-      toast({
-        title: "Claim Failed",
-        description: error instanceof Error ? error.message : "Failed to claim rewards",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
+    toast({
+      title: "Rewards Pending Processing",
+      description: "Your rewards are pending and will be processed by the admin soon!",
+      variant: "default",
+    });
   };
+
+  // Set up real-time subscription for pending rewards
+  useEffect(() => {
+    if (!user) return;
+
+    const subscription = supabase
+      .channel('pending_rewards_changes')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'pending_rewards',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('Pending reward updated:', payload);
+          loadPendingRewards(); // Refresh pending rewards when they change
+          
+          // Show toast for status changes
+          if (payload.eventType === 'UPDATE' && payload.new.status === 'completed') {
+            toast({
+              title: "🎉 Reward Processed!",
+              description: `${payload.new.reward_amount} AURA for "${payload.new.book_title}" has been processed!`,
+              duration: 5000,
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => subscription.unsubscribe();
+  }, [user]);
+
+  // Load wallet connection and balance
+  useEffect(() => {
+    const loadWalletConnection = async () => {
+      try {
+        await connectWallet();
+        console.log('Wallet connection check completed');
+      } catch (error) {
+        console.warn('Failed to auto-connect wallet:', error);
+      }
+    };
+    
+    loadWalletConnection();
+  }, [connectWallet]);
 
   // Load data when wallet connects
   useEffect(() => {
@@ -366,31 +408,48 @@ export const AuraCoinBalance = () => {
             </div>
             
             {pendingRewards.length > 0 ? (
-              <div className="space-y-2">
-                <div className="p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
-                  <div className="flex items-center justify-between">
+              <div className="space-y-3">
+                <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
                     <div>
-                      <div className="text-green-400 font-medium">
-                        {pendingRewards.length} books completed
+                      <div className="text-amber-400 font-medium">
+                        {pendingRewards.length} book{pendingRewards.length !== 1 ? 's' : ''} completed
                       </div>
                       <div className="text-sm text-stone-400">
-                        Ready to claim rewards
+                        {totalPendingAmount} AURA tokens pending
                       </div>
                     </div>
-                    <Button
-                      onClick={handleClaimAllRewards}
-                      disabled={loading}
-                      size="sm"
-                      className="bg-green-600 hover:bg-green-700"
-                    >
-                      <Gift className="w-4 h-4 mr-2" />
-                      Claim All
-                    </Button>
+                    <div className="flex items-center gap-1 text-amber-400">
+                      <Clock className="w-4 h-4" />
+                      <span className="text-xs">Processing</span>
+                    </div>
                   </div>
                 </div>
                 
+                {/* List of pending rewards */}
+                <div className="space-y-2">
+                  {pendingRewards.slice(0, 3).map((reward) => (
+                    <div key={reward.id} className="p-2 bg-stone-800/50 border border-stone-700 rounded text-xs">
+                      <div className="flex justify-between items-center">
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-white truncate">{reward.book_title}</div>
+                          <div className="text-stone-400">{reward.book_pages} pages • {new Date(reward.completed_at).toLocaleDateString()}</div>
+                        </div>
+                        <div className="text-amber-400 font-bold ml-2">
+                          {reward.reward_amount} AURA
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {pendingRewards.length > 3 && (
+                    <div className="text-xs text-stone-500 text-center">
+                      +{pendingRewards.length - 3} more pending rewards...
+                    </div>
+                  )}
+                </div>
+                
                 <div className="text-xs text-stone-500">
-                  Total earned: {totalRewards} AURA tokens
+                  Total earned: {totalCompletedRewards} AURA tokens
                 </div>
               </div>
             ) : (
