@@ -27,6 +27,7 @@ import {
 // AuraCoin Contract Configuration
 export const AURACOIN_CONFIG = {
   CONTRACT_ID: 'CCJ53OFOFCS7XDVBWIJNXUBG7PIAASHBXPGCRJTYFRY3546X6F7Q3V2T', // Your real AURA contract
+  OWNER_ADDRESS: 'GCYXOOV2VEQ2XXYO2DHLJ6JRZFAPEZKYOO5EUPWSPMELTW4IKJW3WGEI', // Contract owner wallet address (your Freighter wallet)
   NETWORK: 'testnet' as const,
   RPC_URL: 'https://soroban-testnet.stellar.org',
   NETWORK_PASSPHRASE: Networks.TESTNET // Force testnet network passphrase
@@ -35,6 +36,7 @@ export const AURACOIN_CONFIG = {
 // Debug logging for network configuration
 console.log('🔧 AuraCoin Configuration:', {
   CONTRACT_ID: AURACOIN_CONFIG.CONTRACT_ID,
+  OWNER_ADDRESS: AURACOIN_CONFIG.OWNER_ADDRESS,
   NETWORK: AURACOIN_CONFIG.NETWORK,
   RPC_URL: AURACOIN_CONFIG.RPC_URL,
   NETWORK_PASSPHRASE: AURACOIN_CONFIG.NETWORK_PASSPHRASE

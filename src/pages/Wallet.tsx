@@ -4,6 +4,7 @@ import { WalletInfo } from '@/components/WalletInfo';
 import { UserInfo } from '@/components/UserInfo';
 import { AuraCoinBalance } from '@/components/AuraCoinBalance';
 import { WalletProfileManager } from '@/components/WalletProfileManager';
+import { AdminRewardsDashboard } from '@/components/AdminRewardsDashboard';
 
 const WalletPage = () => {
   return (
@@ -30,6 +31,11 @@ const WalletPage = () => {
 
       <div className="mb-6">
         <AuraCoinBalance />
+      </div>
+
+      {/* Admin Dashboard - Only visible to contract owner */}
+      <div className="mb-6">
+        <AdminRewardsDashboard />
       </div>
     </div>
   );
