@@ -19,6 +19,7 @@ import {
   AURACOIN_CONFIG 
 } from '@/utils/auraCoinUtils';
 import { AuraCoinRewardService } from '@/services/auraCoinRewardService';
+import { RewardsDetailsModal } from '@/components/RewardsDetailsModal';
 import { 
   Coins, 
   Send, 
@@ -29,7 +30,8 @@ import {
   Loader2,
   Gift,
   BookOpen,
-  Clock
+  Clock,
+  Eye
 } from 'lucide-react';
 
 interface PendingReward {
@@ -54,6 +56,7 @@ export const AuraCoinBalance = () => {
   const [burnAmount, setBurnAmount] = useState('5');
   const [pendingRewards, setPendingRewards] = useState<PendingReward[]>([]);
   const [totalCompletedRewards, setTotalCompletedRewards] = useState(0);
+  const [showRewardsModal, setShowRewardsModal] = useState(false);
 
   // Load token info and balance
   const loadData = async () => {
@@ -80,30 +83,42 @@ export const AuraCoinBalance = () => {
     }
   };
 
-  // Load pending rewards from database
+  // Load pending rewards from database  
   const loadPendingRewards = async () => {
     if (!user) return;
     
     try {
+      // Get all rewards for this user
       const { data, error } = await supabase
         .from('pending_rewards')
-        .select('id, book_title, reward_amount, book_pages, completed_at, status')
+        .select('id, book_title, reward_amount, book_pages, completed_at, status, transaction_hash')
         .eq('user_id', user.id)
-        .eq('status', 'pending')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       
+      const allRewards = data || [];
+      
+      // Split into pending (no transaction) and completed (with transaction)
+      const pendingRewards = allRewards.filter(r => !r.transaction_hash);
+      const completedRewards = allRewards.filter(r => r.transaction_hash);
+      
       // Cast status to the expected type since database returns string | null
-      const typedRewards = data?.map(reward => ({
+      const typedPendingRewards = pendingRewards.map(reward => ({
         ...reward,
         status: (reward.status || 'pending') as 'pending' | 'processing' | 'completed' | 'failed'
-      })) || [];
+      }));
       
-      setPendingRewards(typedRewards);
+      setPendingRewards(typedPendingRewards);
+      
+      // Calculate total completed rewards (only those with actual transactions)
+      const totalCompleted = completedRewards.reduce((sum, r) => sum + r.reward_amount, 0);
+      setTotalCompletedRewards(totalCompleted);
+      
     } catch (error) {
       console.error('Error loading pending rewards:', error);
       setPendingRewards([]);
+      setTotalCompletedRewards(0);
     }
   };
 
@@ -292,7 +307,9 @@ export const AuraCoinBalance = () => {
       )
       .subscribe();
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [user]);
 
   // Load wallet connection and balance (run once on mount)
@@ -394,7 +411,7 @@ export const AuraCoinBalance = () => {
           </div>
         </div>
 
-        {/* Book Rewards Section */}
+        {/* Book Rewards Summary */}
         {user && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -402,60 +419,49 @@ export const AuraCoinBalance = () => {
                 <BookOpen className="w-5 h-5" />
                 Book Rewards
               </h3>
-              <Badge variant="outline" className="text-purple-400">
-                {pendingRewards.length} pending
-              </Badge>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowRewardsModal(true)}
+                className="text-purple-400 border-purple-500/30 hover:bg-purple-500/10"
+              >
+                <Eye className="w-4 h-4 mr-2" />
+                Show Details
+              </Button>
             </div>
             
-            {pendingRewards.length > 0 ? (
-              <div className="space-y-3">
-                <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <div>
-                      <div className="text-amber-400 font-medium">
-                        {pendingRewards.length} book{pendingRewards.length !== 1 ? 's' : ''} completed
-                      </div>
-                      <div className="text-sm text-stone-400">
-                        {totalPendingAmount} AURA tokens pending
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1 text-amber-400">
-                      <Clock className="w-4 h-4" />
-                      <span className="text-xs">Processing</span>
-                    </div>
-                  </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+                <div className="flex items-center gap-2 mb-1">
+                  <Clock className="w-4 h-4 text-amber-400" />
+                  <span className="text-sm font-medium text-amber-400">Pending</span>
                 </div>
-                
-                {/* List of pending rewards */}
-                <div className="space-y-2">
-                  {pendingRewards.slice(0, 3).map((reward) => (
-                    <div key={reward.id} className="p-2 bg-stone-800/50 border border-stone-700 rounded text-xs">
-                      <div className="flex justify-between items-center">
-                        <div className="flex-1 min-w-0">
-                          <div className="font-medium text-white truncate">{reward.book_title}</div>
-                          <div className="text-stone-400">{reward.book_pages} pages • {new Date(reward.completed_at).toLocaleDateString()}</div>
-                        </div>
-                        <div className="text-amber-400 font-bold ml-2">
-                          {reward.reward_amount} AURA
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                  {pendingRewards.length > 3 && (
-                    <div className="text-xs text-stone-500 text-center">
-                      +{pendingRewards.length - 3} more pending rewards...
-                    </div>
-                  )}
+                <div className="text-lg font-bold text-amber-300">
+                  {pendingRewards.length}
                 </div>
-                
-                <div className="text-xs text-stone-500">
-                  Total earned: {totalCompletedRewards} AURA tokens
+                <div className="text-xs text-amber-400/70">
+                  {totalPendingAmount} AURA
                 </div>
               </div>
-            ) : (
-              <div className="p-3 bg-stone-800/50 border border-stone-700 rounded-lg">
-                <div className="text-center text-stone-400 text-sm">
-                  No pending rewards. Complete books to earn AURA tokens!
+              
+              <div className="p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
+                <div className="flex items-center gap-2 mb-1">
+                  <Coins className="w-4 h-4 text-green-400" />
+                  <span className="text-sm font-medium text-green-400">Earned</span>
+                </div>
+                <div className="text-lg font-bold text-green-300">
+                  {totalCompletedRewards}
+                </div>
+                <div className="text-xs text-green-400/70">
+                  AURA total
+                </div>
+              </div>
+            </div>
+            
+            {pendingRewards.length === 0 && totalCompletedRewards === 0 && (
+              <div className="p-3 bg-stone-800/50 border border-stone-700 rounded-lg text-center">
+                <div className="text-stone-400 text-sm">
+                  Complete books to start earning AURA tokens!
                 </div>
               </div>
             )}
@@ -571,6 +577,12 @@ export const AuraCoinBalance = () => {
           Refresh Balance & Rewards
         </Button>
       </CardContent>
+      
+      {/* Rewards Details Modal */}
+      <RewardsDetailsModal 
+        isOpen={showRewardsModal} 
+        onOpenChange={setShowRewardsModal} 
+      />
     </Card>
   );
 }; 
