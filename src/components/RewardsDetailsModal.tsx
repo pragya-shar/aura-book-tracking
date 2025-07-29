@@ -178,7 +178,7 @@ export function RewardsDetailsModal({ isOpen, onOpenChange }: RewardsDetailsModa
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
+      <DialogContent className="w-[95vw] max-w-4xl max-h-[90vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Trophy className="w-5 h-5" />
@@ -224,23 +224,23 @@ export function RewardsDetailsModal({ isOpen, onOpenChange }: RewardsDetailsModa
                   {pendingRewards.map((reward) => (
                     <Card key={reward.id} className="hover:shadow-md transition-shadow">
                       <CardHeader className="pb-3">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                          <div className="flex-1 min-w-0">
                             <CardTitle className="text-base font-medium truncate">
                               {reward.book_title}
                             </CardTitle>
-                            <CardDescription className="flex items-center gap-2 mt-1">
-                              <BookOpen className="w-3 h-3" />
-                              {reward.book_pages} pages • Completed {formatDate(reward.completed_at)}
+                            <CardDescription className="flex items-center gap-2 mt-1 text-xs">
+                              <BookOpen className="w-3 h-3 flex-shrink-0" />
+                              <span className="truncate">{reward.book_pages} pages • Completed {formatDate(reward.completed_at)}</span>
                             </CardDescription>
                           </div>
-                          <div className="flex items-center gap-2 ml-4">
+                          <div className="flex items-center justify-between sm:justify-end gap-2 sm:ml-4">
                             <Badge className={getStatusColor(reward.status)}>
                               {getStatusIcon(reward.status)}
                               <span className="ml-1 capitalize">{reward.status}</span>
                             </Badge>
                             <div className="text-right">
-                              <div className="font-bold text-amber-600">
+                              <div className="font-bold text-amber-600 text-sm sm:text-base">
                                 {reward.reward_amount} AURA
                               </div>
                             </div>
@@ -279,30 +279,30 @@ export function RewardsDetailsModal({ isOpen, onOpenChange }: RewardsDetailsModa
                   {completedRewards.map((reward) => (
                     <Card key={reward.id} className="hover:shadow-md transition-shadow">
                       <CardHeader className="pb-3">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                          <div className="flex-1 min-w-0">
                             <CardTitle className="text-base font-medium truncate">
                               {reward.book_title}
                             </CardTitle>
-                            <CardDescription className="space-y-1">
+                            <CardDescription className="space-y-1 text-xs">
                               <div className="flex items-center gap-2">
-                                <BookOpen className="w-3 h-3" />
-                                {reward.book_pages} pages • Completed {formatDate(reward.completed_at)}
+                                <BookOpen className="w-3 h-3 flex-shrink-0" />
+                                <span className="truncate">{reward.book_pages} pages • Completed {formatDate(reward.completed_at)}</span>
                               </div>
                               {reward.processed_at && (
                                 <div className="flex items-center gap-2">
-                                  <CheckCircle className="w-3 h-3 text-green-500" />
-                                  Processed {formatDate(reward.processed_at)}
+                                  <CheckCircle className="w-3 h-3 text-green-500 flex-shrink-0" />
+                                  <span className="truncate">Processed {formatDate(reward.processed_at)}</span>
                                 </div>
                               )}
                               {reward.transaction_hash && (
                                 <div className="flex items-center gap-2">
-                                  <ExternalLink className="w-3 h-3" />
+                                  <ExternalLink className="w-3 h-3 flex-shrink-0" />
                                   <a
                                     href={`https://stellar.expert/explorer/public/tx/${reward.transaction_hash}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-blue-500 hover:underline text-sm truncate max-w-[200px]"
+                                    className="text-blue-500 hover:underline text-sm truncate max-w-[150px] sm:max-w-[200px]"
                                   >
                                     View transaction
                                   </a>
@@ -310,13 +310,13 @@ export function RewardsDetailsModal({ isOpen, onOpenChange }: RewardsDetailsModa
                               )}
                             </CardDescription>
                           </div>
-                          <div className="flex items-center gap-2 ml-4">
-                            <Badge className="bg-green-500/10 text-green-700 border-green-500/20">
+                          <div className="flex items-center justify-between sm:justify-end gap-2 sm:ml-4">
+                            <Badge className="bg-green-500/10 text-green-700 border-green-500/20 text-xs">
                               <CheckCircle className="w-3 h-3 mr-1" />
                               Completed
                             </Badge>
                             <div className="text-right">
-                              <div className="font-bold text-green-600">
+                              <div className="font-bold text-green-600 text-sm sm:text-base">
                                 +{reward.reward_amount} AURA
                               </div>
                             </div>
@@ -338,7 +338,7 @@ export function RewardsDetailsModal({ isOpen, onOpenChange }: RewardsDetailsModa
 
           {/* Statistics Tab */}
           <TabsContent value="stats" className="flex-1 overflow-hidden">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-2">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Total AURA Earned</CardTitle>

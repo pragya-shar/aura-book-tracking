@@ -423,10 +423,10 @@ export const AuraCoinBalance = () => {
                 variant="outline"
                 size="sm"
                 onClick={() => setShowRewardsModal(true)}
-                className="text-purple-400 border-purple-500/30 hover:bg-purple-500/10"
+                className="text-purple-400 border-purple-500/30 hover:bg-purple-500/10 h-9 px-3"
               >
-                <Eye className="w-4 h-4 mr-2" />
-                Show Details
+                <Eye className="w-4 h-4 mr-1 sm:mr-2" />
+                <span className="text-xs sm:text-sm">Show Details</span>
               </Button>
             </div>
             
@@ -473,22 +473,23 @@ export const AuraCoinBalance = () => {
           {/* Mint Tokens */}
           <div className="space-y-2">
             <Label htmlFor="mint-amount" className="text-stone-300">Mint Tokens</Label>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Input
                 id="mint-amount"
                 type="number"
                 value={mintAmount}
                 onChange={(e) => setMintAmount(e.target.value)}
                 placeholder="Amount"
-                className="flex-1"
+                className="flex-1 h-10"
               />
               <Button 
                 onClick={handleMint} 
                 disabled={loading}
                 size="sm"
-                className="bg-green-600 hover:bg-green-700"
+                className="bg-green-600 hover:bg-green-700 h-10 px-4 sm:px-3"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-4 h-4 sm:mr-0 mr-1" />
+                <span className="sm:hidden">Mint</span>
               </Button>
             </div>
           </div>
@@ -501,23 +502,24 @@ export const AuraCoinBalance = () => {
               value={transferTo}
               onChange={(e) => setTransferTo(e.target.value)}
               placeholder="Recipient Address (G...)"
-              className="mb-2"
+              className="mb-2 h-10"
             />
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Input
                 type="number"
                 value={transferAmount}
                 onChange={(e) => setTransferAmount(e.target.value)}
                 placeholder="Amount"
-                className="flex-1"
+                className="flex-1 h-10"
               />
               <Button 
                 onClick={handleTransfer} 
                 disabled={loading}
                 size="sm"
-                className="bg-blue-600 hover:bg-blue-700"
+                className="bg-blue-600 hover:bg-blue-700 h-10 px-4 sm:px-3"
               >
-                <Send className="w-4 h-4" />
+                <Send className="w-4 h-4 sm:mr-0 mr-1" />
+                <span className="sm:hidden">Send</span>
               </Button>
             </div>
           </div>
@@ -525,22 +527,23 @@ export const AuraCoinBalance = () => {
           {/* Burn Tokens */}
           <div className="space-y-2">
             <Label htmlFor="burn-amount" className="text-stone-300">Burn Tokens</Label>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Input
                 id="burn-amount"
                 type="number"
                 value={burnAmount}
                 onChange={(e) => setBurnAmount(e.target.value)}
                 placeholder="Amount"
-                className="flex-1"
+                className="flex-1 h-10"
               />
               <Button 
                 onClick={handleBurn} 
                 disabled={loading}
                 size="sm"
-                className="bg-red-600 hover:bg-red-700"
+                className="bg-red-600 hover:bg-red-700 h-10 px-4 sm:px-3"
               >
-                <Flame className="w-4 h-4" />
+                <Flame className="w-4 h-4 sm:mr-0 mr-1" />
+                <span className="sm:hidden">Burn</span>
               </Button>
             </div>
           </div>
@@ -571,10 +574,10 @@ export const AuraCoinBalance = () => {
           disabled={loading}
           variant="outline"
           size="sm"
-          className="w-full border-purple-500/30 text-purple-300 hover:bg-purple-500/10"
+          className="w-full border-purple-500/30 text-purple-300 hover:bg-purple-500/10 h-10"
         >
-          <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-          Refresh Balance & Rewards
+          <RefreshCw className={`w-4 h-4 mr-1 sm:mr-2 ${loading ? 'animate-spin' : ''}`} />
+          <span className="text-xs sm:text-sm">Refresh Balance & Rewards</span>
         </Button>
       </CardContent>
       
