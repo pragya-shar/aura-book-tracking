@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useWalletUser } from "@/hooks/useWalletUser";
 import { useToast } from "@/hooks/use-toast";
 import type { Tables } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
@@ -28,7 +29,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Slider } from "@/components/ui/slider";
-import { Loader2, Trophy, Coins } from "lucide-react";
+import { Loader2, Trophy, Coins, AlertTriangle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 type BookWithProgress = Tables<'books'> & {
     latestLog?: Tables<'reading_logs'>;
@@ -47,7 +49,9 @@ export function LogProgressDialog({ book, children }: LogProgressDialogProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [showCelebration, setShowCelebration] = React.useState(false);
   const [rewardAmount, setRewardAmount] = React.useState(0);
+  const [hasWalletLinked, setHasWalletLinked] = React.useState(false);
   const { user } = useAuth();
+  const walletUser = useWalletUser();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -66,6 +70,11 @@ export function LogProgressDialog({ book, children }: LogProgressDialogProps) {
         currentPage: book.latestLog?.current_page || 0,
     });
   }, [book, form, isOpen]);
+
+  // Update wallet linked status
+  React.useEffect(() => {
+    setHasWalletLinked(walletUser.isLinked);
+  }, [walletUser.isLinked]);
 
   const saveLogMutation = useMutation({
     mutationFn: async (values: z.infer<typeof logProgressSchema>) => {
@@ -108,12 +117,22 @@ export function LogProgressDialog({ book, children }: LogProgressDialogProps) {
         if (updateError) throw updateError;
       }
 
-      return { data, isFinished };
+      return { data, isFinished, hasWallet: hasWalletLinked };
     },
     onSuccess: (result) => {
       if (result.isFinished) {
         // Show celebration before closing dialog
         setShowCelebration(true);
+        
+        // Show appropriate toast based on wallet status
+        if (!result.hasWallet) {
+          toast({
+            title: "📚 Book Completed!",
+            description: "Link your wallet to earn AURA rewards for completing books.",
+            variant: "default",
+          });
+        }
+        
         // Close progress dialog and show celebration after a short delay
         setTimeout(() => {
           setIsOpen(false);
@@ -165,7 +184,7 @@ export function LogProgressDialog({ book, children }: LogProgressDialogProps) {
                 : `You are on page ${currentPage}. (Page count estimated at ${maxPages})`
               }
             </DialogDescription>
-            {isCompleting && (
+            {isCompleting && hasWalletLinked && (
               <div className="flex items-center gap-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
                 <Trophy className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
                 <div className="text-sm">
@@ -177,6 +196,17 @@ export function LogProgressDialog({ book, children }: LogProgressDialogProps) {
                   </div>
                 </div>
               </div>
+            )}
+            {isCompleting && !hasWalletLinked && (
+              <Alert className="border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-900/20">
+                <AlertTriangle className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                <AlertDescription className="text-orange-800 dark:text-orange-200">
+                  <div className="font-medium">No Wallet Linked</div>
+                  <div className="text-sm mt-1">
+                    You're completing this book, but won't earn AURA rewards until you link your wallet.
+                  </div>
+                </AlertDescription>
+              </Alert>
             )}
           </DialogHeader>
           <Form {...form}>
@@ -227,9 +257,11 @@ export function LogProgressDialog({ book, children }: LogProgressDialogProps) {
             <div className="mx-auto mb-4">
               <div className="relative">
                 <Trophy className="h-16 w-16 text-yellow-500 mx-auto animate-bounce" />
-                <div className="absolute -top-2 -right-2">
-                  <Coins className="h-8 w-8 text-amber-500 animate-pulse" />
-                </div>
+                {hasWalletLinked && (
+                  <div className="absolute -top-2 -right-2">
+                    <Coins className="h-8 w-8 text-amber-500 animate-pulse" />
+                  </div>
+                )}
               </div>
             </div>
             <DialogTitle className="text-2xl">🎉 Congratulations!</DialogTitle>
@@ -237,24 +269,60 @@ export function LogProgressDialog({ book, children }: LogProgressDialogProps) {
               <div>
                 You've completed <strong>{book.title}</strong>!
               </div>
-              <div className="flex items-center justify-center gap-2 p-4 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
-                <Coins className="h-6 w-6 text-amber-600 dark:text-amber-400" />
-                <span className="text-xl font-bold text-amber-800 dark:text-amber-200">
-                  +{rewardAmount} AURA
-                </span>
-              </div>
-              <div className="text-sm text-muted-foreground">
-                Your reward is being processed and will appear in your wallet soon!
-              </div>
+              {hasWalletLinked ? (
+                <>
+                  <div className="flex items-center justify-center gap-2 p-4 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+                    <Coins className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+                    <span className="text-xl font-bold text-amber-800 dark:text-amber-200">
+                      +{rewardAmount} AURA
+                    </span>
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Your reward is being processed and will appear in your wallet soon!
+                  </div>
+                </>
+              ) : (
+                <div className="flex items-center justify-center gap-2 p-4 bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
+                  <AlertTriangle className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+                  <div className="text-center">
+                    <div className="font-bold text-orange-800 dark:text-orange-200">
+                      No AURA Earned
+                    </div>
+                    <div className="text-sm text-orange-700 dark:text-orange-300 mt-1">
+                      Link your wallet to start earning rewards!
+                    </div>
+                  </div>
+                </div>
+              )}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="justify-center">
-            <Button 
-              onClick={() => setShowCelebration(false)}
-              className="bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white"
-            >
-              Awesome! 🚀
-            </Button>
+            {hasWalletLinked ? (
+              <Button 
+                onClick={() => setShowCelebration(false)}
+                className="bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white"
+              >
+                Awesome! 🚀
+              </Button>
+            ) : (
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline"
+                  onClick={() => setShowCelebration(false)}
+                >
+                  Continue
+                </Button>
+                <Button 
+                  onClick={() => {
+                    setShowCelebration(false);
+                    // You could add navigation to wallet page here if needed
+                  }}
+                  className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white"
+                >
+                  Link Wallet 🔗
+                </Button>
+              </div>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
