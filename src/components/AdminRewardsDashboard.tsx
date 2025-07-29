@@ -29,6 +29,14 @@ import {
   Settings
 } from "lucide-react";
 import { AURACOIN_CONFIG } from "@/utils/auraCoinUtils";
+import { 
+  bulkMintRewards, 
+  validateRewardsForMinting,
+  MintingProgress,
+  BulkMintingResult 
+} from "@/services/adminRewardMintingService";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Progress } from "@/components/ui/progress";
 
 interface AdminPendingReward {
   id: string;
@@ -52,7 +60,7 @@ interface AdminStats {
 
 export const AdminRewardsDashboard = () => {
   const { user } = useAuth();
-  const { walletAddress } = useFreighter();
+  const { walletAddress, signTransactionWithWallet } = useFreighter();
   const { toast } = useToast();
   
   const [isLoading, setIsLoading] = useState(true);
@@ -71,6 +79,13 @@ export const AdminRewardsDashboard = () => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("newest");
   const [selectedRewards, setSelectedRewards] = useState<string[]>([]);
+  
+  // Minting states
+  const [isMinting, setIsMinting] = useState(false);
+  const [mintingProgress, setMintingProgress] = useState<MintingProgress | null>(null);
+  const [mintingResults, setMintingResults] = useState<BulkMintingResult | null>(null);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [showResultsDialog, setShowResultsDialog] = useState(false);
 
   // Check if current user is the contract owner
   const isContractOwner = walletAddress === AURACOIN_CONFIG.OWNER_ADDRESS;
@@ -204,6 +219,87 @@ export const AdminRewardsDashboard = () => {
 
   const clearSelection = () => {
     setSelectedRewards([]);
+  };
+
+  // Get selected rewards data for minting
+  const getSelectedRewardsData = () => {
+    return pendingRewards.filter(reward => selectedRewards.includes(reward.id));
+  };
+
+  // Handle bulk minting process
+  const handleProcessSelectedRewards = async () => {
+    const selectedRewardsData = getSelectedRewardsData();
+    
+    // Validate before processing
+    const validation = validateRewardsForMinting(selectedRewardsData);
+    if (!validation.valid) {
+      toast({
+        variant: "destructive",
+        title: "Cannot Process Rewards",
+        description: validation.errors.join(', ')
+      });
+      return;
+    }
+
+    setIsMinting(true);
+    setMintingProgress(null);
+    setMintingResults(null);
+    
+    try {
+      const result = await bulkMintRewards(
+        selectedRewardsData,
+        async (xdr: string, network?: string) => {
+          // Use Freighter context signing function
+          return await signTransactionWithWallet(xdr, network || 'TESTNET');
+        },
+        (progress) => {
+          setMintingProgress(progress);
+        }
+      );
+      
+      setMintingResults(result);
+      setShowResultsDialog(true);
+      
+      // Clear selection and refresh data
+      setSelectedRewards([]);
+      await loadAdminRewardsData();
+      
+      // Show summary toast
+      if (result.successful > 0 && result.failed === 0) {
+        toast({
+          title: "✅ All Rewards Processed!",
+          description: `Successfully minted tokens for ${result.successful} reward${result.successful !== 1 ? 's' : ''}.`
+        });
+      } else if (result.successful > 0 && result.failed > 0) {
+        toast({
+          variant: "destructive",
+          title: "⚠️ Partial Success",
+          description: `${result.successful} successful, ${result.failed} failed. Check details for more info.`
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "❌ All Rewards Failed",
+          description: "No rewards were processed successfully. Check error details."
+        });
+      }
+      
+    } catch (error) {
+      console.error('Bulk minting error:', error);
+      toast({
+        variant: "destructive",
+        title: "Minting Error",
+        description: error instanceof Error ? error.message : "An unexpected error occurred during minting."
+      });
+    } finally {
+      setIsMinting(false);
+      setMintingProgress(null);
+    }
+  };
+
+  const handleConfirmMinting = () => {
+    setShowConfirmDialog(false);
+    handleProcessSelectedRewards();
   };
 
   // Don't render anything if not contract owner
@@ -365,10 +461,11 @@ export const AdminRewardsDashboard = () => {
                   variant="outline"
                   size="sm"
                   className="border-amber-500/30 text-amber-300 hover:bg-amber-500/20"
-                  disabled // Will be enabled in Phase C.2
+                  onClick={() => setShowConfirmDialog(true)}
+                  disabled={isMinting}
                 >
                   <Settings className="w-4 h-4 mr-1" />
-                  Process Selected
+                  {isMinting ? 'Processing...' : 'Process Selected'}
                 </Button>
               </div>
             </div>
@@ -414,7 +511,7 @@ export const AdminRewardsDashboard = () => {
                             <CardTitle className="text-base font-medium truncate text-white">
                               {reward.book_title}
                             </CardTitle>
-                            <CardDescription className="space-y-1 text-xs">
+                            <div className="space-y-1 text-xs text-muted-foreground">
                               <div className="flex items-center gap-2">
                                 <BookOpen className="w-3 h-3 flex-shrink-0" />
                                 <span className="truncate">{reward.book_pages} pages • {formatDate(reward.completed_at)}</span>
@@ -426,7 +523,7 @@ export const AdminRewardsDashboard = () => {
                               <div className="flex items-center gap-2 text-stone-400">
                                 <span className="text-xs font-mono truncate">{reward.wallet_address.slice(0, 12)}...{reward.wallet_address.slice(-8)}</span>
                               </div>
-                            </CardDescription>
+                            </div>
                           </div>
                           <div className="flex items-center justify-between sm:justify-end gap-2 sm:ml-4">
                             <Badge className="bg-amber-500/10 text-amber-700 border-amber-500/20 text-xs">
@@ -476,7 +573,7 @@ export const AdminRewardsDashboard = () => {
                             <CardTitle className="text-base font-medium truncate text-white">
                               {reward.book_title}
                             </CardTitle>
-                            <CardDescription className="space-y-1 text-xs">
+                            <div className="space-y-1 text-xs text-muted-foreground">
                               <div className="flex items-center gap-2">
                                 <BookOpen className="w-3 h-3 flex-shrink-0" />
                                 <span className="truncate">{reward.book_pages} pages • {formatDate(reward.completed_at)}</span>
@@ -485,7 +582,7 @@ export const AdminRewardsDashboard = () => {
                                 <Users className="w-3 h-3 flex-shrink-0" />
                                 <span className="truncate font-mono text-xs">User: {reward.user_id.slice(0, 8)}...</span>
                               </div>
-                            </CardDescription>
+                            </div>
                           </div>
                           <div className="flex items-center justify-between sm:justify-end gap-2 sm:ml-4">
                             <Badge className="bg-green-500/10 text-green-700 border-green-500/20 text-xs">
@@ -516,6 +613,173 @@ export const AdminRewardsDashboard = () => {
           </TabsContent>
         </Tabs>
       </CardContent>
+
+      {/* Confirmation Dialog */}
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogContent className="bg-stone-900 border-amber-500/30">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-amber-200 flex items-center gap-2">
+              <Settings className="w-5 h-5" />
+              Confirm Reward Processing
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-stone-300 space-y-3">
+              <div>
+                You are about to mint and distribute AURA tokens for {selectedRewards.length} selected reward{selectedRewards.length !== 1 ? 's' : ''}:
+              </div>
+              
+              <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+                {getSelectedRewardsData().map((reward, index) => (
+                  <div key={reward.id} className="flex justify-between items-center text-sm">
+                    <span className="truncate mr-2">{reward.book_title}</span>
+                    <span className="font-bold text-amber-400">{reward.reward_amount} AURA</span>
+                  </div>
+                ))}
+                <div className="border-t border-amber-500/30 mt-2 pt-2 flex justify-between font-bold text-amber-300">
+                  <span>Total:</span>
+                  <span>{getSelectedRewardsData().reduce((sum, r) => sum + r.reward_amount, 0)} AURA</span>
+                </div>
+              </div>
+              
+              <div className="text-red-400 text-sm">
+                ⚠️ This action cannot be undone. AURA tokens will be permanently minted and distributed to user wallets.
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-stone-700 border-stone-600 text-stone-300 hover:bg-stone-600">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleConfirmMinting}
+              className="bg-amber-600 hover:bg-amber-700 text-white"
+            >
+              Confirm & Process
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Progress Dialog */}
+      <AlertDialog open={isMinting} onOpenChange={() => {}}>
+        <AlertDialogContent className="bg-stone-900 border-amber-500/30">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-amber-200 flex items-center gap-2">
+              <div className="animate-spin rounded-full h-5 w-5 border-2 border-amber-400 border-t-transparent"></div>
+              Processing Rewards...
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-stone-300">
+              Processing rewards and minting AURA tokens. Please wait while transactions are processed on the Stellar network.
+            </AlertDialogDescription>
+            <div className="text-stone-300 space-y-4">
+              {mintingProgress && (
+                <>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Progress:</span>
+                      <span>{mintingProgress.completed + mintingProgress.failed}/{mintingProgress.total}</span>
+                    </div>
+                    <Progress 
+                      value={((mintingProgress.completed + mintingProgress.failed) / mintingProgress.total) * 100} 
+                      className="h-2 bg-stone-700"
+                    />
+                  </div>
+                  
+                  {mintingProgress.currentReward && (
+                    <div className="text-sm">
+                      <span className="text-amber-400">Current:</span> {mintingProgress.currentReward}
+                    </div>
+                  )}
+                  
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-green-400">Successful:</span>
+                      <span>{mintingProgress.completed}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-red-400">Failed:</span>
+                      <span>{mintingProgress.failed}</span>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </AlertDialogHeader>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Results Dialog */}
+      <AlertDialog open={showResultsDialog} onOpenChange={setShowResultsDialog}>
+        <AlertDialogContent className="bg-stone-900 border-amber-500/30 max-w-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-amber-200 flex items-center gap-2">
+              <CheckCircle className="w-5 h-5" />
+              Processing Results
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-stone-300">
+              Summary of AURA token minting results for the selected rewards.
+            </AlertDialogDescription>
+            <div className="text-stone-300">
+              {mintingResults && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-3 gap-4 text-center">
+                    <div className="p-3 bg-stone-800 rounded-lg">
+                      <div className="text-2xl font-bold text-blue-400">{mintingResults.totalProcessed}</div>
+                      <div className="text-xs text-stone-400">Total</div>
+                    </div>
+                    <div className="p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
+                      <div className="text-2xl font-bold text-green-400">{mintingResults.successful}</div>
+                      <div className="text-xs text-green-400">Successful</div>
+                    </div>
+                    <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+                      <div className="text-2xl font-bold text-red-400">{mintingResults.failed}</div>
+                      <div className="text-xs text-red-400">Failed</div>
+                    </div>
+                  </div>
+
+                  {mintingResults.errors.length > 0 && (
+                    <div className="space-y-2">
+                      <div className="font-semibold text-red-400">Errors:</div>
+                      <ScrollArea className="h-32 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+                        <div className="space-y-1">
+                          {mintingResults.errors.map((error, index) => (
+                            <div key={index} className="text-sm text-red-300">{error}</div>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    </div>
+                  )}
+
+                  {mintingResults.successful > 0 && (
+                    <div className="space-y-2">
+                      <div className="font-semibold text-green-400">Successful Transactions:</div>
+                      <ScrollArea className="h-32 p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
+                        <div className="space-y-1">
+                          {mintingResults.results
+                            .filter(r => r.success)
+                            .map((result, index) => (
+                            <div key={index} className="text-sm text-green-300 flex justify-between">
+                              <span>{result.bookTitle}</span>
+                              <span className="font-mono">{result.amount} AURA</span>
+                            </div>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction 
+              onClick={() => setShowResultsDialog(false)}
+              className="bg-amber-600 hover:bg-amber-700 text-white"
+            >
+              Close
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }; 
