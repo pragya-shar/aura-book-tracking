@@ -209,8 +209,12 @@ export function RewardsDetailsModal({ isOpen, onOpenChange }: RewardsDetailsModa
           <TabsContent value="pending" className="flex-1 overflow-hidden">
             <ScrollArea className="h-[500px] pr-4">
               {isLoading ? (
-                <div className="flex items-center justify-center h-40">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                <div className="flex flex-col items-center justify-center h-40 space-y-3">
+                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent"></div>
+                  <div className="text-center space-y-1">
+                    <div className="text-sm font-medium">Loading rewards...</div>
+                    <div className="text-xs text-muted-foreground">Fetching your book completion history</div>
+                  </div>
                 </div>
               ) : pendingRewards.length > 0 ? (
                 <div className="space-y-4">
@@ -264,8 +268,12 @@ export function RewardsDetailsModal({ isOpen, onOpenChange }: RewardsDetailsModa
           <TabsContent value="history" className="flex-1 overflow-hidden">
             <ScrollArea className="h-[500px] pr-4">
               {isLoading ? (
-                <div className="flex items-center justify-center h-40">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                <div className="flex flex-col items-center justify-center h-40 space-y-3">
+                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent"></div>
+                  <div className="text-center space-y-1">
+                    <div className="text-sm font-medium">Loading history...</div>
+                    <div className="text-xs text-muted-foreground">Checking for completed transactions</div>
+                  </div>
                 </div>
               ) : completedRewards.length > 0 ? (
                 <div className="space-y-4">

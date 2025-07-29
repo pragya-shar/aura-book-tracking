@@ -185,9 +185,33 @@ export const AuraCoinBalance = () => {
       await loadData(); // Refresh balance and pending rewards
     } catch (error) {
       console.error('Minting error:', error);
+      
+      // Provide more specific error guidance
+      let errorMessage = "Failed to mint tokens";
+      let actionGuidance = "Please try again";
+      
+      if (error instanceof Error) {
+        const errorMsg = error.message.toLowerCase();
+        if (errorMsg.includes('network')) {
+          errorMessage = "Network connection issue";
+          actionGuidance = "Check your internet connection and try again";
+        } else if (errorMsg.includes('insufficient')) {
+          errorMessage = "Insufficient funds for transaction";
+          actionGuidance = "Ensure you have enough XLM for transaction fees";
+        } else if (errorMsg.includes('rejected') || errorMsg.includes('declined')) {
+          errorMessage = "Transaction was rejected";
+          actionGuidance = "Transaction was declined in wallet";
+        } else if (errorMsg.includes('timeout')) {
+          errorMessage = "Transaction timed out";
+          actionGuidance = "Network is slow, please try again";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
       toast({
         title: "Minting Failed",
-        description: error instanceof Error ? error.message : "Failed to mint tokens",
+        description: `${errorMessage}. ${actionGuidance}`,
         variant: "destructive",
       });
     } finally {
@@ -352,8 +376,22 @@ export const AuraCoinBalance = () => {
             Connect your wallet to view and manage AuraCoin tokens
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <p className="text-stone-500 text-sm">Please connect your Freighter wallet to access AuraCoin features.</p>
+        <CardContent className="space-y-4">
+          <div className="flex items-center gap-3 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+            <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
+              <Coins className="w-4 h-4 text-blue-400" />
+            </div>
+            <div className="flex-1">
+              <div className="text-sm font-medium text-blue-200">Wallet Required</div>
+              <div className="text-xs text-blue-300/70">Connect your Freighter wallet to access AuraCoin features</div>
+            </div>
+          </div>
+          
+          <div className="text-xs text-stone-500 space-y-1">
+            <div>• View your AURA token balance</div>
+            <div>• See pending book rewards</div>
+            <div>• Manage token transactions</div>
+          </div>
         </CardContent>
       </Card>
     );
@@ -401,13 +439,21 @@ export const AuraCoinBalance = () => {
         <div className="text-center p-4 bg-purple-500/10 rounded-lg border border-purple-500/20">
           <div className="text-2xl font-bold text-purple-300">
             {loading ? (
-              <Loader2 className="w-8 h-8 animate-spin mx-auto" />
-            ) : (
+              <div className="flex flex-col items-center gap-2">
+                <Loader2 className="w-8 h-8 animate-spin" />
+                <span className="text-sm text-purple-400">Loading balance...</span>
+              </div>
+            ) : balance !== '0' ? (
               `${formatBalance(balance)} AURA`
+            ) : (
+              <div className="flex flex-col items-center gap-1">
+                <span>0 AURA</span>
+                <span className="text-xs text-stone-500">No tokens yet</span>
+              </div>
             )}
           </div>
           <div className="text-sm text-stone-500 mt-1">
-            Available Balance
+            {loading ? "Checking wallet..." : "Available Balance"}
           </div>
         </div>
 
@@ -486,10 +532,14 @@ export const AuraCoinBalance = () => {
                 onClick={handleMint} 
                 disabled={loading}
                 size="sm"
-                className="bg-green-600 hover:bg-green-700 h-10 px-4 sm:px-3"
+                className="bg-green-600 hover:bg-green-700 h-10 px-4 sm:px-3 disabled:opacity-50"
               >
-                <Plus className="w-4 h-4 sm:mr-0 mr-1" />
-                <span className="sm:hidden">Mint</span>
+                {loading ? (
+                  <Loader2 className="w-4 h-4 animate-spin sm:mr-0 mr-1" />
+                ) : (
+                  <Plus className="w-4 h-4 sm:mr-0 mr-1" />
+                )}
+                <span className="sm:hidden">{loading ? "Minting..." : "Mint"}</span>
               </Button>
             </div>
           </div>
@@ -516,10 +566,14 @@ export const AuraCoinBalance = () => {
                 onClick={handleTransfer} 
                 disabled={loading}
                 size="sm"
-                className="bg-blue-600 hover:bg-blue-700 h-10 px-4 sm:px-3"
+                className="bg-blue-600 hover:bg-blue-700 h-10 px-4 sm:px-3 disabled:opacity-50"
               >
-                <Send className="w-4 h-4 sm:mr-0 mr-1" />
-                <span className="sm:hidden">Send</span>
+                {loading ? (
+                  <Loader2 className="w-4 h-4 animate-spin sm:mr-0 mr-1" />
+                ) : (
+                  <Send className="w-4 h-4 sm:mr-0 mr-1" />
+                )}
+                <span className="sm:hidden">{loading ? "Sending..." : "Send"}</span>
               </Button>
             </div>
           </div>
@@ -540,10 +594,14 @@ export const AuraCoinBalance = () => {
                 onClick={handleBurn} 
                 disabled={loading}
                 size="sm"
-                className="bg-red-600 hover:bg-red-700 h-10 px-4 sm:px-3"
+                className="bg-red-600 hover:bg-red-700 h-10 px-4 sm:px-3 disabled:opacity-50"
               >
-                <Flame className="w-4 h-4 sm:mr-0 mr-1" />
-                <span className="sm:hidden">Burn</span>
+                {loading ? (
+                  <Loader2 className="w-4 h-4 animate-spin sm:mr-0 mr-1" />
+                ) : (
+                  <Flame className="w-4 h-4 sm:mr-0 mr-1" />
+                )}
+                <span className="sm:hidden">{loading ? "Burning..." : "Burn"}</span>
               </Button>
             </div>
           </div>
