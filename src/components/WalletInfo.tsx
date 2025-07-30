@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { useAuth } from '@/contexts/AuthContext';
 import { useFreighter } from '@/contexts/FreighterContext';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { 
   Wallet, 
@@ -11,10 +14,22 @@ import {
   RefreshCw, 
   AlertCircle,
   CheckCircle,
-  XCircle
+  XCircle,
+  Link,
+  Loader2
 } from 'lucide-react';
 
+interface UserProfile {
+  id: string;
+  user_id: string;
+  wallet_address: string | null;
+  wallet_network: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export const WalletInfo = () => {
+  const { user } = useAuth();
   const { 
     isWalletConnected, 
     isWalletAllowed, 
@@ -27,6 +42,10 @@ export const WalletInfo = () => {
     loading,
     error
   } = useFreighter();
+  
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [linkingLoading, setLinkingLoading] = useState(false);
+  const [manualWalletAddress, setManualWalletAddress] = useState('');
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -67,6 +86,145 @@ export const WalletInfo = () => {
       });
     }
   };
+
+  // Load user profile
+  const loadProfile = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error loading profile:', error);
+        return;
+      }
+
+      setProfile(data);
+    } catch (error) {
+      console.error('Error in loadProfile:', error);
+    }
+  };
+
+  // Create user profile
+  const createProfile = async (walletAddr?: string) => {
+    if (!user) return;
+
+    setLinkingLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .insert({
+          user_id: user.id,
+          wallet_address: walletAddr || null,
+          wallet_network: 'TESTNET'
+        })
+        .select()
+        .single();
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      setProfile(data);
+      toast({
+        title: "✅ Profile Created",
+        description: "User profile created successfully",
+      });
+    } catch (error) {
+      console.error('Error creating profile:', error);
+      toast({
+        title: "❌ Profile Creation Failed",
+        description: error instanceof Error ? error.message : "Unknown error",
+        variant: "destructive"
+      });
+    } finally {
+      setLinkingLoading(false);
+    }
+  };
+
+  // Link wallet to existing profile
+  const linkWallet = async (walletAddr: string) => {
+    if (!user || !profile) return;
+
+    setLinkingLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .update({
+          wallet_address: walletAddr,
+          wallet_network: 'TESTNET',
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', user.id)
+        .select()
+        .single();
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      setProfile(data);
+      toast({
+        title: "✅ Wallet Linked",
+        description: `Wallet ${walletAddr.slice(0, 8)}...${walletAddr.slice(-4)} linked successfully`,
+      });
+    } catch (error) {
+      console.error('Error linking wallet:', error);
+      toast({
+        title: "❌ Wallet Linking Failed",
+        description: error instanceof Error ? error.message : "Unknown error",
+        variant: "destructive"
+      });
+    } finally {
+      setLinkingLoading(false);
+    }
+  };
+
+  // Handle link current wallet
+  const handleLinkCurrentWallet = async () => {
+    if (!walletAddress) return;
+    
+    if (profile) {
+      await linkWallet(walletAddress);
+    } else {
+      await createProfile(walletAddress);
+    }
+  };
+
+  // Handle manual wallet address linking
+  const handleManualWalletLink = async () => {
+    if (!manualWalletAddress.trim()) {
+      toast({
+        title: "Invalid Address",
+        description: "Please enter a valid wallet address",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (profile) {
+      await linkWallet(manualWalletAddress.trim());
+    } else {
+      await createProfile(manualWalletAddress.trim());
+    }
+    setManualWalletAddress('');
+  };
+
+  // Load profile on mount
+  useEffect(() => {
+    loadProfile();
+  }, [user]);
+
+  // Auto-link if wallet is already connected and profile exists but not linked
+  useEffect(() => {
+    if (isWalletConnected && walletAddress && profile && !profile.wallet_address) {
+      // Don't auto-link, let user choose when to link
+    }
+  }, [isWalletConnected, walletAddress, profile]);
 
   if (!isWalletConnected) {
     return (
@@ -137,6 +295,7 @@ export const WalletInfo = () => {
           <div className="flex items-center gap-2">
             {isWalletLinked ? (
               <Badge variant="outline" className="text-green-400 border-green-400">
+                <Link className="w-3 h-3 mr-1" />
                 Linked
               </Badge>
             ) : (
@@ -146,6 +305,60 @@ export const WalletInfo = () => {
             )}
           </div>
         </div>
+
+        {/* Wallet Linking Section - Show only if connected but not linked */}
+        {!isWalletLinked && user && (
+          <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg space-y-3">
+            <div className="flex items-center gap-2 text-yellow-400">
+              <AlertCircle className="w-4 h-4" />
+              <span className="text-sm font-medium">Link wallet to earn AURA rewards</span>
+            </div>
+            
+            <Button
+              onClick={handleLinkCurrentWallet}
+              disabled={linkingLoading}
+              className="w-full bg-purple-600 hover:bg-purple-700"
+            >
+              {linkingLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Linking...
+                </>
+              ) : (
+                <>
+                  <Link className="w-4 h-4 mr-2" />
+                  Link This Wallet
+                </>
+              )}
+            </Button>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-stone-700" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-black/60 px-2 text-stone-500">or link manually</span>
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <Input
+                placeholder="Enter wallet address..."
+                value={manualWalletAddress}
+                onChange={(e) => setManualWalletAddress(e.target.value)}
+                className="flex-1 bg-stone-800/50 border-stone-700 text-stone-300"
+              />
+              <Button
+                onClick={handleManualWalletLink}
+                disabled={linkingLoading || !manualWalletAddress.trim()}
+                variant="outline"
+                className="border-purple-500/30 text-purple-300 hover:bg-purple-500/10"
+              >
+                Link
+              </Button>
+            </div>
+          </div>
+        )}
 
         {/* Wallet Address */}
         <div className="space-y-2">

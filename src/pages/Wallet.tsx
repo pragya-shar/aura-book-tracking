@@ -2,7 +2,6 @@ import { Wallet } from 'lucide-react';
 import { WalletInfo } from '@/components/WalletInfo';
 import { UserInfo } from '@/components/UserInfo';
 import { UserAuraCoinBalance } from '@/components/UserAuraCoinBalance';
-import { WalletProfileManager } from '@/components/WalletProfileManager';
 
 const WalletPage = () => {
   return (
@@ -15,11 +14,6 @@ const WalletPage = () => {
         <p className="text-stone-400 font-playfair italic mt-1 text-xs sm:text-sm md:text-base">
           Manage your Freighter wallet and track your reading rewards.
         </p>
-      </div>
-
-      {/* Wallet Profile Manager */}
-      <div className="mb-6">
-        <WalletProfileManager />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
