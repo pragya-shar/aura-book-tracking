@@ -49,6 +49,7 @@
 | `src/pages/Auth.tsx` | Login/signup page | ❌ NEVER |
 | `src/pages/Statistics.tsx` | Reading stats page | ✅ Optional |
 | `src/pages/NotFound.tsx` | 404 error page | ⚠️ Recommended |
+| `src/pages/Admin.tsx` | Admin dashboard (restricted access) | ⚠️ Admin only |
 
 ---
 
@@ -75,8 +76,7 @@
 ### 💰 **AuraCoin System (Rewards)** (Keep All)
 | File | Purpose | Can Delete? |
 |------|---------|-------------|
-| `src/components/WalletProfileManager.tsx` | **NEW!** Links email to wallet | ❌ NEVER |
-| `src/components/AuraCoinBalance.tsx` | Shows coin balance | ❌ NEVER |
+| `src/components/UserAuraCoinBalance.tsx` | Shows coin balance & rewards | ❌ NEVER |
 | `src/components/AuraCoinTest.tsx` | Tests coin system | ⚠️ Testing only |
 | `src/components/AuraCoinSystemTest.tsx` | Advanced coin testing | ⚠️ Testing only |
 | `src/components/BookRewardButton.tsx` | Button to claim rewards | ❌ NEVER |
@@ -84,9 +84,17 @@
 ### 🔗 **Wallet Integration** (Keep All)
 | File | Purpose | Can Delete? |
 |------|---------|-------------|
-| `src/components/WalletInfo.tsx` | Shows wallet connection status | ❌ NEVER |
+| `src/components/WalletInfo.tsx` | Shows wallet status & links wallet to profile | ❌ NEVER |
 | `src/components/WalletDemo.tsx` | Wallet testing tools | ⚠️ Testing only |
 | `src/components/auth/FreighterWalletButton.tsx` | Connect wallet button | ❌ NEVER |
+
+### 🛡️ **Admin Components** (Admin Access Only)
+| File | Purpose | Can Delete? |
+|------|---------|-------------|
+| `src/components/AdminRewardsDashboard.tsx` | Admin reward processing | ⚠️ Admin only |
+| `src/components/admin/AdminTokenManager.tsx` | Token minting/transfer/burn | ⚠️ Admin only |
+| `src/components/admin/AdminDatabaseTools.tsx` | Database maintenance | ⚠️ Admin only |
+| `src/components/admin/AdminTestingTools.tsx` | System testing tools | ⚠️ Admin only |
 
 ---
 
