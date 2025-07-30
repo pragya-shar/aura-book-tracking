@@ -1,10 +1,13 @@
 
-import { Home, BarChart, BookOpen, PlusSquare, LogOut, Wallet } from "lucide-react";
+import { Home, BarChart, BookOpen, PlusSquare, LogOut, Wallet, Shield } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFreighter } from "@/contexts/FreighterContext";
+import { AURACOIN_CONFIG } from "@/utils/auraCoinUtils";
+
+const ADMIN_EMAIL = 'sharmapragya997@gmail.com';
 
 const navigationItems = [
   { title: "Home", href: "/library", icon: Home },
@@ -18,7 +21,10 @@ const BottomNavigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { isWalletConnected, disconnectWallet } = useFreighter();
+  const { isWalletConnected, disconnectWallet, walletAddress } = useFreighter();
+  
+  // Check if current user is admin
+  const isAdmin = walletAddress === AURACOIN_CONFIG.OWNER_ADDRESS && user?.email === ADMIN_EMAIL;
 
   const isLinkActive = (href: string) => {
     if (href === '/library') {
@@ -37,10 +43,16 @@ const BottomNavigation = () => {
     navigate('/auth');
   };
 
+  // Build navigation items including admin link if user is admin
+  const allNavigationItems = [
+    ...navigationItems,
+    ...(isAdmin ? [{ title: "Admin", href: "/admin", icon: Shield }] : [])
+  ];
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-sm border-t border-amber-500/20">
       <div className="flex items-center justify-around h-16 px-2">
-        {navigationItems.map((item) => {
+        {allNavigationItems.map((item) => {
           const isActive = isLinkActive(item.href);
           return (
             <Link

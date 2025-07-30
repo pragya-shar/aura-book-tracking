@@ -1,10 +1,8 @@
-import React from 'react';
 import { Wallet } from 'lucide-react';
 import { WalletInfo } from '@/components/WalletInfo';
 import { UserInfo } from '@/components/UserInfo';
-import { AuraCoinBalance } from '@/components/AuraCoinBalance';
+import { UserAuraCoinBalance } from '@/components/UserAuraCoinBalance';
 import { WalletProfileManager } from '@/components/WalletProfileManager';
-import { AdminRewardsDashboard } from '@/components/AdminRewardsDashboard';
 
 const WalletPage = () => {
   return (
@@ -15,7 +13,7 @@ const WalletPage = () => {
           Stellar Wallet
         </h1>
         <p className="text-stone-400 font-playfair italic mt-1 text-xs sm:text-sm md:text-base">
-          Manage your Freighter wallet and explore blockchain features.
+          Manage your Freighter wallet and track your reading rewards.
         </p>
       </div>
 
@@ -30,12 +28,7 @@ const WalletPage = () => {
       </div>
 
       <div className="mb-6">
-        <AuraCoinBalance />
-      </div>
-
-      {/* Admin Dashboard - Only visible to contract owner */}
-      <div className="mb-6">
-        <AdminRewardsDashboard />
+        <UserAuraCoinBalance />
       </div>
     </div>
   );

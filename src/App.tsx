@@ -20,7 +20,7 @@ const Statistics = lazy(() => import("./pages/Statistics"));
 const Wallet = lazy(() => import("./pages/Wallet"));
 const ProtectedRoute = lazy(() => import("./components/ProtectedRoute"));
 const Auth = lazy(() => import("./pages/Auth"));
-const AuraCoinTest = lazy(() => import("./components/AuraCoinTest").then(module => ({ default: module.AuraCoinTest })));
+const Admin = lazy(() => import("./pages/Admin"));
 
 // Loading component
 const PageLoader = () => (
@@ -50,7 +50,7 @@ const App = () => (
                     <Route path="/progress" element={<ReadingProgress />} />
                     <Route path="/statistics" element={<Statistics />} />
                     <Route path="/wallet" element={<Wallet />} />
-                    <Route path="/test-mint" element={<AuraCoinTest />} />
+                    <Route path="/admin" element={<Admin />} />
                   </Route>
                     <Route path="*" element={<NotFound />} />
                   </Routes>
