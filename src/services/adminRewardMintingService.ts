@@ -50,27 +50,63 @@ export async function mintRewardTokens(
     );
     
     if (result && result.hash) {
-      // Update the database with the transaction hash
+      // Update the database with the transaction hash (with retry logic)
       onProgress?.(`Updating database for "${bookTitle}"...`);
       
-      const { error: updateError } = await supabase
-        .from('pending_rewards')
-        .update({
-          transaction_hash: result.hash,
-          processed_at: new Date().toISOString(),
-          status: 'completed'
-        })
-        .eq('id', rewardId);
+      let updateSuccess = false;
+      let updateError: any = null;
+      
+      // Retry database update up to 3 times
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          console.log(`🔄 Database update attempt ${attempt}/3 for reward ${rewardId}`);
+          
+          const { error } = await supabase
+            .from('pending_rewards')
+            .update({
+              transaction_hash: result.hash,
+              processed_at: new Date().toISOString(),
+              status: 'completed'
+            })
+            .eq('id', rewardId);
 
-      if (updateError) {
-        console.error('Database update error:', updateError);
+          if (!error) {
+            console.log(`✅ Database updated successfully on attempt ${attempt}`);
+            updateSuccess = true;
+            break;
+          } else {
+            updateError = error;
+            console.warn(`⚠️ Attempt ${attempt} failed:`, error);
+            
+            // Wait before retry (exponential backoff)
+            if (attempt < 3) {
+              const delay = Math.pow(2, attempt) * 1000; // 2s, 4s
+              console.log(`⏳ Waiting ${delay}ms before retry...`);
+              await new Promise(resolve => setTimeout(resolve, delay));
+            }
+          }
+        } catch (fetchError) {
+          updateError = fetchError;
+          console.warn(`⚠️ Network error on attempt ${attempt}:`, fetchError);
+          
+          // Wait before retry for network errors
+          if (attempt < 3) {
+            const delay = Math.pow(2, attempt) * 1000;
+            console.log(`⏳ Waiting ${delay}ms before retry...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+          }
+        }
+      }
+
+      if (!updateSuccess) {
+        console.error('❌ All database update attempts failed:', updateError);
         return {
           success: false,
           rewardId,
           bookTitle,
           amount,
           walletAddress,
-          error: `Minting succeeded but database update failed: ${updateError.message}`
+          error: `Minting succeeded but database update failed after 3 attempts: ${updateError?.message || 'Network error'}`
         };
       }
 
