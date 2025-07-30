@@ -21,7 +21,8 @@ import {
   xdr,
   BASE_FEE,
   rpc as StellarRpc,
-  nativeToScVal
+  nativeToScVal,
+  scValToNative
 } from '@stellar/stellar-sdk';
 
 // AuraCoin Contract Configuration
@@ -71,22 +72,8 @@ const amountToScVal = (amount: number | string) => {
   return nativeToScVal(BigInt(baseUnitsAmount), { type: "i128" });
 };
 
-// Helper function to convert XDR to native value
-const scValToNative = (scVal: xdr.ScVal): any => {
-  switch (scVal.switch()) {
-    case xdr.ScValType.scvString():
-      return scVal.str();
-    case xdr.ScValType.scvU32():
-      return scVal.u32();
-    case xdr.ScValType.scvI128():
-      const parts = scVal.i128();
-      return parts.lo().toString();
-    case xdr.ScValType.scvBool():
-      return scVal.b();
-    default:
-      return scVal;
-  }
-};
+// Note: Using the proper scValToNative function from Stellar SDK instead of custom implementation
+// This fixes the i128 balance conversion issue that was only reading low 64 bits
 
 // Token configuration constants - Contract uses 18 decimals
 export const TOKEN_DECIMALS = 18; // Contract uses 18 decimal places
