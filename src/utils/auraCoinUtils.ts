@@ -491,17 +491,16 @@ export const getContractExplorerUrl = (): string => {
   return `https://stellar.expert/explorer/testnet/contract/${AURACOIN_CONFIG.CONTRACT_ID}`;
 };
 
-// Format balance for display
+// Format balance for display - balance is already in display units (AURA)
 export const formatBalance = (balance: string | number): string => {
   try {
     const balanceNum = typeof balance === 'string' ? parseFloat(balance) : balance;
     if (isNaN(balanceNum)) return '0';
     
-    // Convert from smallest unit to display units (7 decimals)
-    const displayBalance = balanceNum / Math.pow(10, 7);
-    return displayBalance.toLocaleString('en-US', { 
+    // Balance is already converted to display units, just format for display
+    return balanceNum.toLocaleString('en-US', { 
       minimumFractionDigits: 0,
-      maximumFractionDigits: 7 
+      maximumFractionDigits: 2  // Show up to 2 decimal places for readability
     });
   } catch (error) {
     console.error('Error formatting balance:', error);
