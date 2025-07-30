@@ -40,7 +40,7 @@ export const WalletInfo = () => {
     if (walletAddress) {
       const explorerUrl = network === 'TESTNET' 
         ? `https://stellar.expert/explorer/testnet/account/${walletAddress}`
-        : `https://stellar.expert/explorer/public/account/${walletAddress}`;
+        : `https://stellar.expert/explorer/testnet/account/${walletAddress}`;
       window.open(explorerUrl, '_blank');
     }
   };

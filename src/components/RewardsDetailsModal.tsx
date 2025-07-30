@@ -307,7 +307,7 @@ export function RewardsDetailsModal({ isOpen, onOpenChange }: RewardsDetailsModa
                                 <div className="flex items-center gap-2">
                                   <ExternalLink className="w-3 h-3 flex-shrink-0" />
                                   <a
-                                    href={`https://stellar.expert/explorer/public/tx/${reward.transaction_hash}`}
+                                    href={`https://stellar.expert/explorer/testnet/tx/${reward.transaction_hash}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="text-blue-500 hover:underline text-sm truncate max-w-[150px] sm:max-w-[200px]"
