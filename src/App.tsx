@@ -8,6 +8,10 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { FreighterProvider } from "./contexts/FreighterContext";
 import { ThemeProvider } from "next-themes";
 import { Suspense, lazy } from "react";
+import { LoadingProvider } from "./contexts/LoadingContext";
+import LoadingOverlay from "./components/LoadingOverlay";
+import EnhancedPageLoader from "./components/EnhancedPageLoader";
+import useRouteLoading from "./hooks/useRouteLoading";
 
 // Lazy load all pages for better performance
 const Index = lazy(() => import("./pages/Index"));
@@ -22,25 +26,26 @@ const ProtectedRoute = lazy(() => import("./components/ProtectedRoute"));
 const Auth = lazy(() => import("./pages/Auth"));
 const Admin = lazy(() => import("./pages/Admin"));
 
-// Loading component
-const PageLoader = () => (
-  <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#1a1a1a] to-[#000000]">
-    <div className="text-amber-400 text-xl">Loading...</div>
-  </div>
-);
+// Route loading component that triggers on navigation
+const RouteLoadingDetector = () => {
+  useRouteLoading();
+  return null;
+};
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <Toaster />
-      <BrowserRouter>
-        <TooltipProvider>
-          <AuthProvider>
-          <FreighterProvider>
-              <SidebarProvider>
-                <Suspense fallback={<PageLoader />}>
+      <LoadingProvider>
+        <Toaster />
+        <BrowserRouter>
+          <RouteLoadingDetector />
+          <TooltipProvider>
+            <AuthProvider>
+            <FreighterProvider>
+                <SidebarProvider>
+                  <Suspense fallback={<EnhancedPageLoader />}>
                   <Routes>
                     <Route path="/auth" element={<Auth />} />
                     <Route path="/" element={<Index />} />
@@ -54,12 +59,14 @@ const App = () => (
                   </Route>
                     <Route path="*" element={<NotFound />} />
                   </Routes>
-                </Suspense>
-              </SidebarProvider>
-            </FreighterProvider>
-            </AuthProvider>
-        </TooltipProvider>
-      </BrowserRouter>
+                  </Suspense>
+                  <LoadingOverlay />
+                </SidebarProvider>
+              </FreighterProvider>
+              </AuthProvider>
+          </TooltipProvider>
+        </BrowserRouter>
+      </LoadingProvider>
     </ThemeProvider>
   </QueryClientProvider>
 );
