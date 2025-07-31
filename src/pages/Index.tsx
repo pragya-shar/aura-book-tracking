@@ -70,18 +70,18 @@ const Index = () => {
         </p>
       </div>
 
-      {/* Reading Facts - Load after components are ready */}
+      {/* Enter the Archives Button - appears immediately */}
+      <div className="animate-fade-in" style={{ animationDelay: '0.5s' }}>
+        <InteractiveButton />
+      </div>
+      
+      {/* Reading Facts - appears after the button */}
       <div className="animate-fade-in" style={{ animationDelay: '2s' }}>
         {showHeavyComponents && (
           <Suspense fallback={<div className="w-64 h-16 bg-gray-800/50 rounded animate-pulse"></div>}>
             <ReadingFacts />
           </Suspense>
         )}
-      </div>
-      
-      {/* Enter the Archives Button - appears after the fact */}
-      <div className="animate-fade-in" style={{ animationDelay: '4s' }}>
-        <InteractiveButton />
       </div>
 
 
