@@ -11,7 +11,6 @@ import { Suspense, lazy } from "react";
 import { LoadingProvider } from "./contexts/LoadingContext";
 import LoadingOverlay from "./components/LoadingOverlay";
 import EnhancedPageLoader from "./components/EnhancedPageLoader";
-import useRouteLoading from "./hooks/useRouteLoading";
 
 // Lazy load all pages for better performance
 const Index = lazy(() => import("./pages/Index"));
@@ -26,11 +25,7 @@ const ProtectedRoute = lazy(() => import("./components/ProtectedRoute"));
 const Auth = lazy(() => import("./pages/Auth"));
 const Admin = lazy(() => import("./pages/Admin"));
 
-// Route loading component that triggers on navigation
-const RouteLoadingDetector = () => {
-  useRouteLoading();
-  return null;
-};
+// Note: Loading now only shows for actual component loading (Suspense) and manual operations
 
 const queryClient = new QueryClient();
 
@@ -40,7 +35,6 @@ const App = () => (
       <LoadingProvider>
         <Toaster />
         <BrowserRouter>
-          <RouteLoadingDetector />
           <TooltipProvider>
             <AuthProvider>
             <FreighterProvider>
